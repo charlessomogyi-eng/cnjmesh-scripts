@@ -1,0 +1,16 @@
+tunnel: a05e5efa-8c67-48f8-a71c-833f5258dfce
+credentials-file: /home/somog/.cloudflared/a05e5efa-8c67-48f8-a71c-833f5258dfce.json
+ingress:
+  - hostname: meshshadow.cnjmesh.me
+    service: http://localhost:5000
+  - hostname: malla.cnjmesh.me
+    service: http://localhost:5008
+  - hostname: grafana.cnjmesh.me
+    service: http://localhost:3000
+  - hostname: meshview.cnjmesh.me
+    service: http://localhost:8080
+  - hostname: corescope.cnjmesh.me
+    service: http://localhost:3001
+  - hostname: meshcorehub.cnjmesh.me
+    service: http://localhost:8083
+  - service: http_status:404

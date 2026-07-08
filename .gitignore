@@ -1,0 +1,10 @@
+*.db
+*.sqlite
+*.log
+__pycache__/
+*.pyc
+.env
+venv/
+*.env
+!*.env.example
+mosquitto-cnjmesh1.conf.real

@@ -1,0 +1,80 @@
+allow_anonymous false
+listener 1883
+listener 9001
+ protocol websockets
+persistence false
+password_file /mosquitto/config/pwfile
+log_type all
+
+# Bridge to public Meshtastic broker
+connection meshtastic_public
+address mqtt.meshtastic.org:1883
+remote_username meshdev
+remote_password CHANGEME
+clientid cnjmesh1-CJG2-bridge
+topic msh/US/2/e/CentralNJ/# out 0
+topic msh/US/2/json/CentralNJ/# out 0
+cleansession true
+try_private false
+notifications false
+bridge_attempt_unsubscribe false
+bridge_protocol_version mqttv311
+restart_timeout 10
+
+
+# Bridge from Ocean County Mesh (inbound only)
+connection oceancounty
+address mqtt.oceancountyme.sh:8883
+remote_username oceanmesh
+remote_password CHANGEME
+clientid cnjmesh1-oceancounty-bridge
+topic msh/US/# in 0
+bridge_insecure true
+cleansession true
+try_private false
+notifications false
+bridge_attempt_unsubscribe false
+bridge_protocol_version mqttv311
+restart_timeout 10
+
+# Bridge from Liam Cottle's broker (inbound only)
+connection liamcottle
+address mqtt.meshtastic.liamcottle.net:1883
+remote_username uplink
+remote_password CHANGEME
+clientid cnjmesh1-liamcottle-bridge
+topic msh/# in 0
+cleansession true
+try_private false
+notifications false
+bridge_attempt_unsubscribe false
+bridge_protocol_version mqttv311
+restart_timeout 10
+
+# Bridge from SJMesh (inbound only)
+connection sjmesh
+address mqtt.sjmesh.net:1883
+remote_username meshuser
+remote_password CHANGEME
+clientid cnjmesh1-sjmesh-bridge
+topic msh/US/# in 0
+cleansession true
+try_private false
+notifications false
+bridge_attempt_unsubscribe false
+bridge_protocol_version mqttv311
+restart_timeout 10
+
+# Bridge to MeshOmatic (outbound only)
+connection meshomatic
+address us-east.meshomatic.net:31883
+remote_username user_somog
+remote_password CHANGEME
+clientid cnjmesh1-meshomatic-bridge
+topic meshcore/# out 0
+cleansession true
+try_private false
+notifications false
+bridge_attempt_unsubscribe false
+bridge_protocol_version mqttv311
+restart_timeout 10
