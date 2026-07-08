@@ -8,3 +8,4 @@ venv/
 *.env
 !*.env.example
 mosquitto-cnjmesh1.conf.real
+contacts_archive.json
