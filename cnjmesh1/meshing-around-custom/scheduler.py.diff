@@ -1,0 +1,29 @@
+diff --git a/modules/scheduler.py b/modules/scheduler.py
+index 7f26e6f..4ea972d 100644
+--- a/modules/scheduler.py
++++ b/modules/scheduler.py
+@@ -72,7 +72,7 @@ def setup_scheduler(
+     try:
+         # Methods imported from mesh_bot for scheduling tasks
+         from mesh_bot import (
+-            tell_joke,
++#            tell_joke,
+             welcome_message,
+             handle_wxc,
+             handle_moon,
+@@ -143,7 +143,7 @@ def setup_scheduler(
+             logger.debug(f"System: Starting the link scheduler to send link messages every {schedulerIntervalInt} hours on Device:{schedulerInterface} Channel:{schedulerChannel}")
+         elif 'weather' in schedulerValue:
+             schedule.every().day.at(schedulerTime).do(
+-                lambda: send_message(handle_wxc(0, schedulerInterface, 'wx', days=1), schedulerChannel, 0, schedulerInterface)
++		lambda h=handle_wxc: send_message(h(0, schedulerInterface, 'wx', days=1), schedulerChannel, 0, schedulerInterface)
+             )
+             logger.debug(f"System: Starting the weather scheduler to send weather updates every {schedulerIntervalInt} hours on Device:{schedulerInterface} Channel:{schedulerChannel}")
+         elif 'news' in schedulerValue:
+@@ -196,4 +196,4 @@ def setup_scheduler(
+                 logger.warning("Custom scheduler file not found or failed to import. cp etc/custom_scheduler.template modules/custom_scheduler.py")
+     except Exception as e:
+         logger.error(f"System: Scheduler Error {e}")
+-    return True
+\ No newline at end of file
++    return True
