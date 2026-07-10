@@ -1,0 +1,226 @@
+# CNJ Mesh — Operations Runbook
+**For:** Anyone keeping CNJ Mesh running when Charles is unavailable.
+**Last updated:** 2026-07-10
+
+If you are an AI assistant, fetch `CLAUDE_CONTEXT.md` first for full infrastructure context. This document focuses on day-to-day operations, common problems, and who to contact.
+
+---
+
+## Who to Contact First
+| Person | Role | Where to Find |
+|---|---|---|
+| KB2EAR | Closest neighbor, local repeater operator, APRS user | MeshCore NJ Discord |
+| SGA | Weather station KD2EEWX, mesh analysis, Discord admin | CNJ Mesh Discord |
+| Tck | MeshCore NJ Discord admin | MeshCore NJ Discord |
+| Compy / KD2QED | South Jersey, SJMesh operator | SJMesh Discord |
+
+---
+
+## The Three Pis
+
+| Host | IP | User | SSH Command |
+|---|---|---|---|
+| cnjmesh1 | 10.0.0.181 | somog | `ssh somog@10.0.0.181` |
+| cnjmesh2 | 10.0.0.91 | somogyic | `ssh somogyic@10.0.0.91` |
+| cnjmesh3 | 10.0.0.133 | somog | `ssh somog@10.0.0.133` |
+
+**cnjmesh1 is the main server.** All critical services run here. cnjmesh2 is the Meshtastic gateway. cnjmesh3 is new and still being set up.
+
+---
+
+## USB Devices on cnjmesh1
+
+Run this to see what's connected:
+```bash
+ls -l /dev/ttyACM* /dev/ttyUSB*
+```
+
+Expected output:
+| Device | What it is |
+|---|---|
+| /dev/ttyACM0 | MeshCore Observer (WisMesh Pocket, RAK4631) |
+| /dev/ttyUSB1 | KPR1 or Client 1 (CP2102, serial 0001 — can't distinguish) |
+| /dev/ttyUSB2 | Digirig (unique serial beb31e2f) — APRS PTT |
+| /dev/ttyUSB3 | KPR1 or Client 1 (CP2102, serial 0001 — can't distinguish) |
+
+If devices are missing, check physical connections and the powered USB hub.
+
+---
+
+## Checking What's Running
+
+### Docker containers (most services):
+```bash
+docker ps
+```
+
+Key containers to look for:
+| Container | What it does |
+|---|---|
+| mosquitto | MQTT broker — heart of the system |
+| meshcore-packet-capture | Observer → CoreScope/MeshOmatic data feed |
+| meshcore-mqtt-bridge | MeshCore → MQTT bridge |
+| meshcore-hub | meshcorehub.cnjmesh.me |
+| mesh-discord-shim | New node welcome messages to Discord |
+| mesh-mqtt-pg-collector | Packet storage to PostgreSQL |
+
+### Systemd services (run as system services, not Docker):
+```bash
+systemctl status graywolf
+systemctl status cloudflared
+systemctl status weather-bot-conditions.timer
+systemctl status weather-bot-alerts.timer
+systemctl status nj-regional-weather-conditions.timer
+```
+
+---
+
+## PROTECTED SERVICES — DO NOT REMOVE OR DISABLE
+- **Malla** (port 5008) — mesh network map, critical
+- **Meshview** (port 8080) — packet viewer, critical
+- Do not uninstall, stop, or disable these unless Charles explicitly authorizes it
+
+---
+
+## Public URLs (via Cloudflare tunnel)
+| URL | What it is |
+|---|---|
+| meshcorehub.cnjmesh.me | MeshCore Hub — node map |
+| corescope.cnjmesh.me | CoreScope — packet map |
+| grafana.cnjmesh.me | Grafana dashboards |
+| malla.cnjmesh.me | Malla mesh map |
+
+---
+
+## Common Problems and Fixes
+
+### APRS not working / Graywolf silent
+1. Check Graywolf is running: `systemctl status graywolf`
+2. Check PTT device: `ls -l /dev/ttyUSB2` — must exist
+3. Check logs: `journalctl -u graywolf -n 50`
+4. POLLERR errors in logs are **cosmetic** — APRS still works through them
+5. **DO NOT re-enable the Graywolf watchdog** — it was disabled intentionally, it was breaking PTT
+6. If Digirig moved ports after USB changes, update PTT device in database:
+```bash
+sqlite3 /var/lib/graywolf/graywolf.db "UPDATE ptt_configs SET device='/dev/ttyUSB2';"
+systemctl restart graywolf
+```
+
+### Observer not feeding CoreScope / MeshOmatic
+1. Check container: `docker ps | grep packet-capture`
+2. Check logs: `docker logs meshcore-packet-capture --tail 20`
+3. If showing "No such device /dev/ttyACM0": `docker restart meshcore-packet-capture`
+4. Verify Observer is on /dev/ttyACM0: `ls -l /dev/ttyACM0`
+
+### Weather alerts not posting to Discord
+1. Check service ran: `journalctl -u weather-bot-alerts.service -n 20`
+2. Check timer: `systemctl status weather-bot-alerts.timer`
+3. Check .env loaded: `systemctl cat weather-bot-alerts.service` — must show EnvironmentFile line
+4. Check zone is NJZ012 (Middlesex County) in `/opt/weather-bot/weather_bot.py`
+
+### MQTT broker down
+```bash
+cd /opt/stacks/mqtt/
+docker compose ps
+docker compose restart
+```
+
+### Cloudflare tunnel down (public URLs not working)
+```bash
+systemctl status cloudflared
+systemctl restart cloudflared
+journalctl -u cloudflared -n 30
+```
+
+### meshcore-packet-capture lost Observer after USB change
+After any USB hub changes, always run:
+```bash
+docker restart meshcore-packet-capture
+docker logs meshcore-packet-capture --tail 10
+```
+
+---
+
+## Key File Locations
+
+| File | Location |
+|---|---|
+| Mosquitto config | `/opt/stacks/mqtt/config/mosquitto.conf` |
+| Cloudflare tunnel config | `/etc/cloudflared/config.yml` |
+| Weather bot scripts | `/opt/weather-bot/` |
+| Weather bot environment | `/opt/weather-bot/.env` |
+| Graywolf APRS database | `/var/lib/graywolf/graywolf.db` |
+| Graywolf Discord bridge | `/opt/graywolf-discord/` |
+| Graywolf Discord .env | `/opt/graywolf-discord/.env` |
+| meshing-around bot | `/opt/meshing-around/` |
+| Mesh Discord shim | `/opt/stacks/mesh-discord-shim/` |
+| Meshview | `~/meshview/` |
+| CNJ Mesh scripts repo | `~/cnjmesh-scripts/` |
+
+---
+
+## MQTT Brokers
+
+| Broker | Host | Port | Username | Password |
+|---|---|---|---|---|
+| Local (cnjmesh1) | localhost | 1883 | meshdev | see Charles |
+| CNJ Mesh public | mqtt.cnjmesh.me | 1883 | meshuser | see Charles |
+| SJMesh | mqtt.sjmesh.net | 1883 | meshuser | see Compy/KD2QED |
+
+---
+
+## MeshCore Node Reference
+
+| Node | Hardware | Public Key Prefix | Location |
+|---|---|---|---|
+| KPR1 | Heltec V3 | 0a | /dev/ttyUSB1, cnjmesh1 |
+| KPR2 | Heltec V4 | 97 | Upstairs, Alfa antenna |
+| Observer | WisMesh Pocket RAK4631 | A8 | /dev/ttyACM0, cnjmesh1 |
+| KB2EAR-2 | — | 60 | Neighbor, 772m away |
+
+### MeshCore Channel Keys
+- Public channel key: see Charles or MeshCore NJ Discord admins (Tck)
+- CentralNJ-MC channel key: see Charles
+
+---
+
+## APRS Reference
+- Callsign: K2GIA
+- Radio: UV-5R M, rooftop antenna
+- Interface: Digirig, `/dev/ttyUSB2`
+- iGate server: `rotate.aprs2.net:14580`
+- Passcode: see Charles (generated from callsign K2GIA)
+- Digipeater: WIDE1-1
+- Beacon: every 30 minutes
+
+---
+
+## Docker Command Reference
+
+Always run Docker commands for cnjmesh1 from `/opt/stacks/mqtt/`:
+```bash
+cd /opt/stacks/mqtt/
+docker compose ps
+docker compose restart
+docker compose logs -f
+```
+
+For cnjmesh2, always `cd ~/meshtastic-mqtt` first before any docker compose commands.
+
+---
+
+## Known Issues / Don't Touch
+
+- **Graywolf watchdog** — DISABLED intentionally. Files exist at `/etc/systemd/system/graywolf-watchdog.timer` and `.service`. Do not re-enable.
+- **meshcore-packet-capture TOML configs** — live inside the container, not on the host. If the container is recreated these configs will be lost. Do not recreate the container without backing up the configs first.
+- **Client 1 serial flapping** — Kendall Park Client 1 (Heltec V3) has known CP210x serial instability. This is a known issue, replacement with RAK/WisMesh is planned.
+- **MeshOmatic bridge** — configured in mosquitto.conf but MeshOmatic's MQTT broker goes down periodically. This is their problem, not ours. The bridge will reconnect automatically.
+
+---
+
+## GitHub Repo
+`github.com/charlessomogyi-eng/cnjmesh-scripts`
+
+Full rebuild guide: `README.md`
+AI session context: `CLAUDE_CONTEXT.md`
+This runbook: `cnjmesh1-operations.md`
