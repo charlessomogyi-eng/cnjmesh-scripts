@@ -22,7 +22,7 @@ PWS_API_URL       = (
     f"?client_id={PWS_CLIENT_ID}&client_secret={PWS_CLIENT_SECRET}"
 )
 
-NWS_ZONE        = "NJZ107"
+NWS_ZONE        = "NJZ012"
 NWS_ALERTS_URL  = f"https://api.weather.gov/alerts/active?zone={NWS_ZONE}"
 NWS_POINTS_URL  = "https://api.weather.gov/points/40.4187,-74.5607"
 

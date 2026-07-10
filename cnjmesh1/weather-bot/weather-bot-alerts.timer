@@ -1,0 +1,11 @@
+[Unit]
+Description=CNJ Mesh Weather Bot — NWS Alerts (every 15 min)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=15min
+AccuracySec=30sec
+Persistent=true
+
+[Install]
+WantedBy=timers.target

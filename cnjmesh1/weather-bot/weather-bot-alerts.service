@@ -1,0 +1,12 @@
+[Unit]
+Description=CNJ Mesh Weather Bot — NWS Alerts
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/opt/weather-bot/.env
+Type=oneshot
+User=somog
+ExecStart=/usr/bin/python3 /opt/weather-bot/weather_bot.py alerts
+StandardOutput=journal
+StandardError=journal
