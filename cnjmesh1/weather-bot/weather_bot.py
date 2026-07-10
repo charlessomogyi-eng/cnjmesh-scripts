@@ -27,6 +27,8 @@ NWS_ALERTS_URL  = f"https://api.weather.gov/alerts/active?zone={NWS_ZONE}"
 NWS_POINTS_URL  = "https://api.weather.gov/points/40.4187,-74.5607"
 
 DISCORD_WEBHOOKS = [os.environ["WEATHER_WEBHOOK_1"], os.environ["WEATHER_WEBHOOK_2"]]
+ALERT_WEBHOOKS   = [os.environ["WEATHER_WEBHOOK_1"], os.environ["WEATHER_WEBHOOK_2"],
+                    os.environ["NORTH_WEBHOOK"], os.environ["SOUTH_WEBHOOK"]]
 
 STATE_FILE      = Path("/var/lib/weather-bot/state.json")
 LOG_FILE        = "/var/log/weather-bot.log"
@@ -56,9 +58,9 @@ def save_state(state: dict):
     except Exception as e:
         log.warning(f"Could not save state: {e}")
 
-def post_to_discord(embeds: list):
+def post_to_discord(embeds: list, webhooks: list = None):
     payload = {"embeds": embeds}
-    for url in DISCORD_WEBHOOKS:
+    for url in (webhooks or DISCORD_WEBHOOKS):
         try:
             r = requests.post(url, json=payload, timeout=10)
             r.raise_for_status()
@@ -240,7 +242,7 @@ def run(mode: str):
 
         if new_embeds:
             log.info(f"Posting {len(new_embeds)} new alert(s)")
-            post_to_discord(new_embeds)
+            post_to_discord(new_embeds, ALERT_WEBHOOKS)
             posted_ids.update(new_ids)
             state["posted_alert_ids"] = list(posted_ids)[-50:]
             save_state(state)
