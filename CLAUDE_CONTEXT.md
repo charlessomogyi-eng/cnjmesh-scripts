@@ -167,3 +167,10 @@ Say **"read my GitHub context file"** and Claude will run:
 curl -s https://raw.githubusercontent.com/charlessomogyi-eng/cnjmesh-scripts/main/CLAUDE_CONTEXT.md
 ```
 No re-explaining needed.
+
+## How to End Each Claude Session
+At the end of every session, Claude must:
+1. Update the todo list in this file with completed items and any new items
+2. Update the "What Was Done" section with changes made this session
+3. Push the updated file to GitHub using the token Charles provides
+4. Remind Charles to provide his GitHub token if not already given
