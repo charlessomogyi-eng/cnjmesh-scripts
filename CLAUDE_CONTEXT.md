@@ -101,7 +101,16 @@ docker run -d \
 | SJMesh | mqtt.sjmesh.net:1883 | meshuser / mesh4life |
 | MeshOmatic | us-east.meshomatic.net:31883 | user_somog / (in mosquitto.conf) |
 
-### Key Config Notes
+### MQTT Public Access — CONFIRMED PLAN: Cloudflare Tunnel WSS
+**Decided 2026-07-12.** Public MQTT access on `mqtt.cnjmesh.me` will use **Cloudflare Tunnel with WebSocket Secure (WSS) over port 443** — same pattern already used for CoreScope and MeshCore Hub. This means:
+- **No router port forwarding.** Port 1883 stays closed on the Xfinity router — no change needed there.
+- **No public DNS A record pointing at the home IP.** Traffic routes through the existing Cloudflare tunnel (`a05e5efa-8c67-48f8-a71c-833f5258dfce`), same as other public services.
+- Mosquitto needs a WebSocket listener added (separate from the existing plain-TCP 1883 listener) in `/opt/stacks/mqtt/config/mosquitto.conf`, and `cloudflared`'s `config.yml` needs an ingress rule routing `mqtt.cnjmesh.me` to that WebSocket listener.
+- Credentials (`meshuser`/`large4cats`) should still be rotated before this goes live publicly, per the original plan — WSS doesn't remove the need for that, it just removes the router/firewall exposure.
+- **This supersedes any earlier mention of port-forwarding + Cloudflare DNS A record** — that approach is not being used.
+- Not yet implemented — current state of `mosquitto.conf` and `cloudflared/config.yml` needs to be checked before making changes.
+
+
 - **Graywolf PTT:** `/dev/ttyUSB2`, `serial_rts`, stored in `/var/lib/graywolf/graywolf.db` table `ptt_configs` column `device`
 - **Graywolf watchdog DISABLED** — was restarting every 5 min breaking PTT. Do NOT re-enable.
 - **POLLERR errors are cosmetic** — APRS works through them
@@ -140,7 +149,8 @@ docker run -d \
 4. NWS Middlesex focused forecasts for north/south channels
 5. Add meshcore-packet-capture health check / auto-restart on Observer disconnect
 6. Rotate the GitHub PAT that was pasted into chat this session (still valid, but exposed)
-7. Reconcile "Part 96" status doc details into this file — especially the confirmed **Cloudflare Tunnel WSS** approach for public MQTT (supersedes port-forward/DNS-A-record described below), plus community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api)
+7. Reconcile remaining "Part 96" status doc details into this file — community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api). (Cloudflare Tunnel WSS decision now confirmed and documented above — that part is done.)
+8. Implement Cloudflare Tunnel WSS for public MQTT — add WebSocket listener to mosquitto.conf, add ingress rule to cloudflared config.yml, rotate meshuser/large4cats credentials before going live. Good candidate for Claude Code on cnjmesh1 (needs reading + coordinated edits across two config files).
 
 ### Back Burner
 - Remove dead MeshOmatic section from mosquitto.conf — verify first
@@ -149,21 +159,21 @@ docker run -d \
 - Rotate MeshOmatic password — low priority
 
 ### Medium Projects
-8. Node tagging in hub (KPR1, KPR2, Observer)
-9. KPR1 retirement decision
-10. Discord server security review
-11. APRS Discord silent-alert monitor
-12. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
-13. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
-14. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
+9. Node tagging in hub (KPR1, KPR2, Observer)
+10. KPR1 retirement decision
+11. Discord server security review
+12. APRS Discord silent-alert monitor
+13. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
+14. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
+15. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
 
 ### Longer Projects
-15. cnjmesh3 full setup — awaiting replacement Pi 3B+
-16. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
-17. Client 1 replacement with RAK/WisMesh
-18. Cross-mesh bridge via mesh-api
-19. MeshOmatic relay script
-20. KPR2 watchdog
+16. cnjmesh3 full setup — awaiting replacement Pi 3B+
+17. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
+18. Client 1 replacement with RAK/WisMesh
+19. Cross-mesh bridge via mesh-api
+20. MeshOmatic relay script
+21. KPR2 watchdog
 
 ---
 
