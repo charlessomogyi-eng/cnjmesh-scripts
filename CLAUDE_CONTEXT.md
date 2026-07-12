@@ -121,9 +121,17 @@ docker run -d \
 - Discord category `mesh-to-discord-relays-no-public` created ✅
 - cnjmesh3 original Pi unit faulty — returning to vendor, replacement Pi 3B+ needed
 
+## What Was Done — July 12, 2026 (later session)
+- **SSH key auth set up for GitHub on cnjmesh1** ✅ — generated `~/.ssh/id_ed25519_github`, added to GitHub account, configured `~/.ssh/config`, switched `~/cnjmesh-scripts` remote from HTTPS to SSH. Token-free push/pull confirmed working end-to-end.
+- **cnjmesh1 backup script created and tested** ✅ — `scripts/cnjmesh1-backup.sh`. Backs up `/opt/stacks/`, meshing-around, graywolf-discord, cloudflared config, graywolf.db, mesh-discord-shim seen_nodes.db, and a full `pg_dumpall` of the mesh-mqtt-pg-collector Postgres DB (container: `mesh-mqtt-pg-collector-postgres-1`, user/db: `meshtastic`). Fixed initial failure — script now reads `POSTGRES_USER`/`POSTGRES_PASSWORD` from the container's own env instead of assuming defaults. Verified dump output is non-empty (238k+ lines).
+- **Backup runbook documented** ✅ — `docs/backup-runbook.md`. Covers what's backed up, what's not (SD card image, unmounted Docker volumes), when to run it (ad hoc, before risky changes), and manual restore steps.
+- **PowerShell pull script created and tested** ✅ — `scripts/pull-cnjmesh1-backup.ps1`. Runs on Charles's laptop, finds latest backup via SSH, skips if already downloaded, pulls via `scp` into `OneDrive\Documents\cnjmesh-backups\` for automatic OneDrive sync. Confirmed working via right-click "Run with PowerShell" (direct `.\script.ps1` invocation blocked by an execution policy above CurrentUser scope, likely machine/Group Policy — not resolved, but right-click method works fine so not pursued further).
+- **Note:** a GitHub PAT was pasted into chat during this session and used for a couple of pushes before SSH was fully working. It's still valid (Charles's policy: 90-day PATs are fine to let expire naturally) but should be considered exposed since it appeared in chat text.
+- **Open item:** an uploaded status doc ("Part 96", from a prior chat) contained additional details not yet reconciled into this file — notably that Charles's session that day confirmed **Cloudflare Tunnel WSS** (not port-forwarding + DNS A record) as the plan for public MQTT access on `mqtt.cnjmesh.me`. This file's MQTT section below still describes the port-forward approach and needs updating. Also unreconciled: fuller KPR1 pubkey (`0acd65fb`), Digirig audio bus ID, community contact notes (Tilly, y0gurt, ozneteast, Tck, KB2EAR, OC, Compy), and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api, docker-mqtt-mosquitto-cloudflare-tunnel).
+
 ---
 
-## Todo List (Priority Order) — Last updated 2026-07-12
+## Todo List (Priority Order) — Last updated 2026-07-12 (later session)
 
 ### Quick Wins
 1. Invite NJ MeshCore operators to join meshcore-nj-mqtt channel (share QR from meshcorehub.cnjmesh.me/channels)
@@ -131,6 +139,8 @@ docker run -d \
 3. NWS alerts for MeshCore NJ Discord — verify on next real alert
 4. NWS Middlesex focused forecasts for north/south channels
 5. Add meshcore-packet-capture health check / auto-restart on Observer disconnect
+6. Rotate the GitHub PAT that was pasted into chat this session (still valid, but exposed)
+7. Reconcile "Part 96" status doc details into this file — especially the confirmed **Cloudflare Tunnel WSS** approach for public MQTT (supersedes port-forward/DNS-A-record described below), plus community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api)
 
 ### Back Burner
 - Remove dead MeshOmatic section from mosquitto.conf — verify first
@@ -139,21 +149,21 @@ docker run -d \
 - Rotate MeshOmatic password — low priority
 
 ### Medium Projects
-6. Node tagging in hub (KPR1, KPR2, Observer)
-7. KPR1 retirement decision
-8. Discord server security review
-9. APRS Discord silent-alert monitor
-10. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
-11. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
-12. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
+8. Node tagging in hub (KPR1, KPR2, Observer)
+9. KPR1 retirement decision
+10. Discord server security review
+11. APRS Discord silent-alert monitor
+12. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
+13. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
+14. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
 
 ### Longer Projects
-13. cnjmesh3 full setup — awaiting replacement Pi 3B+
-14. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
-15. Client 1 replacement with RAK/WisMesh
-16. Cross-mesh bridge via mesh-api
-17. MeshOmatic relay script
-18. KPR2 watchdog
+15. cnjmesh3 full setup — awaiting replacement Pi 3B+
+16. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
+17. Client 1 replacement with RAK/WisMesh
+18. Cross-mesh bridge via mesh-api
+19. MeshOmatic relay script
+20. KPR2 watchdog
 
 ---
 
