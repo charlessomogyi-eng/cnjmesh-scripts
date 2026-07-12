@@ -69,8 +69,11 @@ fi
 echo "[6/6] Dumping Postgres database ..."
 PG_CONTAINER=$(docker ps --format '{{.Names}}' | grep -i postgres || true)
 if [ -n "${PG_CONTAINER}" ]; then
+    PG_USER=$(docker inspect "${PG_CONTAINER}" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep '^POSTGRES_USER=' | cut -d= -f2)
+    PG_USER=${PG_USER:-postgres}
     mkdir -p "${STAGING_DIR}/postgres-dump"
-    docker exec "${PG_CONTAINER}" pg_dumpall -U postgres > "${STAGING_DIR}/postgres-dump/pg_dumpall.sql" 2>/dev/null \
+    docker exec -e PGPASSWORD="$(docker inspect "${PG_CONTAINER}" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep '^POSTGRES_PASSWORD=' | cut -d= -f2)" \
+        "${PG_CONTAINER}" pg_dumpall -U "${PG_USER}" > "${STAGING_DIR}/postgres-dump/pg_dumpall.sql" 2>/dev/null \
         || echo "  WARNING: pg_dumpall failed - check Postgres container name/credentials"
 else
     echo "  No Postgres container found running - skipping"
