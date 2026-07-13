@@ -182,14 +182,15 @@ docker run -d \
 14. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
 15. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
 16. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
+17. Upgrade Meshtastic gateway nodes CJG1 and CJG2 firmware — must be done via serial connection (USB), not WiFi/OTA, since WiFi connections to these nodes have been inconsistent. Hoping new firmware resolves the WiFi instability itself. CJG1 (Heltec V4, !0aca423c, 10.0.0.18, feeds cnjmesh2) and CJG2 (Heltec V3, !9ea3e8d4, 10.0.0.234, feeds cnjmesh1) — CJG2 has known prior WiFi instability history per existing notes.
 
 ### Longer Projects
-17. cnjmesh3 full setup — awaiting replacement Pi 3B+
-18. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
-19. Client 1 replacement with RAK/WisMesh
-20. Cross-mesh bridge via mesh-api
-21. MeshOmatic relay script
-22. KPR2 watchdog
+18. cnjmesh3 full setup — awaiting replacement Pi 3B+
+19. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
+20. Client 1 replacement with RAK/WisMesh
+21. Cross-mesh bridge via mesh-api
+22. MeshOmatic relay script
+23. KPR2 watchdog
 
 ---
 
