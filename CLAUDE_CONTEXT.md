@@ -158,14 +158,15 @@ docker run -d \
 
 
 ### Quick Wins
-1. Invite NJ MeshCore operators to join meshcore-nj-mqtt channel (share QR from meshcorehub.cnjmesh.me/channels)
-2. Get Tilly and y0gurt to point their observers at mqtt.cnjmesh.me
-3. NWS alerts for MeshCore NJ Discord — verify on next real alert
-4. NWS Middlesex focused forecasts for north/south channels
-5. Add meshcore-packet-capture health check / auto-restart on Observer disconnect
-6. Rotate the GitHub PAT that was pasted into chat this session (still valid, but exposed)
-7. Reconcile remaining "Part 96" status doc details into this file — community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api)
-8. Rotate meshuser/large4cats (and/or meshdev/large4cats) MQTT credentials now that mqtt.cnjmesh.me is publicly reachable over WSS
+1. **Explore LetsMesh.net integration** — see `docs/letsmesh-and-ozneteast-notes.md` for full research and starting point. Decided 2026-07-12 to pursue this path over (or alongside) the custom mqtt.cnjmesh.me broker for reaching other regional operators.
+2. Invite NJ MeshCore operators to join meshcore-nj-mqtt channel (share QR from meshcorehub.cnjmesh.me/channels)
+3. Get Tilly and y0gurt to point their observers at mqtt.cnjmesh.me — or, per LetsMesh pivot, help them set up as LetsMesh observers with correct NJ IATA code instead
+4. NWS alerts for MeshCore NJ Discord — verify on next real alert
+5. NWS Middlesex focused forecasts for north/south channels
+6. Add meshcore-packet-capture health check / auto-restart on Observer disconnect
+7. Rotate the GitHub PAT that was pasted into chat this session (still valid, but exposed)
+8. Reconcile remaining "Part 96" status doc details into this file — community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api)
+9. Rotate meshuser/large4cats (and/or meshdev/large4cats) MQTT credentials now that mqtt.cnjmesh.me is publicly reachable over WSS
 
 ### Back Burner
 - Remove dead MeshOmatic section from mosquitto.conf — verify first
@@ -174,21 +175,21 @@ docker run -d \
 - Rotate MeshOmatic password — low priority
 
 ### Medium Projects
-9. Node tagging in hub (KPR1, KPR2, Observer)
-10. KPR1 retirement decision
-11. Discord server security review
-12. APRS Discord silent-alert monitor
-13. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
-14. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
-15. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
+10. Node tagging in hub (KPR1, KPR2, Observer)
+11. KPR1 retirement decision
+12. Discord server security review
+13. APRS Discord silent-alert monitor
+14. T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
+15. LoRa APRS 433MHz arriving July 14 — configure 433.775/62.5kHz
+16. Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
 
 ### Longer Projects
-16. cnjmesh3 full setup — awaiting replacement Pi 3B+
-17. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
-18. Client 1 replacement with RAK/WisMesh
-19. Cross-mesh bridge via mesh-api
-20. MeshOmatic relay script
-21. KPR2 watchdog
+17. cnjmesh3 full setup — awaiting replacement Pi 3B+
+18. cnjmesh3 becomes upstairs RF hub — Observer + KPR2 + LoRa APRS node
+19. Client 1 replacement with RAK/WisMesh
+20. Cross-mesh bridge via mesh-api
+21. MeshOmatic relay script
+22. KPR2 watchdog
 
 ---
 
