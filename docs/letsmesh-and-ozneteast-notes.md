@@ -91,8 +91,22 @@ Charles signed up for both `analyzer.letsmesh.net` (the map/dashboard) and `foru
 ## Packet Type Reference (from live Analyzer feed UI)
 Available filter types on the Packets feed: Request, Response, TextMessage, Ack, **Advert** (the one that matters for map visibility), GroupText, GroupData, AnonRequest, Path, Trace, Multipart, Control, RawCustom, Unknown.
 
+## Live Verification — ABE (LV Mesh) Confirmed Active (2026-07-12, evening)
+Searched and confirmed **ABE (Lehigh Valley International, PA)** is LV Mesh's IATA code — checked "nj" search first (returned false matches: CNJ = Cloncurry Australia, coincidental letter match, not NJ). ABE, filtered to "Public" channel, showed **500 live packets**, mostly `GroupText` type, arriving multiple times per minute. This is solid proof-of-concept that the whole LetsMesh pipeline works end-to-end — this is what CNJ Mesh's own EWR feed should look like once connected tomorrow.
 
-1. Find the correct IATA code for Central NJ: `https://analyzer.letsmesh.net/map/iata`
+**EWR was double-checked as genuinely empty** (not a filter artifact) — confirmed 0 packets under both "All Channels" and "Public" channel filter states. CNJ Mesh would be the first observer under the EWR code — not joining an existing cluster.
+
+**Important limitation to communicate to anyone asked to test:** MeshCore's community MQTT/observability layer (LetsMesh included) is **read-only by design** — "MeshCore does not allow for messages to enter the mesh via MQTT nodes." This confirms and generalizes what ozneteast told Charles earlier (he could publish local traffic out, but not relay MQTT traffic back over RF) — it's a structural limitation of the whole ecosystem, not specific to any one setup. Set expectations accordingly when sharing connection info with others.
+
+## Public, No-Login-Required Resources (safe to share in Discord)
+- **`analyzer.letsmesh.net/guide/meshcore-quick-start`** — official LetsMesh quick-start guide, publicly hosted
+- **`github.com/samuk/awesome-meshcore`** — community-curated list of MeshCore resources: official docs, regional Discord servers, forums, mapping/analyzer tools (LetsMesh, MeshMapper, and others), client apps, firmware projects. Good single link to share broadly rather than explaining everything individually.
+
+## Discord Landscape
+No dedicated LetsMesh-specific Discord found — their community lives primarily on `forum.letsmesh.net`. However there is an **official MeshCore Discord** (meshcore.io) with many regional channels built in. The awesome-meshcore list also shows numerous *regional* community Discords (Boston Mesh, CascadiaMesh, Chicagoland Mesh, CT Mesh, Missouri Mesh, NTXMesh, Spokane Mesh, West Coast Mesh) — no NJ-specific one listed there, which is consistent with CNJ Mesh's own `meshcore-nj-mqtt` Discord channel effectively filling that role already.
+
+## Next Session — Starting Point
+1. ~~Find the correct IATA code for Central NJ~~ — **DONE: EWR confirmed** (see above)
 2. Check if `meshcore-packet-capture` (already running on cnjmesh1) supports
    publishing to multiple brokers simultaneously, or if a second instance /
    `meshcoretomqtt` install is needed
