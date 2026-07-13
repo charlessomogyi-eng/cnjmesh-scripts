@@ -52,7 +52,46 @@ already expect) while keeping mqtt.cnjmesh.me for CNJ-specific tooling
 supports dual-broker publishing, or whether `meshcore-packet-capture` can
 publish to both mqtt.cnjmesh.me and LetsMesh simultaneously.
 
-## Next Session — Starting Point
+## Confirmed Connection Details (found 2026-07-12, evening)
+- **Host:** `mqtt-us-v1.letsmesh.net`
+- **Port:** `443`
+- **Transport:** WebSockets (WSS), TLS enabled — same pattern as mqtt.cnjmesh.me
+- **Auth:** JWT/token-based, tied to your node's own public key — **not** a shared username/password like `meshdev`/`large4cats`. The bridge software (meshcore-packet-capture or meshcoretomqtt) generates/signs this automatically; may require installing `meshcore-decoder` (npm package) on cnjmesh1 if not already present — check before assuming this is a zero-install task.
+- **Topic structure** (auto-handled by bridge software):
+  ```
+  meshcore/{IATA}/{PUBLIC_KEY}/status
+  meshcore/{IATA}/{PUBLIC_KEY}/packets
+  meshcore/{IATA}/{PUBLIC_KEY}/debug
+  ```
+- **IATA code:** not yet determined for Central NJ — look up at `https://analyzer.letsmesh.net/map/iata`
+
+Charles signed up for both `analyzer.letsmesh.net` (the map/dashboard) and `forum.letsmesh.net` (community forum) on 2026-07-12 — account exists, ready to use tomorrow.
+
+## Two Paths to Get On the Map
+1. **Software bridge (likely path — matches existing infra):** `meshcore-packet-capture` (already running on cnjmesh1, feeding the Observer's serial data to mqtt.cnjmesh.me) reportedly supports adding LetsMesh as a second simultaneous broker target — a single observer can publish to multiple brokers at once. This would be a config change, not new infrastructure.
+2. **Firmware-level (alternative, not needed given #1 exists):** Flash "observer-uplink-native-dev" firmware directly onto a Heltec board via the LetsMesh onboarding page, which bakes in WiFi + LetsMesh upload support natively. Per Idaho Mesh's guide (`idahomesh.org/add-a-letsmesh-observer`), you set the IATA code via CLI command, optionally link to your LetsMesh account via email, optionally link to a companion node's public key for public ownership display. This is a from-scratch route — not needed since we already have a working observer/capture pipeline.
+
+## Before/After Verification Checklist
+**Before (baseline, check first):**
+1. `docker logs meshcore-packet-capture --tail 30` on cnjmesh1 — confirm only your own broker connection shows, no LetsMesh mention
+2. Check `analyzer.letsmesh.net/map` filtered to your future NJ region — confirm nothing shows there yet (baseline = empty)
+
+**After implementing:**
+1. Same log command — look for a new connection line to `mqtt-us-v1.letsmesh.net`, ideally "connected"/"subscribed"
+2. `analyzer.letsmesh.net/map` (or the Packets feed, filtered by region and packet type = **Advert**) — your node's advertisement should appear within ~5 minutes of first successful connection (per official onboarding docs: "Your node must have an advertisement heard before it will show up in the map or dropdown, but packet data will still be recorded in the meantime")
+3. Regional observer list (once NJ IATA code is known), same pattern as: `analyzer.letsmesh.net/status/observers?region=BOS` (Boston's version) — check for an NJ-equivalent URL
+
+## Precedent: Regional Communities Running Dual-Broker (LetsMesh + Local)
+**Greater Boston Mesh** is doing exactly the dual-broker pattern being considered for CNJ Mesh — upload to LetsMesh globally *and* their own regional MQTT broker simultaneously, with a public region-filtered observer view. Their setup doc: `bostonme.sh/docs/MeshCore/meshcore-mqtt`. Worth reading as a working example of the exact end-state CNJ Mesh may end up at (LetsMesh + mqtt.cnjmesh.me both running).
+
+## Forum Threads Flagged for Reading (not yet fetched — forum blocks automated access)
+- `forum.letsmesh.net` thread: "Not able to connect to US LM Broker" (General category, ~2 days old as of 2026-07-12) — worth reading in case it surfaces a common connection issue we'd otherwise hit blind
+- `forum.letsmesh.net` thread: "How do I put my self on the mash analyzer map?" (Pacific Northwest category, ~2 days old) — same question we'll have tomorrow; attempted to fetch directly but the forum blocks bot/automated requests (returns a block page) — Charles will need to open these manually in-browser if the answers are needed
+
+## Packet Type Reference (from live Analyzer feed UI)
+Available filter types on the Packets feed: Request, Response, TextMessage, Ack, **Advert** (the one that matters for map visibility), GroupText, GroupData, AnonRequest, Path, Trace, Multipart, Control, RawCustom, Unknown.
+
+
 1. Find the correct IATA code for Central NJ: `https://analyzer.letsmesh.net/map/iata`
 2. Check if `meshcore-packet-capture` (already running on cnjmesh1) supports
    publishing to multiple brokers simultaneously, or if a second instance /
