@@ -101,14 +101,25 @@ docker run -d \
 | SJMesh | mqtt.sjmesh.net:1883 | meshuser / mesh4life |
 | MeshOmatic | us-east.meshomatic.net:31883 | user_somog / (in mosquitto.conf) |
 
-### MQTT Public Access — CONFIRMED PLAN: Cloudflare Tunnel WSS
-**Decided 2026-07-12.** Public MQTT access on `mqtt.cnjmesh.me` will use **Cloudflare Tunnel with WebSocket Secure (WSS) over port 443** — same pattern already used for CoreScope and MeshCore Hub. This means:
-- **No router port forwarding.** Port 1883 stays closed on the Xfinity router — no change needed there.
-- **No public DNS A record pointing at the home IP.** Traffic routes through the existing Cloudflare tunnel (`a05e5efa-8c67-48f8-a71c-833f5258dfce`), same as other public services.
-- Mosquitto needs a WebSocket listener added (separate from the existing plain-TCP 1883 listener) in `/opt/stacks/mqtt/config/mosquitto.conf`, and `cloudflared`'s `config.yml` needs an ingress rule routing `mqtt.cnjmesh.me` to that WebSocket listener.
-- Credentials (`meshuser`/`large4cats`) should still be rotated before this goes live publicly, per the original plan — WSS doesn't remove the need for that, it just removes the router/firewall exposure.
-- **This supersedes any earlier mention of port-forwarding + Cloudflare DNS A record** — that approach is not being used.
-- Not yet implemented — current state of `mosquitto.conf` and `cloudflared/config.yml` needs to be checked before making changes.
+### MQTT Public Access — IMPLEMENTED: Cloudflare Tunnel WSS ✅
+**Completed 2026-07-12.** Public MQTT access on `mqtt.cnjmesh.me` uses **Cloudflare Tunnel with WebSocket Secure (WSS) over port 443** — no port forwarding, no public A record.
+
+**What was configured:**
+- DNS: CNAME `mqtt` → `a05e5efa-8c67-48f8-a71c-833f5258dfce.cfargotunnel.com` (Proxied), added via Cloudflare dashboard
+- Ingress rule added to `/etc/cloudflared/config.yml`: `mqtt.cnjmesh.me` → `http://localhost:9001` (before the `http_status:404` catch-all)
+- `cloudflared` restarted, confirmed active/running with registered tunnel connections
+- Mosquitto's existing WebSocket listener on port 9001 (already present in `mosquitto.conf`, `allow_anonymous false` + password file) handles the traffic — no Mosquitto config changes were needed
+
+**Verification performed:**
+- Local WS test on cnjmesh1: `python3` + `paho-mqtt` (transport="websockets") connecting to `localhost:9001` → Success
+- Public WSS test from cnjmesh1: same script pointed at `mqtt.cnjmesh.me:443` with `tls_set()` → Success (after fixing a `/etc/hosts` gotcha below)
+- Phone test over cellular (WiFi off) using MyMQTT app to `mqtt.cnjmesh.me:443` — reached the server (got a PUBACK decode error, which is expected: MyMQTT doesn't support MQTT-over-WebSocket transport, so it can't complete the handshake — this was a client limitation, not a server problem)
+
+**⚠️ `/etc/hosts` gotcha (fixed):** `/etc/hosts` on cnjmesh1 had a stale entry `172.18.0.2 mosquitto mosquitto.cnjmesh.me f7ae1469a8af mqtt.cnjmesh.me` — an old Docker-internal override that hijacked IPv4 resolution of `mqtt.cnjmesh.me` to a container-internal address (172.18.0.2, not a real Cloudflare IP), causing "connection refused" when testing from cnjmesh1's own shell. IPv6 resolution was unaffected and worked correctly the whole time via real DNS — this was not a general IPv6 problem, just an IPv4-only stale override. Fixed by removing `mqtt.cnjmesh.me` from that line (kept `mosquitto`/`mosquitto.cnjmesh.me` for internal container use). Note: `/etc/hosts` has the immutable attribute set (`chattr +i`, likely due to cloud-init's `manage_etc_hosts`) — future edits need `sudo chattr -i /etc/hosts` first, then `chattr +i` again after editing.
+
+**Still to do:** rotate `meshuser`/`large4cats` (and/or `meshdev`/`large4cats`) credentials before/soon after this is announced publicly, since the broker is now internet-reachable.
+
+
 
 
 - **Graywolf PTT:** `/dev/ttyUSB2`, `serial_rts`, stored in `/var/lib/graywolf/graywolf.db` table `ptt_configs` column `device`
@@ -138,9 +149,13 @@ docker run -d \
 - **Note:** a GitHub PAT was pasted into chat during this session and used for a couple of pushes before SSH was fully working. It's still valid (Charles's policy: 90-day PATs are fine to let expire naturally) but should be considered exposed since it appeared in chat text.
 - **Open item:** an uploaded status doc ("Part 96", from a prior chat) contained additional details not yet reconciled into this file — notably that Charles's session that day confirmed **Cloudflare Tunnel WSS** (not port-forwarding + DNS A record) as the plan for public MQTT access on `mqtt.cnjmesh.me`. This file's MQTT section below still describes the port-forward approach and needs updating. Also unreconciled: fuller KPR1 pubkey (`0acd65fb`), Digirig audio bus ID, community contact notes (Tilly, y0gurt, ozneteast, Tck, KB2EAR, OC, Compy), and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api, docker-mqtt-mosquitto-cloudflare-tunnel).
 
----
+## What Was Done — July 12, 2026 (Claude Code first session)
+- **Claude Code installed on cnjmesh1** ✅ — via npm (`npm install -g @anthropic-ai/claude-code`), v2.1.207, Node v24.14.0. Authenticated via OAuth to charles.somogyi@gmail.com (Claude Pro). Runs from `~/cnjmesh-scripts`, working folder trusted.
+- **Public MQTT over Cloudflare Tunnel WSS — fully implemented and verified** ✅ — see "MQTT Public Access" section above for full detail. DNS CNAME added manually via Cloudflare dashboard (Charles's preference — avoids CLI Cloudflare auth), ingress rule added to cloudflared config.yml via direct bash/Python edit (not Claude Code — Charles opted for direct SSH commands for this one), cloudflared restarted cleanly. Verified working via local WS test, public WSS test, and phone-over-cellular test.
+- **Found and fixed a stale `/etc/hosts` override** ✅ — was hijacking `mqtt.cnjmesh.me` IPv4 resolution to a stale Docker-internal IP, causing false "connection refused" when testing from cnjmesh1's own shell. Not a real IPv6 or DNS problem — see detail above. `/etc/hosts` has immutable attribute (`chattr +i`) due to cloud-init; remember to toggle it off/on around any future manual edits.
+- **paho-mqtt installed** on cnjmesh1 (`pip install paho-mqtt --break-system-packages`) — useful for future MQTT testing/scripting since the packaged `mosquitto_sub` (v2.0.21) lacks WebSocket transport support.
 
-## Todo List (Priority Order) — Last updated 2026-07-12 (later session)
+
 
 ### Quick Wins
 1. Invite NJ MeshCore operators to join meshcore-nj-mqtt channel (share QR from meshcorehub.cnjmesh.me/channels)
@@ -149,8 +164,8 @@ docker run -d \
 4. NWS Middlesex focused forecasts for north/south channels
 5. Add meshcore-packet-capture health check / auto-restart on Observer disconnect
 6. Rotate the GitHub PAT that was pasted into chat this session (still valid, but exposed)
-7. Reconcile remaining "Part 96" status doc details into this file — community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api). (Cloudflare Tunnel WSS decision now confirmed and documented above — that part is done.)
-8. Implement Cloudflare Tunnel WSS for public MQTT — add WebSocket listener to mosquitto.conf, add ingress rule to cloudflared config.yml, rotate meshuser/large4cats credentials before going live. Good candidate for Claude Code on cnjmesh1 (needs reading + coordinated edits across two config files).
+7. Reconcile remaining "Part 96" status doc details into this file — community contact notes and GitHub repos found (MeshCoreDiscordBridge, agessaman MQTT firmware fork, mesh-api)
+8. Rotate meshuser/large4cats (and/or meshdev/large4cats) MQTT credentials now that mqtt.cnjmesh.me is publicly reachable over WSS
 
 ### Back Burner
 - Remove dead MeshOmatic section from mosquitto.conf — verify first
