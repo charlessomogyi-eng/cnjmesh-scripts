@@ -63,7 +63,7 @@ publish to both mqtt.cnjmesh.me and LetsMesh simultaneously.
   meshcore/{IATA}/{PUBLIC_KEY}/packets
   meshcore/{IATA}/{PUBLIC_KEY}/debug
   ```
-- **IATA code:** not yet determined for Central NJ — look up at `https://analyzer.letsmesh.net/map/iata`
+- **IATA code:** **EWR (Newark, US) — confirmed 2026-07-12.** Searching "nj" returns false matches (CNJ = Cloncurry Australia, etc. — coincidental letter match, not NJ). EWR is the correct, verified match for the Central NJ region on the LetsMesh region selector. Not yet checked whether another operator is already using EWR — worth a quick look before committing (not a blocker either way; shared regional code is fine).
 
 Charles signed up for both `analyzer.letsmesh.net` (the map/dashboard) and `forum.letsmesh.net` (community forum) on 2026-07-12 — account exists, ready to use tomorrow.
 
