@@ -230,3 +230,50 @@ At the end of every session, Claude must:
 2. Update the "What Was Done" section with changes made this session
 3. Push the updated file to GitHub using the token Charles provides
 4. Remind Charles to provide his GitHub token if not already given
+
+---
+
+## LoRa APRS / K2GIA-10 — Session July 14-15, 2026
+
+### Infrastructure
+- **K2GIA-10**: LilyGO T3 LoRa32 V1.6.1, reserved IP `10.0.0.74`, firmware CA2RXU_LoRa_iGate v3.2.4. Web UI at `http://10.0.0.74`, login `admin` / blank password (still needs a real password set).
+- **aprs-tnc-web**: browser-based APRS messaging UI, deployed at `/opt/aprs-tnc-web` on cnjmesh1, port 8085. Built as a **local arm64 image** (`aprs-tnc-web-local:latest`) — the upstream `ghcr.io/sq2cpa/aprs-tnc-web` image is amd64-only and fails on the Pi's arm64 with `exec format error`. To rebuild: `cd /opt/aprs-tnc-web/repo && docker build -t aprs-tnc-web-local:latest .`, then `docker-compose.yaml` image line already points at the local tag.
+- **lora-aprs-discord bridge**: `/opt/lora-aprs-discord/`. `.env` holds `DISCORD_WEBHOOK_LORA`, `DISCORD_WEBHOOK_LORA_MESHCORE` (both post to `lora-aprs-70cm` channel in the Central/South NJ Meshtastic Discord and the MeshCore-NJ Discord respectively), `SYSLOG_PORT=1514`.
+
+### KEY ARCHITECTURE FINDING — read before doing more KISS work
+K2GIA-10's KISS TCP server (port 8001) is **TX-injection only**. It accepts frames from a connected KISS client and transmits them over LoRa, but it does **not** echo transmitted or received frames back to any connected client — confirmed via a raw unfiltered 60-second socket sniff during an active message send (zero frames received). The "Accept own frames via KISS" toggle does NOT control this — per the firmware's own wiki, that toggle only affects whether the iGate accepts inbound frames from a TNC app sharing the iGate's own callsign; it's unrelated to echo/monitoring.
+
+**Do not build any future LoRa monitoring/relay tooling on the KISS TCP port.** Use the syslog feed instead (see below).
+
+### Working data source: syslog TX feed
+K2GIA-10's built-in Syslog feature (Configuration page, Syslog section) broadcasts real-time log lines over UDP, including actual TX events with full packet content. Confirmed real-world format for a message-type TX:
+```
+<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - TX / MESSAGE / <FROM> ---> <TO> :<text>{<msgid>
+```
+Beacon-type TX events use a different format (no `MESSAGE /` marker) and are correctly ignored by the current regex.
+
+K2GIA-10's Syslog Server/Port is currently set to `10.0.0.181` (cnjmesh1) port `1514` — previously was `lora.link9.net:1514` (the public LoRa-APRS.live aggregator; that's still a legitimate destination, worth eventually running *both* if a fan-out is wanted).
+
+`lora-aprs-discord-bridge-v2.py` is deployed at `/opt/lora-aprs-discord/lora-aprs-discord-bridge-v2.py`, listens on UDP 1514, parses the MESSAGE format above, posts to both webhooks. **Not yet fully confirmed posting to Discord end-to-end** — last test was interrupted by the ANSRVR/APRS-IS investigation below. Verify this first next session: run the bridge, send a test message via aprs-tnc-web, confirm it actually lands in both Discord channels.
+
+The old KISS-based bridge (`lora-aprs-discord-bridge.py`, v1) is obsolete — left in place but should not be run; superseded by the v2 syslog-based script.
+
+### K2GIA-10 does NOT self-gate its own outgoing messages to APRS-IS
+Confirmed via aprs.fi raw packet history for K2GIA-10 (50+ packets over 24hrs): every single entry was the identical periodic position beacon via `TCPIP*` — none of tonight's test messages (multiple self-addressed tests, a CQ broadcast, and two messages to `ANSRVR` for #APRSThursday) appeared there at all, despite APRS-IS connection being enabled and confirmed connected (`rotate.aprs2.net:14580`, valid passcode, "Gate APRS-IS Messages to RF" also on).
+
+Working theory (not yet verified against firmware source): an iGate's gate-to-IS logic triggers off *received/decoded RF packets*, not off self-originated TX. The periodic beacon is gated via a separate dedicated "send beacon to APRS-IS" path that bypasses RX entirely, which is why beacons reach IS but locally-composed messages don't.
+
+**Open item for next session:** check `richonguzman/LoRa_APRS_iGate` firmware source on GitHub directly to confirm or rule this out before spending money on hardware. If confirmed, the fix is a second, cheap ($15-25) ESP32 LoRa board running the same firmware as an RX-only iGate elsewhere in the house — it would genuinely receive K2GIA-10's real RF transmission (unlike K2GIA-10 hearing itself) and gate it normally. Not yet purchased — Charles wants the source-code check done first given past experience sinking effort into MQTT bridging before verifying feasibility (see May-June 2026 history).
+
+### LoRa RF confirmed genuinely working
+- Radio settings confirmed FCC-compliant: 433.775 MHz, SF12 (RX+TX), CR 4/5, BW 125kHz (RX+TX), 20dBm. Verified via search: no numeric bandwidth cap applies to LoRa's "unspecified digital code" modulation on 70cm under 47 CFR §97.307(f) — the 100kHz limit some people cite only applies to Baudot/AMTOR/ASCII.
+- Syslog TX log entries independently confirm real transmissions matching aprs-tnc-web's retry counts — e.g. a message retried twice showed two separate `TX / MESSAGE` syslog lines.
+- The "Aborted" status on every test message in aprs-tnc-web is expected, not a failure: all tests were self-addressed (to K2GIA-10 itself) or to `ANSRVR` which never received them (see above) — no ACK was ever possible in either case. Not a sign of RF failure.
+- Nearest visible LoRa APRS iGate on lora-aprs.live map: KD2ZHO-2 near Newark/Bloomfield NJ, ~30+ miles away. Realistic likely reason K2GIA-10 hasn't heard anyone in 38+ days: genuine lack of nearby users on this mode/band, not a config problem. Stock antenna range is more like 5-15 miles suburban.
+
+### Also unsubscribed from #APRSThursday HOTG group tonight
+Sent `CQ HOTG ...` test messages to `ANSRVR` (checked in), then sent `U HOTG` to unsubscribe once we determined the check-in likely never reached APRS-IS anyway (per the self-gating issue above). If the check-in silently succeeded despite that, the unsubscribe covers it either way.
+
+### Not yet done (carried over from July 14 handoff, still pending)
+- Roof UHF/VHF antenna swap test for K2GIA-10 (temporarily disconnect UV-5RM, connect K2GIA-10 via PL-259-to-SMA-male adapter) — still the best next real-world range test once/if a second iGate or the source-code check resolves the self-gating question.
+- K2GIA-10 web UI admin password still not set (still `admin`/blank).
