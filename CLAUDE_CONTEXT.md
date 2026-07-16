@@ -277,3 +277,14 @@ Sent `CQ HOTG ...` test messages to `ANSRVR` (checked in), then sent `U HOTG` to
 ### Not yet done (carried over from July 14 handoff, still pending)
 - Roof UHF/VHF antenna swap test for K2GIA-10 (temporarily disconnect UV-5RM, connect K2GIA-10 via PL-259-to-SMA-male adapter) — still the best next real-world range test once/if a second iGate or the source-code check resolves the self-gating question.
 - K2GIA-10 web UI admin password still not set (still `admin`/blank).
+
+---
+
+### CONFIRMED (post-session follow-up): self-gating is a genuine firmware limitation, not a missed setting
+
+Checked richonguzman/LoRa_APRS_iGate wiki and GitHub discussions directly:
+- Wiki, iGate Configuration page: "Enable APRS-IS Connection: to upload all Rx LoRa packets." -- RX only, explicit.
+- Wiki, describing stationMode 2 (what K2GIA-10 runs): "Rx will be sent to APRS-IS, Messages will be sent via Lora." -- confirms the RX-to-IS / TX-to-RF split directly from the developer's own docs.
+- GitHub Discussion #214 ("Add API to send APRS messages from igate") is an OPEN feature request asking the developer to add exactly this capability. Developer response: "sure can do! but give me a few days..." -- confirms this does not exist in the firmware as of the discussion. Not a config we missed; a feature that hasn't been built yet.
+
+**Conclusion: the second RX-only iGate plan is correct and necessary, not a workaround for a misconfiguration.** Cheap ESP32 LoRa board (5-25), same firmware, same LoRa radio params (433.775MHz/SF12/BW125k/CR5) as K2GIA-10, own callsign/SSID, Enable LoRa TX OFF, Enable APRS-IS Connection ON with its own passcode. No KISS/TNC setup needed -- just RX + gate. Can sit anywhere in the house with WiFi/USB power; does not need to run on/through either Pi.
