@@ -342,3 +342,29 @@ If `mosquitto_sub` shows no traffic, problem is upstream (broker/publishers). If
 
 **MeshCore regioning — talking points to bring back to NY/NE Mesh Discord.** Not yet actioned. Key points to raise: (1) push for nested region hierarchy, not flat namespace; (2) geography should win over political boundaries where real communities overlap; (3) don't let a short Discord poll lock in long-term technical naming/hierarchy without seeing a full proposal doc; (4) CNJ Mesh (300+ nodes) is positioned to propose its own regional naming convention (e.g. `us` → `nj` → `cnj`/`nnj`/`snj` → local metro) rather than just adopting another region's scheme; (5) explicit ask for a cross-border NJ/PA tag (e.g. `lv-cnj`) so LVMesh (Pennsylvania, in RF range of CNJ Mesh) doesn't get isolated by a state-line-drawn region boundary. Background: MeshCore's protocol-level regions are sender-chosen, opt-in, non-enforced tags (up to ~32 per repeater) — separate and distinct from MeshMapper's own unrelated "regions" concept (administrative coverage-map boundaries, doesn't affect routing). MeshMapper itself evaluated and deemed not needed for CNJ Mesh — it's a wardriving/drive-tested-coverage tool, different niche than CoreScope/MeshCore Hub/Meshomatic's live monitoring.
 
+
+### cnjmesh3 upstairs RF hub — Observer + KPR2 migration COMPLETE — July 17, 2026
+
+**Completed:**
+- Docker installed on cnjmesh3 (v29.6.2, arm64), confirmed working without sudo (docker group applied).
+- **Observer (WisMesh Pocket v2, RAK4631)** physically relocated upstairs to cnjmesh3, connected via USB at `/dev/ttyACM0` (confirmed via dmesg: `Product: WisCore RAK4631 Board`, serial `06308D8BE14915FD`). `meshcore-packet-capture` deployed via docker run (privileged, --group-add dialout, --device /dev/ttyACM0), config.d copied directly from cnjmesh1 (`10-letsmesh.toml`, `20-meshomatic.toml`, `30-local.toml` — all unchanged, since `30-local.toml` already targeted `10.0.0.181:1883`, which is correct for cnjmesh3 too). Confirmed live: connected to all 4 brokers (letsmesh-us, letsmesh-eu, meshomatic, local), actively capturing real packets with SNR/RSSI data.
+- **KPR2 (Heltec V4 MeshCore repeater)** physically relocated upstairs to cnjmesh3, connected via USB at `/dev/ttyACM1` (confirmed via dmesg: `heltec_wifi_lora_32 v4`, serial `E8F60AC9DEB4`). `meshcore-mqtt` bridge built from source (`git clone https://github.com/ipnet-mesh/meshcore-mqtt.git` → `docker build -t meshcore-mqtt:local .`) since the running instance on cnjmesh1 is a custom local build, not the public ghcr.io image. Deployed via docker run pointed at `/dev/ttyACM1`, MQTT_BROKER=10.0.0.181, using the actual working credentials from cnjmesh1's live container (`meshdev`/`large4cats` — note: this differs from what's in cnjmesh1's `.env.docker` file on disk, which says `meshuser` — the live container was evidently started a different way; `meshdev`/`large4cats` is the confirmed-working pair). Confirmed live: connected to MQTT broker, serial connection to `/dev/ttyACM1` established, subscribed to all configured events.
+
+**Architecture decision (locked in):** Mosquitto broker, MeshCore Hub, and CoreScope all **stay on cnjmesh1** — no reason to run a second broker or move the dashboard/hub services, since cnjmesh3's two new containers just publish outward to cnjmesh1's existing broker over the LAN (`10.0.0.181:1883`). cnjmesh3's role is purely: physically host devices that need a local USB/serial connection (Observer, KPR2), nothing else.
+
+**K2GIA-10 explicitly NOT moved to cnjmesh3** — stays connected to cnjmesh1 via USB for now. Separate, not-yet-started task: physically relocate K2GIA-10 upstairs for antenna height (it's WiFi-based/standalone, no serial dependency on any Pi, so this is purely a placement/antenna task, independent of the cnjmesh3 serial migration).
+
+**Also completed this session (quick hits):**
+- K2GIA-10 web UI admin password set (was blank since initial setup — fixed via toggling "Web interface authentication" off/on to unstick a frozen password field, then setting a real password).
+- graywolf-discord-bridge watchdog confirmed working end-to-end via an actual timer fire (not just a manual script run) — stopped the bridge, waited for the 5-min timer, confirmed both auto-restart and the Discord alert landed correctly.
+
+### New to-dos — July 17, 2026 (post-cnjmesh3-migration)
+
+**Verify CoreScope, MeshCore Hub, and Meshomatic still working correctly after the Observer/KPR2 move.** Charles flagged that Observer was previously registered with Meshomatic and wasn't sure if anything about that registration is tied to Observer's prior physical host (cnjmesh1). Working theory: Observer's Meshomatic/letsmesh registration is tied to the Observer's own identity (IATA code "CNJ", pubkey A8C40BF3) via the packet-capture config, not to which Pi it's physically plugged into — so this should be unaffected by the move. Not yet confirmed live — check next session.
+
+**Add monitoring/watchdogs to cnjmesh3.** Charles uses **UptimeRobot** (not Uptime Kuma) for cnjmesh1's existing monitoring. Neither new cnjmesh3 container (meshcore-packet-capture, meshcore-mqtt-bridge) exposes a web UI/HTTP endpoint, so there's nothing for UptimeRobot's normal pull-based checks to hit. Recommended approach: UptimeRobot **push/heartbeat monitoring** (cnjmesh3 pings UptimeRobot periodically via a cron job) rather than extending the Cloudflare Tunnel to cnjmesh3 — no need to build a fake HTTP endpoint just to satisfy a pull-based checker. Not yet built.
+
+**Cloudflare Tunnel exposure for cnjmesh3 — resolved as not needed for now.** Neither current cnjmesh3 service needs public/Cloudflare access. Revisit only if a future service on cnjmesh3 needs one.
+
+**K2GIA-10 upstairs relocation for antenna height** — not yet started, separate task from the cnjmesh3 serial migration (see above).
+
