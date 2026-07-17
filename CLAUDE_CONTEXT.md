@@ -447,3 +447,29 @@ Charles wants to reach out to Tilly (MeshOmatic admin, based in Old Bridge NJ �
 4. **Confirm CoreScope dashboard is now actually showing live data** (Transmissions/Nodes/Last-24h counts climbing) from the browser/UI itself, not just from log evidence — quick visual sanity check, not yet done.
 5. Everything else carried over from the earlier July 17 entries above (radio tuning, KPR1 retirement, Client 1 replacement, MeshCore regioning talking points, K2GIA-10 upstairs relocation) remains open and untouched tonight.
 
+
+---
+
+## Session addendum — July 17, 2026 (LetsMesh investigation + reference tools)
+
+### LetsMesh map/observer investigation — findings, unresolved
+- Confirmed via `analyzer.letsmesh.net/status/observers?region=CNJ`: "CNJ Mesh Observer" (pubkey A8C40BF3...3A26B975) shows **ONLINE**, region correctly tagged **CNJ** (not JVI — resolves earlier ambiguity from the same-day entry above).
+- LetsMesh map (`analyzer.letsmesh.net/map`) zoomed to NJ shows solid statewide node density — NW corner near Sparta down through Trenton/Philly-Camden area, coastal presence from Sandy Hook down to Atlantic City. Good shareable content for Discord if desired.
+- **Packets page** (`analyzer.letsmesh.net/packets` or similar route) initially showed "0 packets" / "No packets found" with a "Reconnect" button showing red — this was a **disconnected live WebSocket feed**, not a real data problem. Mobile browsers commonly suspend background WebSocket connections when a tab isn't in the foreground; hitting "Reconnect" is the fix, not a config issue on Charles's end.
+- After reconnecting: **Latest 500 Packets, all tagged region CNJ, real current timestamps (~3:40-3:47 PM same day)** — Adverts, TextMessages, GroupText, Responses all actively flowing. This contradicts the earlier-noted "38+ days since last heard a station directly" from Observer's own local syslog — **not reconciled**, worth investigating next session which figure is actually accurate (stale old log line vs. genuinely fresh CNJ regional activity Observer is now hearing).
+- **Still NOT showing on the map itself** despite packets clearly flowing on the Packets page — unresolved, Charles chose not to dig further tonight. Worth checking next session: map-specific filters/toggles, data lag between packets feed and map rendering, or whether map only plots certain packet/node types.
+- **KB2EAR-2 (known-nearby MeshCore repeater, ~772m from Charles per existing notes) is NOT appearing** in the CNJ packet feed — genuinely odd given the very close range. Not urgent, but flagged as worth checking: whether it's simply not advertising in the observed window, a "Group by Hash" deduplication/display quirk, or an "All Observers" filter scoping issue (the packets page may only be showing what Charles's own Observer heard, not what *any* observer heard — needs confirming next session).
+- **Clarified: packet/map data is per-Observer, not a directory of "everyone in the region."** A node only appears if it was actually heard on RF by *some* observer within the displayed dataset — it's not self-reported/opt-in the way a directory listing would be.
+
+### GitHub tools for future MQTT/bridging reference — SAVED, not yet evaluated in depth
+Three projects flagged across earlier sessions as relevant if Charles wants to revisit "open up MQTT communications" further:
+
+1. **agessaman's MQTT firmware fork** — modified MeshCore *repeater* firmware with MQTT support built directly in. This is the only one of the three that could theoretically enable genuine two-way MQTT-to-RF bridging (message in via MQTT, real LoRa transmission out) — the capability stock MeshCore firmware doesn't have. **Status: NOT yet merged upstream.** Would require flashing non-standard firmware onto a repeater, no official community support.
+2. **mr-tbot's mesh-api** — cross-mesh bridging, AI-on-mesh, emergency alerts. Broader scope, not yet actually investigated in any session — only named/filed.
+3. **MeshCoreDiscordBridge (Hude06)** — bidirectional Discord bridge via serial connection. Different problem than MQTT-to-RF bridging (this connects MeshCore directly to Discord, not to another MQTT-based mesh network) — most directly relevant to the new to-do below.
+
+None of these three have been cloned, tested, or evaluated for current maturity/viability — purely reference pointers for a future session.
+
+### New to-do — tinkering project, explicitly low priority
+Charles wants to test: **sending MeshCore messages to a Discord channel and vice versa** (Discord → MeshCore). Explicitly framed as "not important, worth a test for the sake of tinkering" — no urgency, casual experiment. **MeshCoreDiscordBridge (Hude06)** above is the most obviously relevant starting point for this, given it's specifically a bidirectional Discord↔MeshCore bridge via serial — worth looking at first when Charles wants to pick this up.
+
