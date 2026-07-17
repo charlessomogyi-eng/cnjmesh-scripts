@@ -1,7 +1,7 @@
 # CLAUDE_CONTEXT.md — CNJ Mesh
 **For AI assistants:** Fetch this file at the start of every session. It is the authoritative current-state summary of Charles's infrastructure. Do not ask him to re-explain anything documented here. Treat him as an experienced operator. When presenting the todo list, always show ALL items including medium and longer projects — never summarize or truncate. Ask which todo item to start on and get to work.
 
-Last updated: 2026-07-12
+Last updated: 2026-07-17
 
 ---
 
@@ -324,3 +324,21 @@ Important distinction Charles raised and worth keeping straight: the 2nd LoRa iG
 **Replace Kendall Park Client 1 (currently old/junked Heltec V3).** This is the device the meshcore-mqtt bridge on cnjmesh1 connects to via /dev/ttyUSB2 -- already flagged as having a serial flapping issue, already planned for replacement with a Heltec V4 or second WisMesh Pocket (see meshcore-mqtt bridge notes above). New idea from Charles: check if the V3's old case still exists and is intact -- if so, could reuse the V3 itself (not junk it) as a portable/movable MeshCore client rather than buying new hardware for that role. Worth checking case condition before deciding whether to buy new hardware or refurbish the V3.
 
 **Correction logged this session:** MeshCore tooling (Observer, KPR1/KPR2, meshcore-mqtt bridge, CoreScope) does NOT feed Malla or meshview -- those are Meshtastic-only tools fed by CJG1/CJG2 via Mosquitto MQTT. MeshCore has its own separate toolchain (CoreScope, MeshCore Hub, mesh-discord-shim's MeshCore relays). Keep these two ecosystems straight going forward -- don't conflate them.
+
+### New to-dos — July 17, 2026 (from sidebar chat: MeshCore regioning, radio tuning, CoreScope incident, watchdog)
+
+**Radio tuning (KPR1, KPR2, Observer):** Apply the Capital District Mesh radio-tuning whitepaper (cdme.sh/repeaters/radio-tuning-whitepaper) §9.4.2 table to CNJ Mesh repeaters. First step: gather each repeater's current SNR-positive neighbor count (via CoreScope or CLI), then generate the specific `set txdelay` / `set direct.txdelay` / `set rxdelay` values per repeater based on that count. Paper's proposed new static defaults if not doing per-repeater tuning: `txdelay=1.1`, `direct.txdelay=0.5`, `rxdelay=2`. Not yet started — neighbor counts not yet gathered.
+
+**CoreScope data-pipeline outage — diagnosed, not resolved.** Dashboard showing 0 Transmissions/Nodes/Last-24h while historical counts (37 Observers) persist — points to a live ingest failure (MQTT broker connection or CoreScope-side), not the "No packets from meshomatic" banner (confirmed a red herring, Meshomatic contact isn't a CoreScope dependency). Diagnostic commands to run:
+```bash
+docker ps | grep corescope
+docker logs corescope --tail 150 | grep -iE "mqtt|connect|disconnect|error"
+mosquitto_sub -h localhost -p 1883 -t '#' -v -C 10
+docker logs $(docker ps -qf name=mosquitto) --tail 200
+```
+If `mosquitto_sub` shows no traffic, problem is upstream (broker/publishers). If traffic's present but dashboard still zeroed, try `docker restart corescope`.
+
+**Deploy cnj-watchdog.** Built in a separate session (files in that session's outputs: `watchdog.py`, `.env.example`, `cnj-watchdog.service`, `cnj-watchdog.timer`, `README.md`) — a custom Python watchdog that listens briefly on the MQTT broker each run, tracks idle time across runs via `state.json`, checks configured Docker containers, and alerts to Discord only on state change (down→alert, recovered→alert). Chosen over Uptime Kuma specifically because CoreScope's own incident showed its web server stayed up even while the data pipeline was dead — a simple port/HTTP check would have missed it; this watchdog checks the real MQTT data path instead. Not yet deployed. Deployment steps: copy files to `/opt/cnj-watchdog` on cnjmesh1, configure `.env` (real Discord webhook URL + actual container names, confirm via `docker ps --format '{{.Names}}'`), enable systemd timer, verify via `systemctl list-timers` + `journalctl`.
+
+**MeshCore regioning — talking points to bring back to NY/NE Mesh Discord.** Not yet actioned. Key points to raise: (1) push for nested region hierarchy, not flat namespace; (2) geography should win over political boundaries where real communities overlap; (3) don't let a short Discord poll lock in long-term technical naming/hierarchy without seeing a full proposal doc; (4) CNJ Mesh (300+ nodes) is positioned to propose its own regional naming convention (e.g. `us` → `nj` → `cnj`/`nnj`/`snj` → local metro) rather than just adopting another region's scheme; (5) explicit ask for a cross-border NJ/PA tag (e.g. `lv-cnj`) so LVMesh (Pennsylvania, in RF range of CNJ Mesh) doesn't get isolated by a state-line-drawn region boundary. Background: MeshCore's protocol-level regions are sender-chosen, opt-in, non-enforced tags (up to ~32 per repeater) — separate and distinct from MeshMapper's own unrelated "regions" concept (administrative coverage-map boundaries, doesn't affect routing). MeshMapper itself evaluated and deemed not needed for CNJ Mesh — it's a wardriving/drive-tested-coverage tool, different niche than CoreScope/MeshCore Hub/Meshomatic's live monitoring.
+
