@@ -314,3 +314,13 @@ Decision: the new 2nd LoRa APRS RX-only iGate will use an indoor antenna for now
 
 ### Clarified: 2nd LoRa node does NOT fix APRSdroid
 Important distinction Charles raised and worth keeping straight: the 2nd LoRa iGate solves the self-gating problem (messages reaching APRS-IS), but does NOT change APRSdroid's fundamental limitation -- APRSdroid still cannot speak TCP/IP KISS at all (only Bluetooth-Serial TNC, direct APRS-IS, AFSK, Kenwood). K2GIA-10 has no Bluetooth, only TCP KISS. These are two unrelated problems. aprs-tnc-web (browser tool) remains the way to compose/send LoRa APRS messages from a computer; a dedicated tracker board (e.g. T-Deck Plus) remains the option for phone-free standalone messaging, per the original July 14 handoff doc.
+
+---
+
+### New to-dos -- July 16, 2026 (end of session)
+
+**KPR1 retirement.** Charles doesn't want to run 2 MeshCore repeaters going forward, especially with KPR1 stuck in the garage (worse location than KPR2). Plan: retire/decommission KPR1. Not yet scheduled -- needs a session to actually pull it down and update any docs/dashboards referencing it (CoreScope, MeshCore Hub node list, this context file's KPR1 entry, etc.).
+
+**Replace Kendall Park Client 1 (currently old/junked Heltec V3).** This is the device the meshcore-mqtt bridge on cnjmesh1 connects to via /dev/ttyUSB2 -- already flagged as having a serial flapping issue, already planned for replacement with a Heltec V4 or second WisMesh Pocket (see meshcore-mqtt bridge notes above). New idea from Charles: check if the V3's old case still exists and is intact -- if so, could reuse the V3 itself (not junk it) as a portable/movable MeshCore client rather than buying new hardware for that role. Worth checking case condition before deciding whether to buy new hardware or refurbish the V3.
+
+**Correction logged this session:** MeshCore tooling (Observer, KPR1/KPR2, meshcore-mqtt bridge, CoreScope) does NOT feed Malla or meshview -- those are Meshtastic-only tools fed by CJG1/CJG2 via Mosquitto MQTT. MeshCore has its own separate toolchain (CoreScope, MeshCore Hub, mesh-discord-shim's MeshCore relays). Keep these two ecosystems straight going forward -- don't conflate them.
