@@ -368,3 +368,82 @@ If `mosquitto_sub` shows no traffic, problem is upstream (broker/publishers). If
 
 **K2GIA-10 upstairs relocation for antenna height** — not yet started, separate task from the cnjmesh3 serial migration (see above).
 
+
+---
+
+## Session — July 17, 2026 (evening/night): CoreScope root-cause fix, watchdogs, cnjmesh3 completion, community outreach
+
+### CONFIRMED WORKING — Meshomatic, LetsMesh, MeshCore Hub verification after cnjmesh3 migration
+Verified via CoreScope logs that Observer's move to cnjmesh3 did NOT break anything:
+- `[local]` MQTT source connects and subscribes cleanly to the real broker
+- `[meshomatic]` source connected, actively receiving status/foreign-advert traffic
+- Both `letsmesh-us` and `letsmesh-eu` confirmed connected with JWT on-device auth in meshcore-packet-capture logs on cnjmesh3
+- MeshCore Hub (3 containers: collector, web, api) all healthy on cnjmesh1, unaffected
+
+### MAJOR FIND — CoreScope 8+ day data outage: ROOT CAUSE FOUND AND FIXED
+
+**Symptom:** CoreScope dashboard showing 0 Transmissions/0 Nodes/0 Last-24h for 8+ days (12883+ min per the "No packets from meshomatic" banner), while historical counts (37 Observers) persisted. This was the same unresolved issue flagged in an earlier sidebar chat — now actually fixed.
+
+**Root cause:** CoreScope's `local` MQTT source in `/home/somog/meshcore-data/config.json` was configured as `mqtt://localhost:1883`. CoreScope runs its **own embedded MQTT broker** inside its own container (confirmed via `docker exec corescope netstat -tlnp` showing something listening on container-internal port 1883, and the container's port mapping `1884->1883/tcp`). Because CoreScope's container runs in Docker's default `bridge` network mode (isolated network namespace), `localhost:1883` inside that container resolved to **its own internal broker**, not cnjmesh1's real Mosquitto. It was talking to itself — clean connects, clean subscribes, zero real messages, forever. `allow_anonymous false` on the real broker meant an anonymous connection (which is what `local` source was using, no credentials configured) would have failed outright if it had ever actually reached the real broker — it never did, so no auth error ever surfaced either.
+
+**Fix applied:**
+1. Backed up original config: `docker exec corescope cat /app/data/config.json > /tmp/corescope-config-backup.json` (on cnjmesh1)
+2. Confirmed the Docker bridge gateway IP from inside the container: `docker exec corescope ip route | grep default` → `172.17.0.1`
+3. Edited `/home/somog/meshcore-data/config.json` (host-side bind-mounted file) via Python: changed the `local` mqttSources entry's `broker` from `mqtt://localhost:1883` to `mqtt://172.17.0.1:1883`, added `username: meshdev`, `password: large4cats` (same creds already used by other services)
+4. `docker restart corescope`
+5. **Confirmed fixed** — logs show `MQTT [local] connected to tcp://172.17.0.1:1883`, followed by real `foreign advert` and `status` messages flowing in, `[broadcast] sending N packets to N clients` events firing. Dashboard should now show live Transmissions/Nodes/Last-24h counts climbing instead of stuck at zero. This fix persisted through a container restart, confirming it's not just an in-memory fluke.
+
+**Note on the also-broken `lincomatic` and `wsmqtt` mqttSources entries in the same config file:** these are leftover example/template entries with fake credentials (`your-username`/`your-password`, `wsmqtt.example.com`) — NOT real Charles infrastructure, safe to ignore or clean up later, not part of tonight's outage.
+
+### cnj-corescope-watchdog — BUILT AND DEPLOYED (on cnjmesh1)
+New monitoring specifically for the failure mode just found — checks CoreScope's own `[ingestor] [stats] tx_inserted=N ...` log line (printed roughly every 5 min) and alerts if `tx_inserted` stops climbing, which is a genuine "is data actually flowing" check (unlike a port/HTTP check, which would have shown "healthy" the whole 8-day outage since CoreScope's web server stayed up throughout).
+
+Files:
+- `/opt/corescope-watchdog/watchdog.sh`
+- `/opt/corescope-watchdog/state.json` (auto-created, tracks last_value/stall_count/alerted)
+- `/etc/systemd/system/corescope-watchdog.service`
+- `/etc/systemd/system/corescope-watchdog.timer` (OnBootSec=2min, OnUnitActiveSec=5min)
+
+**Alerts post to a NEW dedicated Discord webhook/channel** — `#cnjmesh` in the "CNJ Mesh various meshes" server, webhook created 2026-07-17 by somogyic. This channel is intended going forward as the general home for CNJ-MeshCore-related alerts (not just CoreScope). Webhook URL is in the watchdog script itself (`/opt/corescope-watchdog/watchdog.sh`) — do not lose track of this webhook if that script is ever rebuilt.
+
+**Three real bugs found and fixed while building this script tonight — same watchdog script, three separate root causes, all now resolved:**
+1. `--tail 200` was too shallow — CoreScope logs so many Meshomatic status lines (~1/sec) that 200 lines only covered ~3 min, but `[stats]` only prints every ~5 min. Fixed: bumped to `--tail 2000`.
+2. `2>/dev/null` on the `docker logs corescope` command was discarding almost the entire log stream. **CoreScope logs almost everything to stderr, not stdout** — confirmed via `docker logs corescope --tail 2000 2>/dev/null | wc -l` (32 lines) vs `docker logs corescope --tail 2000 | wc -l` (thousands). Fixed: removed the `2>/dev/null` suppression.
+3. Even after removing `2>/dev/null`, `$LATEST` still came back empty — because bash's `$(...)` command substitution only captures **stdout**, not stderr, by default; removing a redirect just let stderr flow to the terminal instead of being captured. Fixed: added `2>&1` inside the substitution specifically (`docker logs corescope --tail 2000 2>&1 | grep ...`) so stderr gets merged into stdout *before* being captured.
+
+**Confirmed working end to end:** manual run produced a real `state.json` (`{"last_value": 12, "stall_count": 0, "alerted": false}`), timer installed and fired its first scheduled run cleanly.
+
+### cnjmesh3 — Observer + KPR2 migration: FULLY COMPLETE (carried over from earlier tonight, now also verified downstream)
+See the earlier same-day entry above for full build detail (Docker install, physical USB moves, meshcore-packet-capture and meshcore-mqtt-bridge deployment). Tonight's additional confirmation: the whole downstream chain (Meshomatic, LetsMesh, MeshCore Hub, and now CoreScope once its unrelated pre-existing bug was fixed) all correctly receive data that originates from cnjmesh3, proving the "cnjmesh3 publishes outward to cnjmesh1's broker over the LAN" architecture decision was sound.
+
+### Quick hits completed tonight
+- K2GIA-10 web UI real password set (was blank) — required toggling "Web interface authentication" off/on first to unstick a frozen password field
+- graywolf-discord-bridge watchdog: confirmed firing correctly via the actual systemd timer (not just manual script execution) — stopped the bridge, waited for the real 5-min timer, confirmed both auto-restart and Discord alert landed
+- graywolf-discord-bridge watchdog: hostname `cnjmesh1` removed from the alert message text (Charles doesn't want the Pi hostname published to the Discord community) — logic unchanged, `sed` edit only
+
+### Community outreach — Tilly message drafted (NOT YET SENT)
+Charles wants to reach out to Tilly (MeshOmatic admin, based in Old Bridge NJ — east of Kendall Park) about testing MQTT connectivity to `mqtt.cnjmesh.me`. Final drafted message (ready to send, Charles has not sent yet):
+
+> "Hey Tilly — following up on the MQTT bridging convo from a while back. Since you mentioned that goes against MeshCore's core design, I didn't pursue a bridge — but I did make my broker (mqtt.cnjmesh.me) publicly reachable over WSS/port 443 via Cloudflare Tunnel, no port forwarding or VPN needed on your end.
+>
+> If you're up for it: point CoreScope (or an observer) at:
+> Broker: mqtt.cnjmesh.me
+> Port: 443
+> Transport: WebSocket Secure (wss)
+>
+> I'll send credentials whenever's good. If we tie in both ways — you pulling from my broker and me pulling from yours — you'd see what my observer sees and I'd see what your observer sees, so we'd both get a wider combined picture in CoreScope than either of us has alone.
+>
+> None of this is urgent or important — just floating it. No worries at all if you're not up for it or don't want to go down this path right now."
+
+**Important scope-setting established this session, worth remembering for any future community outreach:** MQTT connectivity to `mqtt.cnjmesh.me` (or LetsMesh) provides **shared visibility/analytics only** — it does NOT enable actual cross-network messaging or a real RF bridge. This is architectural in MeshCore (Tilly's own prior confirmation: "goes against the core of MC"), not a config limitation. The only theoretical path to real MQTT-to-RF bridging is the agessaman MQTT firmware fork, which is NOT yet merged upstream and would require non-standard firmware on repeaters. Similarly clarified tonight: if Charles and ozneteast both report into LetsMesh as observers, they get a shared benefit through **LetsMesh's own global map/analyzer tools** (seeing both coverage areas together) — but this does NOT unlock direct messaging between them either; same architectural ceiling applies regardless of which broker/aggregator is used.
+
+**⚠️ Still outstanding before sending outreach messages to Tilly/ozneteast/y0gurt:** credentials (`meshuser`/`meshdev` + `large4cats` password) need rotating before being shared further externally — this was already flagged as overdue back in the July 12-13 session ("rotate meshuser/large4cats... now that mqtt.cnjmesh.me is publicly reachable over WSS") and remains undone. Sharing the current credentials with three more external people makes this more urgent, not less.
+
+### New to-dos — July 17, 2026 (end of session)
+
+1. **Rotate `meshuser`/`meshdev` MQTT credentials** on cnjmesh1's Mosquitto before sending the Tilly (or any future ozneteast/y0gurt) outreach message — carried-over overdue item, now higher priority given external sharing is imminent.
+2. **Send the drafted Tilly message** (see above) once credentials are rotated — get his CoreScope/observer pointed at `mqtt.cnjmesh.me:443` (wss), confirm two-way visibility works.
+3. **Clean up the fake/template `lincomatic` and `wsmqtt` entries** in CoreScope's `mqttSources[]` config (`/home/somog/meshcore-data/config.json`) — not real infrastructure, currently generating harmless but noisy repeated connection-attempt log spam every ~30s.
+4. **Confirm CoreScope dashboard is now actually showing live data** (Transmissions/Nodes/Last-24h counts climbing) from the browser/UI itself, not just from log evidence — quick visual sanity check, not yet done.
+5. Everything else carried over from the earlier July 17 entries above (radio tuning, KPR1 retirement, Client 1 replacement, MeshCore regioning talking points, K2GIA-10 upstairs relocation) remains open and untouched tonight.
+
