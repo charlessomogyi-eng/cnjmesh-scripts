@@ -288,3 +288,29 @@ Checked richonguzman/LoRa_APRS_iGate wiki and GitHub discussions directly:
 - GitHub Discussion #214 ("Add API to send APRS messages from igate") is an OPEN feature request asking the developer to add exactly this capability. Developer response: "sure can do! but give me a few days..." -- confirms this does not exist in the firmware as of the discussion. Not a config we missed; a feature that hasn't been built yet.
 
 **Conclusion: the second RX-only iGate plan is correct and necessary, not a workaround for a misconfiguration.** Cheap ESP32 LoRa board (5-25), same firmware, same LoRa radio params (433.775MHz/SF12/BW125k/CR5) as K2GIA-10, own callsign/SSID, Enable LoRa TX OFF, Enable APRS-IS Connection ON with its own passcode. No KISS/TNC setup needed -- just RX + gate. Can sit anywhere in the house with WiFi/USB power; does not need to run on/through either Pi.
+
+---
+
+### cnjmesh3 REPLACEMENT hardware live -- July 16, 2026
+
+Original cnjmesh3 Pi 3B+ unit was faulty (kernel panics), returned to vendor. Replacement Pi 3B+ arrived and is now up.
+
+- New IP: 10.0.0.186 (DHCP-assigned, reserved) -- NOT 10.0.0.133 as the old context entry says. New hardware has a new MAC (B8:27:EB:62:6C:5A), old .133 reservation was bound to the dead unit's MAC and is now orphaned/irrelevant.
+- Freshly flashed via Raspberry Pi Imager (Pi OS Lite 64-bit), hostname cnjmesh3, user somog, SSH enabled w/ password auth, WiFi C4Somogyi-24 configured during imaging.
+- SSH login confirmed working: ssh somog@10.0.0.186
+- Nothing installed yet -- clean slate. Note: initial flash attempts stalled repeatedly at 7-10% (bad state on the laptop, not the SD cards/reader/hardware -- confirmed by testing 2 different cards, 2 different USB ports, with and without caddy, all failing identically). Laptop reboot fixed it; root cause was likely memory pressure (86% RAM used, 115 background processes) rather than anything card/reader-related. If this recurs, reboot the laptop before troubleshooting hardware.
+
+### cnjmesh3 role (per existing plan, item 19 -- confirmed correct, reaffirmed 2026-07-16)
+cnjmesh3 = upstairs RF hardware hub. Physically local to where the 2nd-story window antenna feeds are, so it can serially connect: MeshCore Observer, KPR2 repeater, and (new) the second LoRa APRS iGate node (once that hardware arrives -- ordered 2026-07-15, see LoRa APRS section above).
+
+General principle for the cnjmesh1/cnjmesh3 split going forward: things that need a physical/serial connection to RF hardware in the upstairs room move to cnjmesh3. Pure software/dashboard services that don't need to be physically near any radio can stay on cnjmesh1. Corescope, MeshCore Hub, and MeshOmatic all need to stay in mind during this migration -- not yet decided which of these move vs. stay; MeshCore Hub in particular likely needs to move to cnjmesh3 since it talks to the Observer over USB serial, but this needs confirming, not assumed. Not yet decided whether KPR2 needs an actual serial/USB connection to cnjmesh3 (it's a repeater -- typically standalone RF-only, no host connection needed) or whether Charles means something else by "serially connect... kpr2" -- clarify next session before doing this migration work.
+
+Not yet planned/built: actual list of what to install on cnjmesh3 (Docker, MeshCore Hub stack, etc.) -- next session's starting task.
+
+### 2nd LoRa APRS node -- antenna placement decided
+K2GIA-10 currently runs an Abree dual-band whip (~$20, decent rated antenna -- corrected from earlier note that called it a "stock/stub" antenna, which was inaccurate) -- not connected to the good grounded roof UHF/VHF feed (that's dedicated to graywolf/UV-5R M).
+
+Decision: the new 2nd LoRa APRS RX-only iGate will use an indoor antenna for now, likely placed in the garage. Reasoning: its only job is to hear K2GIA-10 within the same house (a short indoor hop), not reach distant stations -- a much lower bar than K2GIA-10's own long-range iGate duty. Charles already has extensive antenna infrastructure on the house (roof UHF/VHF + Meshtastic antennas via grounded bus-bar project box, 2 Meshtastic gateway antennas + KPR2 antenna out 2nd-story windows, Observer antenna to be added upstairs too) and does not have unlimited space/desire for more outdoor penetrations right now. Test indoor-to-indoor first once both nodes are running; if the new node can't hear K2GIA-10 reliably, fall back to the already-planned roof-antenna swap test for K2GIA-10 (see earlier LoRa APRS section -- coax loss math already confirmed clean for that swap).
+
+### Clarified: 2nd LoRa node does NOT fix APRSdroid
+Important distinction Charles raised and worth keeping straight: the 2nd LoRa iGate solves the self-gating problem (messages reaching APRS-IS), but does NOT change APRSdroid's fundamental limitation -- APRSdroid still cannot speak TCP/IP KISS at all (only Bluetooth-Serial TNC, direct APRS-IS, AFSK, Kenwood). K2GIA-10 has no Bluetooth, only TCP KISS. These are two unrelated problems. aprs-tnc-web (browser tool) remains the way to compose/send LoRa APRS messages from a computer; a dedicated tracker board (e.g. T-Deck Plus) remains the option for phone-free standalone messaging, per the original July 14 handoff doc.
