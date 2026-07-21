@@ -493,3 +493,15 @@ Charles wants to test: **sending MeshCore messages to a Discord channel and vice
 - Deployable to cnjmesh2 and cnjmesh3 immediately (both currently up); add to cnjmesh1 once the new board is stable.
 - Not yet built.
 
+
+**KPR1 retirement — now confirmed, queued for cleanup once cnjmesh1 is back.**
+- MC companion reconnected to wall power July 21, back on MC network — unrelated to cnjmesh1 outage.
+- KPR1 will NOT be reconnected once cnjmesh1's new board is up. Effectively retired as of this outage.
+- Cleanup needed once cnjmesh1 is back and stable (documentation only, nothing urgent/destructive):
+  1. Mark KPR1 row in this file's device table as retired/decommissioned
+  2. Flip KPR1 to ARCHIVED status in the `whorepeated` tool
+  3. Mark KPR1 as retired/offline in CoreScope's node list, if it has that concept
+  4. Mark KPR1 as retired/offline in MeshCore Hub's node list, if applicable
+  5. `/dev/ttyUSB1` on cnjmesh1 becomes free once KPR1's physically disconnected — relevant if that port gets reused later
+- No community Discord announcement planned — Charles's call, not considered necessary for this repeater.
+
