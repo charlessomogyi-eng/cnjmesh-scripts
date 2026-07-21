@@ -35,7 +35,14 @@ TEMP_URGENT_C = 80.0
 
 
 def get_hostname():
-    return socket.gethostname()
+    """
+    Returns a friendly, non-identifying label for Discord alerts (e.g. 'Node 1')
+    instead of the real hostname, per preference: don't publish Pi hostnames
+    to the community. Set via NODE_LABEL env var, one per host, in the
+    .service file. Falls back to the real hostname only if NODE_LABEL is unset,
+    so this is never silently blank -- but NODE_LABEL should always be set.
+    """
+    return os.environ.get("NODE_LABEL", socket.gethostname())
 
 
 def get_disk_pct(path="/"):
@@ -113,21 +120,21 @@ def main():
 
     if disk_state != prev_disk:
         if disk_state == "ok":
-            send_discord(f"[{host}] Disk usage back to normal: {disk_pct}%")
+            send_discord(f"CNJMESH {host}: Disk usage back to normal ({disk_pct}%)")
         else:
             icon = "\U0001F534" if disk_state == "urgent" else "\U0001F7E1"
-            send_discord(f"{icon} [{host}] Disk usage {disk_state.upper()}: {disk_pct}% used (root filesystem)")
+            send_discord(f"{icon} CNJMESH {host}: Disk usage {disk_state.upper()} ({disk_pct}% used, root filesystem)")
 
     if temp_c is not None and temp_state != prev_temp:
         if temp_state == "ok":
-            send_discord(f"[{host}] Temperature back to normal: {temp_c}\u00b0C")
+            send_discord(f"CNJMESH {host}: Temperature back to normal ({temp_c}\u00b0C)")
         else:
             icon = "\U0001F525" if temp_state == "urgent" else "\U0001F7E1"
-            send_discord(f"{icon} [{host}] Temperature {temp_state.upper()}: {temp_c}\u00b0C")
+            send_discord(f"{icon} CNJMESH {host}: Temperature {temp_state.upper()} ({temp_c}\u00b0C)")
 
     save_state({"disk_state": disk_state, "temp_state": temp_state})
 
-    print(f"[{host}] disk={disk_pct}% ({disk_state}) temp={temp_c}C ({temp_state})")
+    print(f"{host}: disk={disk_pct}% ({disk_state}) temp={temp_c}C ({temp_state})")
 
 
 if __name__ == "__main__":
