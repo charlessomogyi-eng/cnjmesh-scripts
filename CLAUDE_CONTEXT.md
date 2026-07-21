@@ -505,3 +505,30 @@ Charles wants to test: **sending MeshCore messages to a Discord channel and vice
   5. `/dev/ttyUSB1` on cnjmesh1 becomes free once KPR1's physically disconnected — relevant if that port gets reused later
 - No community Discord announcement planned — Charles's call, not considered necessary for this repeater.
 
+
+---
+
+## Antenna inventory and placement constraints — July 21, 2026
+
+Full picture logged for future reference, since antenna real estate is now fully allocated and any new hardware placement decisions need to work around this.
+
+**Fixed constraint (top priority, non-negotiable):** Icom 2730 requires a rooftop UHF/VHF antenna at all times. This is Charles's primary radio and takes precedence over any other device competing for the same roof position.
+
+**Current allocation:**
+
+| Antenna / Location | Device(s) | Notes |
+|---|---|---|
+| Comet GP3 (roof, UHF/VHF) | Icom 2730 | Dedicated, not shared — this is the fixed constraint above |
+| Separate roof antenna | KPN6 (LoRa Meshtastic node) | |
+| Alfa antenna (2nd floor, out window) | CJG1, CJG2 | Both Meshtastic gateways |
+| 2nd floor, out window | MC Observer, KPR2 | MeshCore hardware |
+
+**Graywolf APRS (K2GIA-M, UV-5R M + Digirig) — decision made this session:**
+- Previously used the good rooftop UHF/VHF feed shared conceptually with the Icom 2730 setup — but Charles has decided this is not sustainable; the rooftop antenna needs to stay fully dedicated to the Icom 2730.
+- **Plan:** move Graywolf (UV-5R M + Digirig) upstairs to cnjmesh3's location, on a whip antenna — not rooftop.
+- **Accepted tradeoff:** meaningfully reduced RF range/coverage for APRS digipeating and iGate traffic vs. rooftop gain. Considered acceptable given the roof antenna's higher-priority use.
+- **What's needed:** UV-5R M + Digirig physically relocate to cnjmesh3, connected via USB same as today (RTS-line PTT dependency, so this is a physical move, not just a software/config change). A new whip antenna needed for this location.
+- K2GIA-10 (the separate WiFi-based LoRa APRS iGate board, not Graywolf) has no serial/antenna dependency tied to this move — already flagged separately as a second, RX-only board with its own antenna placement (indoor/garage, decided July 16).
+
+**Why this matters:** every existing "good" antenna position (roof x2, Alfa out the 2nd floor window) is already spoken for by higher-priority gear. Any future hardware needing a strong outdoor position will need to either share/timeshare an existing feed or accept an indoor/whip compromise like Graywolf is now doing.
+
