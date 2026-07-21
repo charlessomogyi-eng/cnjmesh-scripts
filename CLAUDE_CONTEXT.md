@@ -473,3 +473,23 @@ None of these three have been cloned, tested, or evaluated for current maturity/
 ### New to-do — tinkering project, explicitly low priority
 Charles wants to test: **sending MeshCore messages to a Discord channel and vice versa** (Discord → MeshCore). Explicitly framed as "not important, worth a test for the sake of tinkering" — no urgency, casual experiment. **MeshCoreDiscordBridge (Hude06)** above is the most obviously relevant starting point for this, given it's specifically a bidirectional Discord↔MeshCore bridge via serial — worth looking at first when Charles wants to pick this up.
 
+
+---
+
+## New to-dos — July 21, 2026 (cnjmesh1 hardware failure, pending recovery)
+
+**cnjmesh1 hardware failure — CONFIRMED, board replacement ordered.**
+- Root cause chain: root filesystem hit 100% (disk-full), followed by a manual hard power cycle mid-write while services were crash-looping. This is the suspected trigger for corrupting the Pi 4's bootloader EEPROM.
+- Diagnosis fully ruled out: SD card (tested 3 different cards — original, old backup, fresh Pi OS Lite 64-bit flash — all showed zero green LED), official power supply (confirmed correct 5.1V/3A unit), monitor/cable (tested on 2 different monitors, both showed no signal), and EEPROM corruption (attempted official `rpi-eeprom-recovery` SD card process — zero green LED even during recovery attempt, meaning the board itself has a genuine hardware fault, not a recoverable EEPROM issue).
+- **Replacement Pi 4 board ordered July 21.** Original SD card (last confirmed good backup July 12-13, plus subsequent config changes) is intact and should boot normally once the new board arrives — no reimaging needed.
+- **When new board arrives:** (1) insert original SD card, boot, verify services come up; (2) restore SJMesh bridge config into `/opt/stacks/mqtt/config/mosquitto.conf` on cnjmesh1 from `docs/sjmesh-bridge-backup.md` (already committed to this repo); (3) manually redo CoreScope's `config.json` local MQTT source fix (`mqtt://172.17.0.1:1883`, `meshdev`/`large4cats` creds) — NOT backed up anywhere, was lost with the dead board; (4) corescope-watchdog's `state.json` — not backed up, safe to lose/regenerate; (5) confirm SJMesh bridge, CoreScope, MeshCore Hub, meshview, Malla, mesh-discord-shim, Graywolf APRS all come back healthy.
+- **What stayed up during the outage (confirmed via git 2026-07-20 notes):** MeshOmatic and LetsMesh (both US and EU) — cnjmesh3's Observer/KPR2 connect to these directly, independent of cnjmesh1's broker. Everything else (Mosquitto/MQTT, MeshCore Hub, CoreScope, mesh-discord-shim, meshview, Malla, Graywolf) was fully down for the duration.
+
+**New: build and deploy a disk + temperature watchdog for all three Pis.**
+- Purpose: directly prevents recurrence of the July 19-20 disk-full → hard power cut → dead board failure chain.
+- Design (matching existing watchdog pattern — Python + systemd timer, alert-only on state change, posts to `#cnjmesh` Discord webhook):
+  - Disk usage: warning at 80%, urgent at 90% (via `shutil.disk_usage('/')`)
+  - Temperature: warning at 70°C, urgent at 80°C (via `vcgencmd measure_temp`) — Pi 4/3 throttle around 80°C
+- Deployable to cnjmesh2 and cnjmesh3 immediately (both currently up); add to cnjmesh1 once the new board is stable.
+- Not yet built.
+
