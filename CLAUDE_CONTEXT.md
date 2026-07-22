@@ -660,3 +660,7 @@ malla.cnjmesh.me,meshview.cnjmesh.me,mqtt.cnjmesh.me,meshcorehub.cnjmesh.me,core
 ### Decision — container-level watchdog deferred, Pi-level peer-check is sufficient for now
 Discussed building a local container-watchdog on cnjmesh1 (checking actual `docker ps` status per service — malla, meshview, meshcorehub, corescope — since peer-check only confirms the Pi itself responds to ping, not that every container is genuinely healthy). Decided to defer this — peer-check's existing Pi-level online/offline detection (with full service list in the alert) is good enough for now. Can build per-service container checks later if a specific service turns out to need closer monitoring.
 
+
+### TO-DO tomorrow: rename "APRS 2m (Graywolf)" to "Graywolf APRS 2M" in peer-check SERVICES config
+Charles's preferred naming. Update on cnjmesh2 and cnjmesh3's peer-check.service files (find/replace `APRS 2m (Graywolf)` -> `Graywolf APRS 2M`). Not urgent, cosmetic wording only.
+
