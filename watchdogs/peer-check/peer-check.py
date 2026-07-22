@@ -154,7 +154,15 @@ def main():
                 else:
                     msg = f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})"
             else:
-                msg = f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})"
+                svc_list = services_map.get(label, [])
+                if svc_list:
+                    svc_text = ", ".join(svc_list)
+                    msg = (
+                        f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})\n"
+                        f"Restored: {svc_text}"
+                    )
+                else:
+                    msg = f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})"
             send_discord(msg, label=label)
 
         state[ip] = current
