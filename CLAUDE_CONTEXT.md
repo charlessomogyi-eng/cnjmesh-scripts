@@ -532,3 +532,42 @@ Full picture logged for future reference, since antenna real estate is now fully
 
 **Why this matters:** every existing "good" antenna position (roof x2, Alfa out the 2nd floor window) is already spoken for by higher-priority gear. Any future hardware needing a strong outdoor position will need to either share/timeshare an existing feed or accept an indoor/whip compromise like Graywolf is now doing.
 
+
+---
+
+## Session — July 21, 2026 (evening): disk/temp + peer-check watchdogs built and deployed to cnjmesh2/cnjmesh3
+
+### New watchdogs — BUILT, DEPLOYED to cnjmesh2 and cnjmesh3, CONFIRMED WORKING
+
+**`watchdogs/disk-temp-watchdog/`** — checks root filesystem usage and CPU temp on the host it runs on.
+- Thresholds: disk warning 80%/urgent 90%, temp warning 70°C/urgent 80°C.
+- Alert-only on state change (ok→warning→urgent→ok), same pattern as corescope-watchdog.
+- Deployed to cnjmesh2 (`Node 2`) and cnjmesh3 (`Node 3`). Confirmed clean output on both, e.g. `Node 3: disk=15.7% (ok) temp=40.2C (ok)`.
+
+**`watchdogs/peer-check/`** — each Pi pings the OTHER two Pis' IPs and alerts if one stops responding. No third-party tool, no cost. Solves the "is a Pi itself online/offline" gap that disk/temp alone doesn't cover (a dead Pi can't self-report). Deliberately NOT a central monitor — each Pi checks the others independently, so one Pi being down doesn't blind you to the rest; only fails if two Pis go down simultaneously.
+- Deployed to cnjmesh2 (checks Node 1 + Node 3) and cnjmesh3 (checks Node 1 + Node 2).
+- Confirmed working: both cnjmesh2 and cnjmesh3 independently alerted `CNJMESH Node 1 appears OFFLINE` when cnjmesh1's outage was detected — correct behavior, not a duplicate bug, since each Pi alerts independently.
+- Alerts once on down, once on recovery — no repeat spam while state is unchanged, confirmed in practice (checked every 5 min, only 1 alert per actual transition).
+
+**Both post to the existing `#cnjmesh` Discord channel/webhook** (same one corescope-watchdog and graywolf's watchdogs already use — confirmed appropriate to share, not a new channel).
+
+**Node label scheme adopted (privacy — hostnames not posted publicly):** cnjmesh1 = "Node 1", cnjmesh2 = "Node 2", cnjmesh3 = "Node 3" in all Discord-facing alert text, via `NODE_LABEL` env var per host. Real hostnames never appear in alerts.
+
+**Two real bugs found and fixed during deployment (both pushed to git, affects all hosts going forward):**
+1. `systemd` `Environment=NODE_LABEL=Node 2` (no quotes) silently truncated at the space, dropping the number — fixed by quoting: `Environment="NODE_LABEL=Node 2"`. Hit on both cnjmesh2 and cnjmesh3 deploys, same fix applied both times.
+2. Discord webhook posts returned `HTTP Error 403: Forbidden` — root cause: missing `User-Agent` header, which Discord's endpoint requires. Fixed in both `watchdog.py` and `peer-check.py` by adding `User-Agent: cnjmesh-watchdog/1.0` to the request headers. This means the corescope-watchdog-style webhook POST pattern should be checked for the same issue if ever rebuilt from scratch.
+
+### Full inventory of what posts to #cnjmesh, going forward (once cnjmesh1's back)
+- **corescope-watchdog** (cnjmesh1 only) — CoreScope data-pipeline stall detection
+- **graywolf-discord-bridge watchdog** (cnjmesh1 only) — auto-restarts the Discord bridge
+- **graywolf.service watchdog** (cnjmesh1 only) — alert-only, no auto-restart (PTT risk)
+- **aprs_monitor.py** (cnjmesh1 only) — 48hr dead-air + service crash checks
+- **disk-temp-watchdog** (all 3 Pis) — disk % and CPU temp
+- **peer-check** (all 3 Pis) — online/offline detection between Pis
+
+### To-do when cnjmesh1's new board is stable
+Deploy disk-temp-watchdog and peer-check to cnjmesh1 too, same steps as cnjmesh2/cnjmesh3:
+- `NODE_LABEL=Node 1`
+- peer-check `PEERS=Node 2:10.0.0.91,Node 3:10.0.0.186`
+- Confirmed no naming/path conflicts with existing cnjmesh1 watchdogs (corescope-watchdog, graywolf x2, aprs_monitor) — separate folders (`/opt/disk-temp-watchdog/`, `/opt/peer-check/`) and separate systemd unit names, safe to coexist.
+
