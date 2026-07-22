@@ -617,3 +617,23 @@ Charles requested full domain names (e.g. `malla.cnjmesh.me`) instead of generic
 - Node 2 (cnjmesh2): `malla2.cnjmesh.me`
 - Node 3 (cnjmesh3): `MeshOmatic feed, LetsMesh feed, corescope.cnjmesh.me data going stale (Observer/KPR2 offline)`
 
+
+### Full-domain SERVICES mapping — CONFIRMED DEPLOYED and tested on cnjmesh2 and cnjmesh3
+Live, tested, and confirmed working in Discord (both #cnjmesh and the Meshtastic cross-post channel) as of 2026-07-21:
+
+**cnjmesh2's peer-check config (reports on Node 1 and Node 3 going down):**
+```
+SERVICES=Node 1:malla.cnjmesh.me,meshview.cnjmesh.me,mqtt.cnjmesh.me,meshcorehub.cnjmesh.me,corescope.cnjmesh.me,LoRa APRS 2m;Node 3:MeshOmatic feed,LetsMesh feed,corescope.cnjmesh.me data going stale
+```
+
+**cnjmesh3's peer-check config (reports on Node 1 and Node 2 going down):**
+```
+SERVICES=Node 1:malla.cnjmesh.me,meshview.cnjmesh.me,mqtt.cnjmesh.me,meshcorehub.cnjmesh.me,corescope.cnjmesh.me,LoRa APRS 2m;Node 2:malla2.cnjmesh.me
+```
+
+**TO-DO when cnjmesh1's new board is back online:** deploy the equivalent config, reporting on Node 2 and Node 3 going down (cnjmesh1 doesn't need to report on itself):
+```
+SERVICES=Node 2:malla2.cnjmesh.me;Node 3:MeshOmatic feed,LetsMesh feed,corescope.cnjmesh.me data going stale
+```
+Plus the standard `CROSS_POST_WEBHOOK` and `CROSS_POST_LABELS=Node 2` (Node 3/MeshCore-only doesn't cross-post to the Meshtastic server, same logic as the other two hosts).
+
