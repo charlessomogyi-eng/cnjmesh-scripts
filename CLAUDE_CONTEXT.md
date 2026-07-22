@@ -647,3 +647,12 @@ Not reporting into MeshOmatic,Not reporting into LetsMesh,corescope.cnjmesh.me: 
 ```
 Note: semicolons separate different NODEs in the SERVICES format, commas separate items within one node's list — this replacement string uses commas only since it's all one node's (Node 3's) item list.
 
+
+### Node 1 SERVICES corrected — "LoRa APRS 2m" was wrong, split into two real distinct services
+Charles caught: "LoRa APRS 2m" doesn't exist — Graywolf (UV-5R M + Digirig) is standard AFSK APRS on the 2m band, no LoRa involved. LoRa APRS is a completely separate thing on the 70cm band (K2GIA-10, 433.775 MHz). Also found while fixing: there's a SECOND APRS-related service on cnjmesh1 not previously in the SERVICES list — the LoRa APRS Discord bridge (`/opt/lora-aprs-discord/lora-aprs-discord-bridge-v2.py`), which relays K2GIA-10's LoRa APRS messages to Discord, listens on cnjmesh1 UDP 1514, posts to `lora-aprs-70cm` channel in both the Meshtastic and MeshCore-NJ Discord servers.
+
+**Corrected Node 1 SERVICES (needs deploying to cnjmesh2 and cnjmesh3, config-only, deliberately NOT test-fired to avoid more alert spam tonight):**
+```
+malla.cnjmesh.me,meshview.cnjmesh.me,mqtt.cnjmesh.me,meshcorehub.cnjmesh.me,corescope.cnjmesh.me,APRS 2m (Graywolf),LoRa APRS 70cm relay (K2GIA-10)
+```
+
