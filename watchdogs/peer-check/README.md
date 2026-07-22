@@ -30,6 +30,13 @@ preference) and set values:
   Format: semicolon between peers, colon after label, comma-separated
   services, e.g.:
   `Node 1:meshview,malla,meshcorehub,mqtt,APRS 2m;Node 3:Observer,KPR2`
+- `CROSS_POST_WEBHOOK` (optional) -- a second Discord webhook URL to also
+  post to, for peers whose services matter to a different audience (e.g.
+  the Meshtastic community server, since meshview/malla are Meshtastic
+  tools -- MeshCore-only outages shouldn't cross-post there).
+- `CROSS_POST_LABELS` (optional) -- comma-separated peer labels whose
+  alerts should ALSO go to `CROSS_POST_WEBHOOK`, e.g. `Node 1,Node 2`.
+  Only listed labels cross-post; everything else stays #cnjmesh-only.
 
 Example python one-liner (adjust values per host):
 ```bash
