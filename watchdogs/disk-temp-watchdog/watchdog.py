@@ -97,7 +97,10 @@ def send_discord(message):
     req = urllib.request.Request(
         DISCORD_WEBHOOK_URL,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "cnjmesh-watchdog/1.0",
+        },
     )
     try:
         urllib.request.urlopen(req, timeout=10)
