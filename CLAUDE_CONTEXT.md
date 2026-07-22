@@ -637,3 +637,13 @@ SERVICES=Node 2:malla2.cnjmesh.me;Node 3:MeshOmatic feed,LetsMesh feed,corescope
 ```
 Plus the standard `CROSS_POST_WEBHOOK` and `CROSS_POST_LABELS=Node 2` (Node 3/MeshCore-only doesn't cross-post to the Meshtastic server, same logic as the other two hosts).
 
+
+### SERVICES wording corrected again — "not reporting into" vs "down", CoreScope nuance refined
+Charles flagged: MeshOmatic/LetsMesh themselves don't go down if cnjmesh3 does — only CNJ's OWN feed into them stops. Corrected wording to make that distinction clear. Also refined CoreScope: it pulls from 4 sources (local Observer/KPR2 via cnjmesh3, plus community-wide meshomatic/letsmesh-us/letsmesh-eu from OTHER people's observers). If cnjmesh3 goes down, only the `local` source stops — CoreScope's dashboard stays partially live with community data, just missing CNJ's own nodes' contribution. Not full staleness.
+
+**Corrected Node 3 SERVICES text (needs deploying to cnjmesh2 and cnjmesh3's peer-check config, not yet done):**
+```
+Not reporting into MeshOmatic,Not reporting into LetsMesh,corescope.cnjmesh.me: your own Observer/KPR2 data stops updating (community data from others continues)
+```
+Note: semicolons separate different NODEs in the SERVICES format, commas separate items within one node's list — this replacement string uses commas only since it's all one node's (Node 3's) item list.
+
