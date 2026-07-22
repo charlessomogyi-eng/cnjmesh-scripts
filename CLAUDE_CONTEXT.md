@@ -656,3 +656,7 @@ Charles caught: "LoRa APRS 2m" doesn't exist — Graywolf (UV-5R M + Digirig) is
 malla.cnjmesh.me,meshview.cnjmesh.me,mqtt.cnjmesh.me,meshcorehub.cnjmesh.me,corescope.cnjmesh.me,APRS 2m (Graywolf),LoRa APRS 70cm relay (K2GIA-10)
 ```
 
+
+### Decision — container-level watchdog deferred, Pi-level peer-check is sufficient for now
+Discussed building a local container-watchdog on cnjmesh1 (checking actual `docker ps` status per service — malla, meshview, meshcorehub, corescope — since peer-check only confirms the Pi itself responds to ping, not that every container is genuinely healthy). Decided to defer this — peer-check's existing Pi-level online/offline detection (with full service list in the alert) is good enough for now. Can build per-service container checks later if a specific service turns out to need closer monitoring.
+
