@@ -582,3 +582,14 @@ Discussed and deliberately scoped down: added undervoltage (relevant given tonig
 ### Future consideration — switch watchdog alerts from Discord to email
 Charles raised a concern: Discord dependency (platform could go away) and alerts being visible to the whole community rather than private. Decided to stick with Discord (#cnjmesh) for now, but revisit later. Planned approach when ready: Gmail SMTP with an app password (no server to run), convert disk-temp-watchdog.py and peer-check.py to use Python's built-in smtplib instead of/alongside the Discord webhook. Not started.
 
+
+### Service-to-node mapping — confirmed for peer-check SERVICES alerts
+- **cnjmesh1 hosts:** meshview, Malla, MeshCore Hub, CoreScope, MQTT broker, mesh-discord-shim, LoRa APRS (Graywolf/K2GIA-10, 2m)
+- **cnjmesh2 hosts:** malla2.cnjmesh.me (new info, not previously documented — confirmed by Charles 2026-07-21)
+- **cnjmesh3 hosts:** Observer + KPR2, feeding MeshOmatic and LetsMesh directly — if cnjmesh3 goes down, MeshOmatic/LetsMesh stop receiving CNJ Mesh data (not a locally-hosted service, but an outbound feed that stops)
+
+peer-check's SERVICES env var (added 2026-07-21) uses this mapping so down-alerts say what's actually affected, not just "node down":
+- cnjmesh2 config: `Node 1:meshview,malla,meshcorehub,mqtt,LoRa APRS 2m;Node 3:MeshOmatic feed,LetsMesh feed`
+- cnjmesh3 config: `Node 1:meshview,malla,meshcorehub,mqtt,LoRa APRS 2m;Node 2:malla2.cnjmesh.me`
+- cnjmesh1 config (once back): `Node 2:malla2.cnjmesh.me;Node 3:MeshOmatic feed,LetsMesh feed`
+
