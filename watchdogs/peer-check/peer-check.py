@@ -30,7 +30,7 @@ import urllib.request
 
 STATE_FILE = "/opt/peer-check/state.json"
 
-DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "REPLACE_ME")
+DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "https://discord.com/api/webhooks/1527750520138367156/pn4PUcrUNQ7CMMOkuE-BIWyT0l4NOE1TeA54pXsiaBcsC19JKaPLnWDdciZJdz6pry7x")
 NODE_LABEL = os.environ.get("NODE_LABEL", socket.gethostname())
 
 # Comma-separated "label:ip" pairs, e.g. "Node 1:10.0.0.181,Node 3:10.0.0.186"
@@ -42,7 +42,7 @@ PEERS_RAW = os.environ.get("PEERS", "")
 SERVICES_RAW = os.environ.get("SERVICES", "")
 
 # Optional second webhook (e.g. Meshtastic community server) for cross-posting.
-CROSS_POST_WEBHOOK = os.environ.get("CROSS_POST_WEBHOOK", "")
+CROSS_POST_WEBHOOK = os.environ.get("CROSS_POST_WEBHOOK", "https://discord.com/api/webhooks/1529297959987183659/o1jPNQaxa67uK5-9tmbUfOCoKny6IFaWsHy9nIFCyNLFdlkJ95RMflxn21ZUf-9l8J0Z")
 # Comma-separated labels whose alerts should ALSO go to CROSS_POST_WEBHOOK,
 # e.g. "Node 1,Node 2" -- only peers whose services matter to that audience.
 CROSS_POST_LABELS = set(

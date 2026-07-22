@@ -21,7 +21,7 @@ import urllib.request
 
 STATE_FILE = "/opt/disk-temp-watchdog/state.json"
 
-DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "REPLACE_ME")
+DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "https://discord.com/api/webhooks/1527750520138367156/pn4PUcrUNQ7CMMOkuE-BIWyT0l4NOE1TeA54pXsiaBcsC19JKaPLnWDdciZJdz6pry7x")
 
 DISK_WARN_PCT = 80
 DISK_URGENT_PCT = 90
