@@ -7,6 +7,9 @@ stops responding. No central monitoring server, no third-party tool,
 no cost -- each Pi covers the others, so one Pi being down doesn't
 blind you to the rest.
 
+Optionally lists known services hosted on a peer when it goes down,
+so the alert says what's actually affected, not just "node down".
+
 Deploy on cnjmesh1, cnjmesh2, cnjmesh3 -- each with a PEERS list that
 excludes its own IP (see .service file for how to set this per-host).
 
@@ -26,8 +29,12 @@ DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "REPLACE_ME")
 NODE_LABEL = os.environ.get("NODE_LABEL", socket.gethostname())
 
 # Comma-separated "label:ip" pairs, e.g. "Node 1:10.0.0.181,Node 3:10.0.0.186"
-# Set per-host in the .service file -- each Pi should list the OTHER Pis, not itself.
 PEERS_RAW = os.environ.get("PEERS", "")
+
+# Optional: what services live on each peer, shown in the down-alert.
+# Format: "Node 1:meshview,malla,meshcorehub,mqtt,APRS 2m;Node 3:Observer,KPR2"
+# Semicolon between peers, colon after label, comma-separated service list.
+SERVICES_RAW = os.environ.get("SERVICES", "")
 
 
 def parse_peers(raw):
@@ -39,6 +46,18 @@ def parse_peers(raw):
         label, ip = entry.split(":", 1)
         peers.append((label.strip(), ip.strip()))
     return peers
+
+
+def parse_services(raw):
+    """Returns {label: [service, ...]}"""
+    services = {}
+    for entry in raw.split(";"):
+        entry = entry.strip()
+        if not entry:
+            continue
+        label, svc_list = entry.split(":", 1)
+        services[label.strip()] = [s.strip() for s in svc_list.split(",") if s.strip()]
+    return services
 
 
 def ping(ip, timeout=3):
@@ -90,6 +109,7 @@ def send_discord(message):
 
 def main():
     peers = parse_peers(PEERS_RAW)
+    services_map = parse_services(SERVICES_RAW)
     if not peers:
         print("No PEERS configured, nothing to check.", file=sys.stderr)
         return
@@ -103,7 +123,15 @@ def main():
 
         if current != prev:
             if current == "down":
-                send_discord(f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})")
+                svc_list = services_map.get(label, [])
+                if svc_list:
+                    svc_text = ", ".join(svc_list)
+                    send_discord(
+                        f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})\n"
+                        f"Services likely affected: {svc_text}"
+                    )
+                else:
+                    send_discord(f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})")
             else:
                 send_discord(f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})")
 

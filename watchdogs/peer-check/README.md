@@ -20,11 +20,16 @@ sudo cp peer-check.service peer-check.timer /etc/systemd/system/
 ```
 
 Edit `/etc/systemd/system/peer-check.service` (use python, not sed/nano, per
-preference) and set THREE values:
+preference) and set values:
 - `CNJ_DISCORD_WEBHOOK` -- the real #cnjmesh webhook URL
 - `NODE_LABEL` -- this Pi's own label (e.g. "Node 2")
 - `PEERS` -- the OTHER two Pis' labels and IPs, comma-separated, e.g.:
   `Node 1:10.0.0.181,Node 3:10.0.0.186`
+- `SERVICES` (optional) -- what services live on each peer, listed in the
+  down-alert so it says what's actually affected, not just "node down".
+  Format: semicolon between peers, colon after label, comma-separated
+  services, e.g.:
+  `Node 1:meshview,malla,meshcorehub,mqtt,APRS 2m;Node 3:Observer,KPR2`
 
 Example python one-liner (adjust values per host):
 ```bash
