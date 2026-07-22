@@ -10,6 +10,11 @@ blind you to the rest.
 Optionally lists known services hosted on a peer when it goes down,
 so the alert says what's actually affected, not just "node down".
 
+Optionally cross-posts specific peers' up/down alerts to a second
+Discord webhook (e.g. the Meshtastic community server), for peers whose
+services are relevant to that audience (meshview/malla are Meshtastic
+tools; MeshCore-only outages stay CNJ-only).
+
 Deploy on cnjmesh1, cnjmesh2, cnjmesh3 -- each with a PEERS list that
 excludes its own IP (see .service file for how to set this per-host).
 
@@ -35,6 +40,14 @@ PEERS_RAW = os.environ.get("PEERS", "")
 # Format: "Node 1:meshview,malla,meshcorehub,mqtt,APRS 2m;Node 3:Observer,KPR2"
 # Semicolon between peers, colon after label, comma-separated service list.
 SERVICES_RAW = os.environ.get("SERVICES", "")
+
+# Optional second webhook (e.g. Meshtastic community server) for cross-posting.
+CROSS_POST_WEBHOOK = os.environ.get("CROSS_POST_WEBHOOK", "")
+# Comma-separated labels whose alerts should ALSO go to CROSS_POST_WEBHOOK,
+# e.g. "Node 1,Node 2" -- only peers whose services matter to that audience.
+CROSS_POST_LABELS = set(
+    l.strip() for l in os.environ.get("CROSS_POST_LABELS", "").split(",") if l.strip()
+)
 
 
 def parse_peers(raw):
@@ -88,13 +101,13 @@ def save_state(state):
         json.dump(state, f)
 
 
-def send_discord(message):
-    if DISCORD_WEBHOOK_URL == "REPLACE_ME":
-        print("Discord webhook not configured, would have sent:", message)
+def _post(webhook_url, message):
+    if not webhook_url or webhook_url == "REPLACE_ME":
+        print("Webhook not configured, would have sent:", message)
         return
     payload = json.dumps({"content": message}).encode()
     req = urllib.request.Request(
-        DISCORD_WEBHOOK_URL,
+        webhook_url,
         data=payload,
         headers={
             "Content-Type": "application/json",
@@ -105,6 +118,14 @@ def send_discord(message):
         urllib.request.urlopen(req, timeout=10)
     except Exception as e:
         print(f"Failed to post to Discord: {e}", file=sys.stderr)
+
+
+def send_discord(message, label=None):
+    """Sends to the primary #cnjmesh webhook, and cross-posts to the
+    secondary webhook if this peer's label is in CROSS_POST_LABELS."""
+    _post(DISCORD_WEBHOOK_URL, message)
+    if label and label in CROSS_POST_LABELS and CROSS_POST_WEBHOOK:
+        _post(CROSS_POST_WEBHOOK, message)
 
 
 def main():
@@ -126,14 +147,15 @@ def main():
                 svc_list = services_map.get(label, [])
                 if svc_list:
                     svc_text = ", ".join(svc_list)
-                    send_discord(
+                    msg = (
                         f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})\n"
                         f"Services likely affected: {svc_text}"
                     )
                 else:
-                    send_discord(f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})")
+                    msg = f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})"
             else:
-                send_discord(f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})")
+                msg = f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})"
+            send_discord(msg, label=label)
 
         state[ip] = current
         print(f"{label} ({ip}): {current}")
