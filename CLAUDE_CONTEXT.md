@@ -578,3 +578,7 @@ Discussed and deliberately scoped down: added undervoltage (relevant given tonig
 - No alerts fired (power supplies clean on both, as expected)
 - Same alert-on-change pattern, same #cnjmesh channel
 
+
+### Future consideration — switch watchdog alerts from Discord to email
+Charles raised a concern: Discord dependency (platform could go away) and alerts being visible to the whole community rather than private. Decided to stick with Discord (#cnjmesh) for now, but revisit later. Planned approach when ready: Gmail SMTP with an app password (no server to run), convert disk-temp-watchdog.py and peer-check.py to use Python's built-in smtplib instead of/alongside the Discord webhook. Not started.
+
