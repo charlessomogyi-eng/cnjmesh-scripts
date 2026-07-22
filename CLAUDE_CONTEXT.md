@@ -571,3 +571,10 @@ Deploy disk-temp-watchdog and peer-check to cnjmesh1 too, same steps as cnjmesh2
 - peer-check `PEERS=Node 2:10.0.0.91,Node 3:10.0.0.186`
 - Confirmed no naming/path conflicts with existing cnjmesh1 watchdogs (corescope-watchdog, graywolf x2, aprs_monitor) — separate folders (`/opt/disk-temp-watchdog/`, `/opt/peer-check/`) and separate systemd unit names, safe to coexist.
 
+
+### Undervoltage detection added to disk-temp-watchdog — confirmed deployed to cnjmesh2 and cnjmesh3
+Discussed and deliberately scoped down: added undervoltage (relevant given tonight's board failure — undervoltage during a write can cause similar corruption to a hard power cut). Skipped RAM monitoring (no history of RAM issues, not evidence-based). Held USB device presence checks until Graywolf's move to cnjmesh3 stabilizes the expected device list.
+- Confirmed working on both: `Node 2: disk=17.9%(ok) temp=45.6C(ok) undervolt=ok`, `Node 3: disk=15.7%(ok) temp=39.7C(ok) undervolt=ok`
+- No alerts fired (power supplies clean on both, as expected)
+- Same alert-on-change pattern, same #cnjmesh channel
+
