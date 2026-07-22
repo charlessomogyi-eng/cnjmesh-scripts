@@ -7,6 +7,17 @@ stops responding. No central monitoring server, no third-party tool,
 no cost -- each Pi covers the others, so one Pi being down doesn't
 blind you to the rest.
 
+DEBOUNCED: a peer must fail DOWN_THRESHOLD consecutive checks (default 3,
+i.e. 15 minutes at the standard 5-minute timer interval) before it's
+declared truly down and alerted. This avoids false alarms from brief
+blips -- a router reboot, a few minutes of bad WiFi, a short power flicker
+-- and avoids the mismatched "back online with no prior offline alert"
+problem that happens when a real outage coincides with the ALERTING
+Pi's own network being briefly down too (the down-alert can't be
+delivered in that split second, but the recovery alert goes through fine
+once things are back -- debouncing means short coincidental blips like
+that don't get treated as a real down event in the first place).
+
 Optionally lists known services hosted on a peer when it goes down,
 so the alert says what's actually affected, not just "node down".
 
@@ -17,8 +28,6 @@ tools; MeshCore-only outages stay CNJ-only).
 
 Deploy on cnjmesh1, cnjmesh2, cnjmesh3 -- each with a PEERS list that
 excludes its own IP (see .service file for how to set this per-host).
-
-Alert-only on state change, same pattern as disk-temp-watchdog.
 """
 
 import json
@@ -48,6 +57,11 @@ CROSS_POST_WEBHOOK = os.environ.get("CROSS_POST_WEBHOOK", "https://discord.com/a
 CROSS_POST_LABELS = set(
     l.strip() for l in os.environ.get("CROSS_POST_LABELS", "").split(",") if l.strip()
 )
+
+# Number of consecutive failed checks required before declaring a peer
+# truly down and alerting. Default 3 = 15 minutes at the standard 5-min
+# timer interval. Set DOWN_THRESHOLD env var to override.
+DOWN_THRESHOLD = int(os.environ.get("DOWN_THRESHOLD", "3"))
 
 
 def parse_peers(raw):
@@ -128,6 +142,28 @@ def send_discord(message, label=None):
         _post(CROSS_POST_WEBHOOK, message)
 
 
+def build_down_message(label, services_map):
+    svc_list = services_map.get(label, [])
+    if svc_list:
+        svc_text = ", ".join(svc_list)
+        return (
+            f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})\n"
+            f"Services likely affected: {svc_text}"
+        )
+    return f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})"
+
+
+def build_up_message(label, services_map):
+    svc_list = services_map.get(label, [])
+    if svc_list:
+        svc_text = ", ".join(svc_list)
+        return (
+            f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})\n"
+            f"Restored: {svc_text}"
+        )
+    return f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})"
+
+
 def main():
     peers = parse_peers(PEERS_RAW)
     services_map = parse_services(SERVICES_RAW)
@@ -139,34 +175,33 @@ def main():
 
     for label, ip in peers:
         is_up = ping(ip)
-        current = "up" if is_up else "down"
-        prev = state.get(ip, "up")  # assume up on first run, don't alert on startup
 
-        if current != prev:
-            if current == "down":
-                svc_list = services_map.get(label, [])
-                if svc_list:
-                    svc_text = ", ".join(svc_list)
-                    msg = (
-                        f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})\n"
-                        f"Services likely affected: {svc_text}"
-                    )
-                else:
-                    msg = f"\U0001F534 CNJMESH {label} appears OFFLINE (checked from {NODE_LABEL})"
-            else:
-                svc_list = services_map.get(label, [])
-                if svc_list:
-                    svc_text = ", ".join(svc_list)
-                    msg = (
-                        f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})\n"
-                        f"Restored: {svc_text}"
-                    )
-                else:
-                    msg = f"CNJMESH {label} back ONLINE (checked from {NODE_LABEL})"
-            send_discord(msg, label=label)
+        # Per-peer state: {"alert_state": "up"/"down", "fail_count": N}
+        peer_state = state.get(ip, {"alert_state": "up", "fail_count": 0})
+        # Back-compat: older state files stored a bare string ("up"/"down")
+        if isinstance(peer_state, str):
+            peer_state = {"alert_state": peer_state, "fail_count": 0}
 
-        state[ip] = current
-        print(f"{label} ({ip}): {current}")
+        alert_state = peer_state.get("alert_state", "up")
+        fail_count = peer_state.get("fail_count", 0)
+
+        if is_up:
+            if alert_state == "down":
+                # Was in a confirmed-down alert state -- now recovered, alert immediately.
+                send_discord(build_up_message(label, services_map), label=label)
+            alert_state = "up"
+            fail_count = 0
+            status_text = "up"
+        else:
+            fail_count += 1
+            if alert_state == "up" and fail_count >= DOWN_THRESHOLD:
+                # Crossed the debounce threshold -- now genuinely alert as down.
+                send_discord(build_down_message(label, services_map), label=label)
+                alert_state = "down"
+            status_text = f"down (fail_count={fail_count}/{DOWN_THRESHOLD})"
+
+        state[ip] = {"alert_state": alert_state, "fail_count": fail_count}
+        print(f"{label} ({ip}): {status_text}")
 
     save_state(state)
 
