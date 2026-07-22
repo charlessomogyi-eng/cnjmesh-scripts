@@ -1,0 +1,13 @@
+[Unit]
+Description=CNJ Mesh peer online/offline check
+After=network.target
+
+[Service]
+Type=oneshot
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+Environment="NODE_LABEL=REPLACE_ME_NODE_LABEL"
+# PEERS: comma-separated label:ip pairs for the OTHER two Pis (not this one).
+# Example for cnjmesh2 to check cnjmesh1 and cnjmesh3:
+# Environment="PEERS=Node 1:10.0.0.181,Node 3:10.0.0.186"
+Environment="PEERS=REPLACE_ME_PEERS"
+ExecStart=/usr/bin/python3 /opt/peer-check/peer-check.py
