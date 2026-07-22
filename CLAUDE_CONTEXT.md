@@ -593,3 +593,16 @@ peer-check's SERVICES env var (added 2026-07-21) uses this mapping so down-alert
 - cnjmesh3 config: `Node 1:meshview,malla,meshcorehub,mqtt,LoRa APRS 2m;Node 2:malla2.cnjmesh.me`
 - cnjmesh1 config (once back): `Node 2:malla2.cnjmesh.me;Node 3:MeshOmatic feed,LetsMesh feed`
 
+
+### Cross-posting to Meshtastic Discord — CONFIRMED WORKING on cnjmesh2 and cnjmesh3
+Charles created a new "cnjmesh general" channel in the "Central & South New Jersey Meshtastic" Discord server specifically for this. Webhook: `https://discord.com/api/webhooks/1529297959987183659/o1jPNQaxa67uK5-9tmbUfOCoKny6IFaWsHy9nIFCyNLFdlkJ95RMflxn21ZUf-9l8J0Z` (webhook name "Spidey Bot", channel #cnjmesh in that server).
+
+peer-check now cross-posts Node 1 and Node 2 alerts (meshview/malla/malla2 — Meshtastic-relevant) to both #cnjmesh (CNJ server) AND the new Meshtastic server channel. Node 3 (MeshOmatic/LetsMesh feed, MeshCore-specific) stays CNJ-only, correctly not cross-posted — not relevant to that audience.
+
+Confirmed via live test on both cnjmesh2 and cnjmesh3: Node 1 down-alert (with services listed: meshview, malla, meshcorehub, mqtt, LoRa APRS 2m) appeared correctly in both Discord servers.
+
+**Config per host (peer-check.service env vars):**
+- cnjmesh2: `SERVICES=Node 1:meshview,malla,meshcorehub,mqtt,LoRa APRS 2m;Node 3:MeshOmatic feed,LetsMesh feed` / `CROSS_POST_LABELS=Node 1,Node 2`
+- cnjmesh3: `SERVICES=Node 1:meshview,malla,meshcorehub,mqtt,LoRa APRS 2m;Node 2:malla2.cnjmesh.me` / `CROSS_POST_LABELS=Node 1,Node 2`
+- cnjmesh1 (once back): `SERVICES=Node 2:malla2.cnjmesh.me;Node 3:MeshOmatic feed,LetsMesh feed` / `CROSS_POST_LABELS=Node 2` (no Node 1 self-reference needed once it's the one running this)
+
