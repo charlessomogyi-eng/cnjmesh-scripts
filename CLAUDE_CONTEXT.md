@@ -606,3 +606,14 @@ Confirmed via live test on both cnjmesh2 and cnjmesh3: Node 1 down-alert (with s
 - cnjmesh3: `SERVICES=Node 1:meshview,malla,meshcorehub,mqtt,LoRa APRS 2m;Node 2:malla2.cnjmesh.me` / `CROSS_POST_LABELS=Node 1,Node 2`
 - cnjmesh1 (once back): `SERVICES=Node 2:malla2.cnjmesh.me;Node 3:MeshOmatic feed,LetsMesh feed` / `CROSS_POST_LABELS=Node 2` (no Node 1 self-reference needed once it's the one running this)
 
+
+### SERVICES mapping corrected — full domain names, CoreScope nuance clarified
+Charles requested full domain names (e.g. `malla.cnjmesh.me`) instead of generic tool names (`malla`) — more actionable, matches what you'd type into a browser. Also clarified: CoreScope is hosted ON cnjmesh1, not cnjmesh3, so the two nodes affect it differently:
+- **cnjmesh1 down** → `corescope.cnjmesh.me` itself is unreachable (fully down)
+- **cnjmesh3 down** → `corescope.cnjmesh.me` stays reachable but its DATA goes stale, since Observer/KPR2 (physically on cnjmesh3) stop publishing — same symptom as the original 8-day CoreScope outage, different root cause
+
+**Corrected SERVICES per node:**
+- Node 1 (cnjmesh1): `malla.cnjmesh.me, meshview.cnjmesh.me, mqtt.cnjmesh.me, meshcorehub.cnjmesh.me, corescope.cnjmesh.me, LoRa APRS 2m`
+- Node 2 (cnjmesh2): `malla2.cnjmesh.me`
+- Node 3 (cnjmesh3): `MeshOmatic feed, LetsMesh feed, corescope.cnjmesh.me data going stale (Observer/KPR2 offline)`
+
