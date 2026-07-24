@@ -1,8 +1,10 @@
 # CNJ Mesh — Operations Runbook
 **For:** Anyone keeping CNJ Mesh running when Charles is unavailable.
-**Last updated:** 2026-07-10
+**Last updated:** 2026-07-24
 
-If you are an AI assistant, fetch `CLAUDE_CONTEXT.md` first for full infrastructure context. This document focuses on day-to-day operations, common problems, and who to contact.
+If you are an AI assistant, this file plus `todos.md` are the two short files to fetch at the start of a session. Only fetch `session-log.md` (long, narrative) if you need the backstory behind something. This document focuses on current-state reference facts, day-to-day operations, common problems, and who to contact.
+
+**Philosophy — keep this simple, don't over-engineer.** Charles has been explicit about this: he wants tools that work reliably so he can focus on actual radio contacts, not on managing tooling. Default to the simplest fix that closes a real, already-experienced problem. Don't build speculative monitoring/architecture for problems that haven't happened yet — see "Known Issues" below for a specific example (container-level watchdog, deliberately deferred).
 
 ---
 
@@ -20,11 +22,15 @@ If you are an AI assistant, fetch `CLAUDE_CONTEXT.md` first for full infrastruct
 
 | Host | IP | User | SSH Command |
 |---|---|---|---|
-| cnjmesh1 | 10.0.0.181 | somog | `ssh somog@10.0.0.181` |
+| cnjmesh1 | 10.0.0.181 (static) | somog | `ssh somog@10.0.0.181` |
 | cnjmesh2 | 10.0.0.91 | somogyic | `ssh somogyic@10.0.0.91` |
-| cnjmesh3 | 10.0.0.133 | somog | `ssh somog@10.0.0.133` |
+| cnjmesh3 | 10.0.0.186 | somog | `ssh somog@10.0.0.186` |
 
-**cnjmesh1 is the main server.** All critical services run here. cnjmesh2 is the Meshtastic gateway. cnjmesh3 is new and still being set up.
+**cnjmesh1 is the main server.** All critical services run here. cnjmesh2 is the Meshtastic gateway (Pi Zero 2W). cnjmesh3 is the upstairs MeshCore RF hub (Pi 3B+, hosts Observer + KPR2).
+
+**cnjmesh1 is currently a REPLACEMENT board** (original died from a disk-full/hard-power-cycle failure July 21, 2026 — see session-log.md for full story). Same SD card, same config, static IP `.181` confirmed working. WiFi network must be `C4Somogyi-24` (2.4GHz) — mesh hardware doesn't support 5GHz, and there's a separate `C4Somogyi` (5GHz, no suffix) SSID on the same router that's easy to mistake for it.
+
+**cnjmesh1's OS is Debian Trixie.** Important: Trixie replaced `dphys-swapfile` entirely with `rpi-swap` (zram-based). `/etc/dphys-swapfile` does not exist on this OS — don't reference it. Swap config lives at `/etc/rpi/swap.conf` + `/etc/rpi/swap.conf.d/`. Also, `dhcpcd.conf` is not read on this OS — static IPs are set via `nmcli con mod`, not by editing that file. **Applying an `rpi-swap` config change triggers a full reboot**, not a graceful in-place restart — expect that.
 
 ---
 
@@ -35,15 +41,32 @@ Run this to see what's connected:
 ls -l /dev/ttyACM* /dev/ttyUSB*
 ```
 
-Expected output:
-| Device | What it is |
-|---|---|
-| /dev/ttyACM0 | MeshCore Observer (WisMesh Pocket, RAK4631) |
-| /dev/ttyUSB1 | KPR1 or Client 1 (CP2102, serial 0001 — can't distinguish) |
-| /dev/ttyUSB2 | Digirig (unique serial beb31e2f) — APRS PTT |
-| /dev/ttyUSB3 | KPR1 or Client 1 (CP2102, serial 0001 — can't distinguish) |
+**As of July 23, 2026** (post board-replacement, all devices now on a powered USB 3.0 hub into a blue/USB3 port):
+| Device | What it is | Identifying signature |
+|---|---|---|
+| /dev/ttyACM0 | K2GIA-10 (LoRa APRS board, ESP32-S3) | CH340-family chip, vendor ID 1a86 |
+| /dev/ttyUSB0 | Client 1 (MeshCore companion) | CP2102, serial `0001` |
+| /dev/ttyUSB1 | Digirig — APRS PTT | CP2102N, unique serial `beb31e2f...` |
+
+**KPR1 is retired — no longer connected to cnjmesh1.** Observer and KPR2 physically live on **cnjmesh3** now (see cnjmesh3 section below), not cnjmesh1.
+
+USB paths are NOT guaranteed stable across reboots/reconnects — always verify with `udevadm info -q property -n /dev/ttyUSBx | grep -E "ID_SERIAL|ID_MODEL"` rather than assuming the table above. If Digirig's path changes, update Graywolf's PTT config to match:
+```bash
+sqlite3 /var/lib/graywolf/graywolf.db "SELECT * FROM ptt_configs;"   # check current
+sqlite3 /var/lib/graywolf/graywolf.db "UPDATE ptt_configs SET device='/dev/ttyUSBx' WHERE id=1;"
+systemctl restart graywolf
+```
 
 If devices are missing, check physical connections and the powered USB hub.
+
+### cnjmesh3 (Observer + KPR2)
+Both physically relocated upstairs to cnjmesh3 (confirmed via `dmesg`):
+| Device | What it is |
+|---|---|
+| /dev/ttyACM0 | Observer (WisMesh Pocket v2, RAK4631) |
+| /dev/ttyACM1 | KPR2 (Heltec V4 MeshCore repeater) |
+
+Architecture: Mosquitto broker, MeshCore Hub, and CoreScope all stay on **cnjmesh1**. cnjmesh3's `meshcore-packet-capture` and `meshcore-mqtt-bridge` just publish outward to cnjmesh1's broker at `10.0.0.181:1883` over the LAN — cnjmesh3's only job is hosting the physical USB devices.
 
 ---
 
@@ -173,9 +196,9 @@ docker logs meshcore-packet-capture --tail 10
 
 | Node | Hardware | Public Key Prefix | Location |
 |---|---|---|---|
-| KPR1 | Heltec V3 | 0a | /dev/ttyUSB1, cnjmesh1 |
-| KPR2 | Heltec V4 | 97 | Upstairs, Alfa antenna |
-| Observer | WisMesh Pocket RAK4631 | A8 | /dev/ttyACM0, cnjmesh1 |
+| KPR1 | Heltec V3 | 0a | **RETIRED — not reconnected, no longer in service** |
+| KPR2 | Heltec V4 | 97 | /dev/ttyACM1, cnjmesh3, Alfa antenna |
+| Observer | WisMesh Pocket RAK4631 | A8 | /dev/ttyACM0, cnjmesh3 |
 | KB2EAR-2 | — | 60 | Neighbor, 772m away |
 
 ### MeshCore Channel Keys
@@ -186,12 +209,13 @@ docker logs meshcore-packet-capture --tail 10
 
 ## APRS Reference
 - Callsign: K2GIA
-- Radio: UV-5R M, rooftop antenna
-- Interface: Digirig, `/dev/ttyUSB2`
+- Radio: UV-5R M, whip antenna at cnjmesh3's location (moved off the rooftop feed, which is dedicated to the Icom 2730 — reduced range accepted as a tradeoff)
+- Interface: Digirig — check current path with `udevadm`, don't assume `/dev/ttyUSB2` (paths shift after USB reconnects)
 - iGate server: `rotate.aprs2.net:14580`
 - Passcode: see Charles (generated from callsign K2GIA)
 - Digipeater: WIDE1-1
 - Beacon: every 30 minutes
+- **QRX (APRS Missed Message Mailbox)** — free, no-account APRS-IS service. Register by sending an APRS message to `QRX` with text `REG`. Once registered, holds missed messages (up to 7 days / 100 messages) and notifies on your next beacon. Works fine over LoRa APRS too (K2GIA-10), since it operates at the APRS-IS layer, not tied to a specific RF path.
 
 ---
 
@@ -215,6 +239,10 @@ For cnjmesh2, always `cd ~/meshtastic-mqtt` first before any docker compose comm
 - **meshcore-packet-capture TOML configs** — live inside the container, not on the host. If the container is recreated these configs will be lost. Do not recreate the container without backing up the configs first.
 - **Client 1 serial flapping** — Kendall Park Client 1 (Heltec V3) has known CP210x serial instability. This is a known issue, replacement with RAK/WisMesh is planned.
 - **MeshOmatic bridge** — configured in mosquitto.conf but MeshOmatic's MQTT broker goes down periodically. This is their problem, not ours. The bridge will reconnect automatically.
+- **cnjmesh1 WiFi can silently "stick"** — the interface can report fully healthy stats (good bitrate/signal, TX counter incrementing) while zero traffic actually passes, including to the gateway. Happened twice (July 22-23 and July 24, 2026). Root cause unknown. Fix: `sudo nmcli con down "C4Somogyi-24" && sudo nmcli con up "C4Somogyi-24"` (try this before a full reboot — it's lighter-weight and has worked). See `todos.md` — this is flagged as an open item to actually root-cause if it keeps recurring.
+- **Tailscale was found running on cnjmesh1** (July 24, 2026), apparently installed at some point for casual remote access, never fully used, no other services depend on it. Was broken (couldn't reach its own coordination server) and unrelated to that day's actual connectivity issue — ruled out as a red herring. Stopped and disabled permanently. If it reappears or a "why is this here" question comes up again, this is why.
+- **Container-level watchdog was deliberately deferred** — peer-check only checks "is the Pi reachable," not "is each Docker container healthy." Considered and explicitly NOT built, per the simplicity philosophy at the top of this file. Don't build it preemptively; revisit only if a specific missed outage justifies it.
+- **Malla has a known CVE (stored XSS, CVE-2026-43980)** — node names from public MQTT are rendered unescaped. Check if patched; see `todos.md`.
 
 ---
 
