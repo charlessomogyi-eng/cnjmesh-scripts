@@ -734,3 +734,15 @@ Original cnjmesh1 board died from disk-full + hard power cycle mid-write (see pr
 - cnjmesh1 ↔ cnjmesh3 data flow (MQTT broker dependency) confirmed live and working.
 - Fresh backup taken and safely pulled off-Pi.
 - **Open items carried forward:** Malla retention not yet set (624MB, growing forever), only Mosquitto (not the other 11 containers) has picked up the new Docker log-rotation limit, cnjmesh1 kernel behind cnjmesh3's, elevated post-reboot load average not fully explained, backup script should require sudo upfront rather than failing partway through.
+
+
+### TO-DO — expanded fleet health check (proposed July 23, 2026, not yet built)
+Idea raised after tonight's session, where several real problems (RAM/swap exhaustion, elevated load average, unbounded container logs) went completely unmonitored until they caused visible symptoms. Proposed additions, either as new checks in `disk-temp-watchdog` or a new dedicated `health-check` watchdog (not yet decided which):
+- Load average (1/5/15 min) — not currently monitored at all; tonight's HDMI interrupt storm and post-reboot backlog both would have been caught early by this.
+- RAM/swap usage % — tonight's Malla/Meshview slowness traced directly to swap exhaustion (zram at 1.1GB/1.8GB used); not currently monitored.
+- Docker container status — count of expected vs. actually running/healthy containers per host; current watchdogs only check Pi-level reachability (peer-check), not per-service health.
+- Largest Docker container log file size — early-warning version of tonight's 37GB Mosquitto log-fill incident; would alert well before disk actually fills, rather than after.
+Existing disk-temp-watchdog already covers: disk %, CPU temp, undervoltage. Not yet scoped: alert thresholds for the new checks, whether to consolidate into disk-temp-watchdog or build separate, deployment to all 3 hosts (cnjmesh1/2/3).
+
+### Swap mechanism change note — Trixie uses zram (rpi-swap), not dphys-swapfile
+Confirmed both cnjmesh1 and cnjmesh3 are running Debian Trixie, which replaces the old `dphys-swapfile` swap mechanism entirely with `rpi-swap` (zram-based). `/etc/dphys-swapfile` does not exist on this OS version — any old swap-size tuning from a prior OS version would not carry forward, not because of the board swap specifically, but because the underlying swap mechanism itself changed with the OS. Current config lives at `/etc/rpi/swap.conf` (all defaults) with overrides in `/etc/rpi/swap.conf.d/`. **cnjmesh1's zram swap increased from 1.8GB to 3GB tonight** via `/etc/rpi/swap.conf.d/override.conf` (`[Zram]` / `FixedSizeMiB=3072`) — done in response to observed RAM/swap pressure (52MB RAM free, 1.1GB/1.8GB swap used) coinciding with slow response times on malla.cnjmesh.me and meshview.cnjmesh.me. **Important: applying an `rpi-swap` config change required a full reboot to take effect** — `sudo systemctl restart rpi-swap` alone triggered a reboot (not a graceful in-place restart), which is worth expecting/warning about before running this again on cnjmesh2 or cnjmesh3 if the same tuning is ever needed there.
