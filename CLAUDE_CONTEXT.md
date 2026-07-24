@@ -754,3 +754,16 @@ cnjmesh1 is on an older Trixie image (kernel `6.12.62+rpt-rpi-v8`) than cnjmesh3
 sudo apt update && sudo apt full-upgrade
 sudo reboot
 ```
+
+
+### TO-DO — check Malla for a known XSS vulnerability (CVE-2026-43980), upgrade if affected
+Found while checking upstream repos for updates (July 23, 2026 session). **Malla has a real, moderate-severity (CVSS 6.3) stored XSS vulnerability**: node names (long_name/short_name) received via MQTT are stored without sanitization and rendered unescaped into the DOM. Any participant on a public Meshtastic MQTT broker (which CNJ Mesh's Malla instance pulls from) could set a malicious node name containing JavaScript that executes in every dashboard visitor's browser — phishing overlays, redirects, arbitrary script injection, dashboard DoS. Published May 30, 2026 (GHSA-ch57-39q2-4crm / CVE-2026-43980). Affected: all commits up through `c8a2ed3ce9365c58fd357f66d7fc1b16bbf9b43c`. **Patched**: commits from `4086e2b5f61615a813b70b25bc76095083552135` onward.
+
+**To check if currently affected, run on cnjmesh1:**
+```
+docker inspect mqtt-malla-web-1 --format '{{.Created}}'
+docker inspect mqtt-malla-web-1 --format '{{.Config.Image}}'
+```
+If the container was created/pulled before May 30, 2026, it's very likely still running the vulnerable version. Fix: pull the patched image and recreate — `cd /opt/stacks/mqtt && sudo docker compose pull && sudo docker compose up -d` (adjust stack path/command if Malla lives in a different compose project — not yet confirmed which compose file governs `mqtt-malla-web-1` specifically, worth checking with `docker inspect mqtt-malla-web-1 --format '{{.Config.Labels}}'` first, same approach used earlier tonight to locate Mosquitto's actual compose file).
+
+Also checked Meshview (pablorevilla-meshtastic/meshview) for comparison — no security advisories or notable version-gap concerns found as of this session.
