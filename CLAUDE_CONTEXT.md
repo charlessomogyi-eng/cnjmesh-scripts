@@ -781,3 +781,7 @@ top -bn1 | head -12
 cat /proc/interrupts | grep -E "45:|46:"
 ```
 If interrupts 45/46 are climbing again, it's the monitor (confirm physically disconnected, not just powered off — check the actual HDMI cable). If not, look at `mqtt_filter.py`/`startdb.py`/`mosquitto` CPU usage per the earlier session pattern — may just be normal backlog catch-up that takes longer than expected to settle, worth timing how long it actually takes to normalize on a clean, monitor-free boot.
+
+
+### Philosophy note — keep monitoring simple, don't over-engineer (Charles, July 23, 2026)
+Explicit guidance: peer-check (ping-based) stays as-is, no new parallel service-level check system. The "expanded fleet health check" TO-DO above (load avg, RAM/swap, container status, log size) and any service-vs-ping distinction should stay LOW PRIORITY / someday-maybe, not something to actively build unless a specific real missed outage justifies it later. Goal is these environments working reliably enough that Charles can focus on actual radio contacts, not on tooling. Default to the simplest fix that closes a real, already-experienced problem — avoid speculative monitoring architecture.
