@@ -825,3 +825,12 @@ Confirmed: cnjmesh1 (new board) has no wired network connection, WiFi-only — s
 - Consider building a lightweight recurring check (NOT over-engineered — see the "keep monitoring simple" philosophy note above) that specifically tests actual gateway reachability (not just interface stats) and can alert/auto-recover via the same `nmcli con down/up` fix, if this keeps recurring.
 
 **Also cleaned up as part of this investigation:** Tailscale (`tailscaled`) was found running on cnjmesh1, in a broken/non-functional state (couldn't reach its own coordination server). Charles confirmed it was likely installed at some point for casual remote SSH access, never fully vetted/used, and no other services depend on it. **Stopped AND disabled permanently** (`sudo systemctl stop tailscaled && sudo systemctl disable tailscaled`) — will not start on future reboots.
+
+
+### Update to Fing Agent TO-DO (July 24, 2026 morning) — timing suggests it may be a LIVE process, not just stale/dead hardware
+A second "back online" alert for the same old MAC (`AGENT-88:A2:9E:3E:0E:7E`) fired at 8:48 AM — right around the same time cnjmesh1's WiFi connectivity was restored (see recurring WiFi issue entry above, fixed ~8:44 AM via `nmcli con down/up`). Charles flagged the timing as suspicious, and it's a fair point: this could mean the Fing Agent SOFTWARE is still actually installed and running as a live process on the NEW board (since it's the same reused SD card), just still reporting under the OLD registered agent ID/identity string it generated back when first set up on the original dead hardware — rather than this being purely a stale/coincidental alert about hardware that's truly gone. Not yet confirmed either way. **To check when picking this up:**
+```
+ps aux | grep -i fing
+sudo systemctl list-units | grep -i fing
+```
+If Fing Agent IS found running live on cnjmesh1, the fix is different than previously assumed: don't just delete the old cloud-side agent entry — also may need to re-register/reset the local agent's identity so it reports under a fresh ID matching the new hardware, not just clean up the dashboard side.
