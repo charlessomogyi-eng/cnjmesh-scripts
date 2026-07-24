@@ -746,3 +746,11 @@ Existing disk-temp-watchdog already covers: disk %, CPU temp, undervoltage. Not 
 
 ### Swap mechanism change note — Trixie uses zram (rpi-swap), not dphys-swapfile
 Confirmed both cnjmesh1 and cnjmesh3 are running Debian Trixie, which replaces the old `dphys-swapfile` swap mechanism entirely with `rpi-swap` (zram-based). `/etc/dphys-swapfile` does not exist on this OS version — any old swap-size tuning from a prior OS version would not carry forward, not because of the board swap specifically, but because the underlying swap mechanism itself changed with the OS. Current config lives at `/etc/rpi/swap.conf` (all defaults) with overrides in `/etc/rpi/swap.conf.d/`. **cnjmesh1's zram swap increased from 1.8GB to 3GB tonight** via `/etc/rpi/swap.conf.d/override.conf` (`[Zram]` / `FixedSizeMiB=3072`) — done in response to observed RAM/swap pressure (52MB RAM free, 1.1GB/1.8GB swap used) coinciding with slow response times on malla.cnjmesh.me and meshview.cnjmesh.me. **Important: applying an `rpi-swap` config change required a full reboot to take effect** — `sudo systemctl restart rpi-swap` alone triggered a reboot (not a graceful in-place restart), which is worth expecting/warning about before running this again on cnjmesh2 or cnjmesh3 if the same tuning is ever needed there.
+
+
+### TO-DO — cnjmesh1 OS/kernel upgrade (not urgent, whenever convenient)
+cnjmesh1 is on an older Trixie image (kernel `6.12.62+rpt-rpi-v8`) than cnjmesh3 (`6.18.34+rpt-rpi-v8`). This is a software/SD-card-image age difference only — NOT a hardware issue, and unrelated to the new Pi 4 board purchase. Everything is working fine as-is; this is purely a "bring it current" cleanup task, no ticking clock. To do whenever convenient:
+```
+sudo apt update && sudo apt full-upgrade
+sudo reboot
+```
