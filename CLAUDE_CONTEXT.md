@@ -767,3 +767,17 @@ docker inspect mqtt-malla-web-1 --format '{{.Config.Image}}'
 If the container was created/pulled before May 30, 2026, it's very likely still running the vulnerable version. Fix: pull the patched image and recreate — `cd /opt/stacks/mqtt && sudo docker compose pull && sudo docker compose up -d` (adjust stack path/command if Malla lives in a different compose project — not yet confirmed which compose file governs `mqtt-malla-web-1` specifically, worth checking with `docker inspect mqtt-malla-web-1 --format '{{.Config.Labels}}'` first, same approach used earlier tonight to locate Mosquitto's actual compose file).
 
 Also checked Meshview (pablorevilla-meshtastic/meshview) for comparison — no security advisories or notable version-gap concerns found as of this session.
+
+
+### IMPORTANT — peer-check watchdog DISABLED tonight (July 23, 2026, ~22:20 EDT) — must re-enable next session
+Stopped on BOTH cnjmesh2 and cnjmesh3 (`sudo systemctl stop peer-check.timer` + `sudo systemctl stop peer-check.service` on each) to stop Discord alert spam while cnjmesh1's recurring high-load issue (see below) was still unresolved late at night. **Config untouched, nothing lost — just paused.** To re-enable on each host: `sudo systemctl start peer-check.timer`.
+
+### TO-DO — cnjmesh1 recurring high load average, cause NOT YET confirmed (carried over, needs fresh investigation)
+Pattern seen twice tonight: shortly after a reboot, cnjmesh1 develops sustained load average in the 9-12 range along with severe (100-600ms) but NON-lossy ping latency to/from cnjmesh2 and cnjmesh3 (0% packet loss, just very slow). Two different reboots produced this same pattern.
+- **First occurrence** was conclusively explained: a flaky crash-cart HDMI cable was firing ~30,000 `vc4 hdmi hpd connected/disconnected` interrupts in ~14 minutes, pinning 2 CPU cores. Fixed by unplugging the monitor.
+- **Second occurrence (end of this session)**, load was elevated again (10.20) after the swap-size-change reboot, monitor status at the time uncertain (Charles believes it may still have been connected or just unplugged) — did NOT get to confirm whether this was the same HDMI cause recurring, or a different cause (e.g. legitimate post-reboot Docker/MQTT backlog processing, same pattern separately observed and explained earlier in the session with `mqtt_filter.py`/`meshview startdb.py` pegged at high CPU). Ran out of session time before running `top`/`cat /proc/interrupts` to check — **this is the first thing to check next session**:
+```
+top -bn1 | head -12
+cat /proc/interrupts | grep -E "45:|46:"
+```
+If interrupts 45/46 are climbing again, it's the monitor (confirm physically disconnected, not just powered off — check the actual HDMI cable). If not, look at `mqtt_filter.py`/`startdb.py`/`mosquitto` CPU usage per the earlier session pattern — may just be normal backlog catch-up that takes longer than expected to settle, worth timing how long it actually takes to normalize on a clean, monitor-free boot.
