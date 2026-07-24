@@ -664,3 +664,55 @@ Discussed building a local container-watchdog on cnjmesh1 (checking actual `dock
 ### TO-DO tomorrow: rename "APRS 2m (Graywolf)" to "Graywolf APRS 2M" in peer-check SERVICES config
 Charles's preferred naming. Update on cnjmesh2 and cnjmesh3's peer-check.service files (find/replace `APRS 2m (Graywolf)` -> `Graywolf APRS 2M`). Not urgent, cosmetic wording only.
 
+
+
+---
+
+## What Was Done — July 22-23, 2026 (cnjmesh1 new Pi 4 board bring-up — extended session)
+
+### Context
+Original cnjmesh1 board died from disk-full + hard power cycle mid-write (see prior session). New Pi 4 board physically installed, original SD card (last good backup) inserted and booted fine. This session covered bringing the new board fully back online — network, disk, WiFi link quality, and physical hardware reconnection.
+
+### Root cause #1 — disk filled to 100%, twice
+- **First occurrence:** `/var/lib/docker/containers/f0b305a3.../[id]-json.log` (the `mosquitto` container's Docker log file) had grown to **37GB** with zero log rotation ever configured. This had accumulated slowly over the ~5 months the container has existed, not a sudden spike. Cleared via `sudo truncate -s 0 [logfile]`, freeing 35GB.
+- **Permanent fix applied:** `/etc/docker/daemon.json` created with `{"log-driver": "json-file", "log-opts": {"max-size": "10m", "max-file": "3"}}`, then `sudo systemctl restart docker`. This caps ALL containers' logs at 30MB total going forward — but **only applies to newly-created/recreated containers**, not retroactively to already-running ones. Mosquitto specifically was recreated via `cd /opt/stacks/mqtt && sudo docker compose up -d --force-recreate mosquitto` to pick up the new limit — confirmed via `docker inspect mosquitto --format '{{.HostConfig.LogConfig}}'` showing `max-file:3 max-size:10m`.
+- **TO-DO:** the other 11 containers on cnjmesh1 still have unlimited logging (only Mosquitto was recreated so far). Should recreate the rest of the stacks (`docker compose up -d --force-recreate` per stack) to close this gap fleet-wide, not just for the one container that already caused a problem.
+- **Separately found, NOT yet fixed:** Malla's `data_retention_hours` is commented out in `/opt/stacks/malla/config.yaml` (defaults to `0` = never delete). Malla's SQLite DB (`/var/lib/docker/volumes/mqtt_malla_data/_data/meshtastic_history.db`) is already 624MB and will grow forever uncapped. **TO-DO:** decide on a retention window (90 days / 2160 hours suggested but not agreed) and uncomment+set `data_retention_hours` in that config, then `docker compose restart` the malla stack. Deliberately deferred this session to focus on the more urgent disk-full issue.
+
+### Root cause #2 — wrong WiFi network (5GHz instead of 2.4GHz)
+- Router has two separate SSIDs: **`C4Somogyi-24`** (2.4GHz — what ALL Meshtastic/MeshCore hardware requires, since ESP32-based gear has no 5GHz support) and **`C4Somogyi`** (5GHz, no `-24` suffix — for phones/laptops/etc). This distinction was not previously documented in this context file for cnjmesh1 itself (was documented for CJG1/CJG2's mode issues but not that cnjmesh1's own WiFi must be on the `-24` network specifically).
+- Mid-session, an assistant editing mistake (edited the wrong Netplan-generated NetworkManager profile — the one named after the 5GHz `C4Somogyi` AP) combined with a later revert left cnjmesh1 connected to the 5GHz network for a period. Confirmed and fixed via `sudo nmcli con up "C4Somogyi-24"` — the pre-existing correct 2.4GHz connection profile.
+- **Lesson for future sessions:** always verify actual connected SSID with `nmcli -f active,ssid,chan dev wifi | grep yes` before assuming which Netplan/NetworkManager profile is "the" WiFi config — there can be multiple saved profiles (one per SSID) and NetworkManager doesn't always pick the intended one automatically after a profile edit/revert.
+
+### Root cause #3 — static IP setup, and Raspberry Pi OS network stack notes
+- cnjmesh1's SD card is running **Debian Trixie** (confirmed via `VERSION_CODENAME`), which is newer than Bookworm. Both Bookworm and Trixie have **fully replaced dhcpcd with NetworkManager** — `/etc/dhcpcd.conf` edits have zero effect on these OS versions (the file either doesn't exist or isn't read). On Trixie specifically, **Netplan is the intended source of truth**, rendering to NetworkManager underneath — but the actual live WiFi connection this session turned out to be a **native NetworkManager connection file** at `/etc/NetworkManager/system-connections/C4Somogyi-24.nmconnection`, NOT a Netplan-managed one (no matching Netplan YAML existed for the `-24` SSID, only for the unused 5GHz one).
+- **Static IP correctly set via:** `sudo nmcli con mod "C4Somogyi-24" ipv4.addresses 10.0.0.181/24 ipv4.gateway 10.0.0.1 ipv4.dns "10.0.0.1,8.8.8.8" ipv4.method manual`, then `sudo nmcli con up "C4Somogyi-24"` to activate.
+- Router's Xfinity gateway (10.0.0.1) Reserved IP for `cnjmesh1` (MAC `88:A2:9E:FE:3F:9A`) confirmed correctly pointing to `10.0.0.181` — same known "stuck reservation" Xfinity bug from the original board-swap session eventually resolved itself / accepted the new binding once the Pi claimed the static IP directly (exact mechanism unconfirmed, but end state is correct and stable across a reboot).
+- **cnjmesh1 static IP `10.0.0.181` confirmed persistent across a full `sudo reboot`** — verified via `ip addr show wlan0` post-reboot.
+
+### Root cause #4 — degraded WiFi link (retries/bitrate), largely resolved by a clean reboot
+- Before reboot: `iwconfig wlan0` showed severe degradation — **~74,000-100,000+ Tx excessive retries, bitrate stuck at 5.5 Mb/s**, vs. cnjmesh3 (healthy reference) showing ~964 retries and 72.2 Mb/s on the same router/SSID.
+- Tried and did NOT fix it alone: `sudo iwconfig wlan0 power off` (power management was already off by the time retries were still climbing — ruled out as the cause).
+- Also found via `dmesg -T | grep wlan0`: cnjmesh1's wlan0 was cycling in/out of promiscuous mode every ~4 seconds continuously — cnjmesh3 showed ZERO such messages. Cause not fully identified (not caused by NetworkManager auto-scan or any running iwlist/nmcli scan process — checked and ruled out).
+- **`sudo reboot` resolved the vast majority of the degradation**: post-reboot, bitrate recovered to 52 Mb/s, retries dropped to 319 (both now comparable to cnjmesh3's healthy numbers). Promiscuous mode toggling reduced in frequency (every ~9-10 sec instead of ~4 sec) but did not fully disappear — likely low-priority/cosmetic given performance is now healthy.
+- **Kernel version mismatch found, not yet acted on:** cnjmesh1 is on kernel `6.12.62+rpt-rpi-v8`, cnjmesh3 is on `6.18.34+rpt-rpi-v8` (same `brcmfmac` driver, different kernel version). **TO-DO:** `sudo apt update && sudo apt full-upgrade` on cnjmesh1 to bring it in line with cnjmesh3 — may also resolve the residual promiscuous-mode toggling as a side effect.
+
+### Root cause #5 (separate, unrelated) — HDMI hotplug interrupt storm from crash-cart monitor
+- While troubleshooting the above with a physical crash-cart monitor/keyboard attached, `uptime` showed load average 19-21 (severe, on what should be a lightly-loaded Pi 4). `top` identified `irq/45-` and `irq/46-` kernel interrupt threads pinning two CPU cores near 100%.
+- `cat /proc/interrupts | grep -E "45:|46:"` identified these as **`vc4 hdmi hpd connected` / `disconnected`** — i.e., the physical HDMI cable to the crash-cart monitor was rapidly flickering connect/disconnect (loose cable/connector), firing ~30,000 interrupts each in ~14 minutes.
+- **Fix: unplugged the HDMI cable** (SSH access via `.181` was already working by this point, monitor no longer needed) — load average dropped from ~20 back to normal within a couple minutes. This was a real, separate contributor to session-long sluggishness (console responsiveness, apparent WiFi slowness, web service slowness) — worth remembering for any FUTURE crash-cart sessions: check `uptime` / `top` early if things feel unexpectedly slow, don't assume it's the network.
+
+### Hardware reconnection — physical devices at permanent location
+- Per the previously-documented USB device map, `/dev/ttyACM0` (Observer) and by extension KPR2 were already relocated to cnjmesh3 in an earlier session — correctly NOT reconnected to cnjmesh1.
+- **KPR1 (MeshCore repeater) — retired, will NOT be reconnected to cnjmesh1 going forward.** This confirms/finalizes the "queued for cleanup" status noted in the prior board-failure session. `/dev/ttyUSB1` is now permanently free on cnjmesh1.
+- **Reconnected to cnjmesh1 at its permanent location, via a powered USB 3.0 hub (blue port on the Pi):**
+  - Digirig (Graywolf APRS PTT)
+  - Client 1 / KPC1 (MeshCore companion) — note: same device previously flagged as having a serial-flapping issue, replacement still planned but not yet done
+  - K2GIA-10 (LoRa APRS node, separate WiFi-based board, not directly USB-dependent on the Pi but was included in the same physical relocation/hub setup)
+- **TO-DO:** run `dmesg | tail -30` and `ls -l /dev/ttyUSB* /dev/ttyACM*` after next boot at the permanent location to confirm all three devices enumerate on their expected ports through the hub (not yet verified as of end of this session — hub was just connected).
+- **TO-DO — KPR1 cleanup, still not done (carried over from prior session):** mark retired in this repo's context file (this entry now serves that purpose), flip to ARCHIVED in the `whorepeated` tool, mark retired in CoreScope/MeshCore Hub node lists if applicable.
+
+### Session process notes (for future assistant sessions)
+- This was a very long, high-friction session (12+ hours) with significant back-and-forth, including real mistakes (editing the wrong WiFi profile, premature "this is fixed" claims that weren't fully verified, losing track of an already-identified WiFi retry problem while chasing IP/SSID confusion). Worth reading this whole entry carefully before assuming state, rather than re-verifying from scratch.
+- Charles was working from a crash-cart (monitor+keyboard physically on the Pi, no copy/paste, no mouse initially) for a large portion of this session — commands given during that period were kept to single-line/no-typing-heavy where possible; this constraint should be checked for at the start of future sessions if Charles mentions "crash cart" again.
+- Standing rule reinforced this session: **before giving ANY step-by-step command, be explicit about which node it runs on** ("Run this on cnjmesh1" / "Run this on cnjmesh2", etc.) — Charles has multiple SSH/PuTTY sessions open simultaneously across cnjmesh1/2/3 and ambiguity here caused real confusion.
