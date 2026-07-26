@@ -1,19 +1,22 @@
 # pull-cnjmesh1-backup.ps1
 #
-# Pulls the most recent cnjmesh1 backup archive to your local
-# OneDrive-synced Documents folder so it auto-uploads to OneDrive.
+# Pulls the most recent backup archive from cnjmesh1 AND cnjmesh3 to your
+# local OneDrive-synced Documents folder so it auto-uploads to OneDrive.
+# (cnjmesh2 intentionally excluded - Pi Zero 2W, recovers from git config instead)
 #
 # Usage:
 #   Open PowerShell, cd to where this script lives, then run:
 #     .\pull-cnjmesh1-backup.ps1
 #
-# You will be prompted for the cnjmesh1 (somog) password.
+# You will be prompted for each Pi's password.
 
 $ErrorActionPreference = "Stop"
 
-$PiHost   = "somog@10.0.0.181"
-$RemoteDir = "/home/somog/backups"
-# Adjust this path if your Documents folder isn't the default OneDrive location
+$Pis = @(
+    @{ Name = "cnjmesh1"; Host = "somog@10.0.0.181"; Dir = "/home/somog/backups"; Prefix = "cnjmesh1-backup" },
+    @{ Name = "cnjmesh3"; Host = "somog@10.0.0.186"; Dir = "/home/somog/backups"; Prefix = "cnjmesh3-backup" }
+)
+
 $LocalDir = "$env:USERPROFILE\OneDrive\Documents\cnjmesh-backups"
 
 if (-not (Test-Path $LocalDir)) {
@@ -21,39 +24,57 @@ if (-not (Test-Path $LocalDir)) {
     Write-Host "Created local backup folder: $LocalDir"
 }
 
-Write-Host "Finding latest backup on cnjmesh1..."
+$results = @()
 
-# Ask the Pi for the newest backup filename
-$latestFile = ssh $PiHost "ls -t $RemoteDir/cnjmesh1-backup-*.tar.gz | head -1"
+foreach ($pi in $Pis) {
+    $name   = $pi.Name
+    $piHost = $pi.Host
+    $dir    = $pi.Dir
+    $prefix = $pi.Prefix
 
-if ([string]::IsNullOrWhiteSpace($latestFile)) {
-    Write-Error "No backup files found on cnjmesh1 in $RemoteDir"
-    Read-Host "Press Enter to close"
-    exit 1
+    Write-Host ""
+    Write-Host "=== $name ===" -ForegroundColor Cyan
+
+    try {
+        Write-Host "  Finding latest backup on $name..."
+        $latestFile = ssh $piHost "ls -t $dir/$prefix-*.tar.gz 2>/dev/null | head -1"
+
+        if ([string]::IsNullOrWhiteSpace($latestFile)) {
+            Write-Host "  No backup files found on $name in $dir" -ForegroundColor Yellow
+            $results += "$name : NO BACKUP FOUND"
+            continue
+        }
+
+        $latestFile = $latestFile.Trim()
+        $fileName   = Split-Path $latestFile -Leaf
+        $localPath  = Join-Path $LocalDir $fileName
+
+        if (Test-Path $localPath) {
+            Write-Host "  Already have latest locally: $fileName"
+            $results += "$name : up to date ($fileName)"
+            continue
+        }
+
+        Write-Host "  Pulling $fileName ..."
+        scp "${piHost}:${latestFile}" "$localPath"
+
+        if (Test-Path $localPath) {
+            Write-Host "  Success -> $localPath" -ForegroundColor Green
+            $results += "$name : pulled $fileName"
+        } else {
+            Write-Host "  FAILED" -ForegroundColor Red
+            $results += "$name : TRANSFER FAILED"
+        }
+    }
+    catch {
+        Write-Host "  ERROR: $_" -ForegroundColor Red
+        $results += "$name : ERROR ($_)"
+    }
 }
 
-$latestFile = $latestFile.Trim()
-$fileName = Split-Path $latestFile -Leaf
-$localPath = Join-Path $LocalDir $fileName
-
-if (Test-Path $localPath) {
-    Write-Host "Already have the latest backup locally: $fileName"
-    Write-Host "Nothing to do."
-    Read-Host "Press Enter to close"
-    exit 0
-}
-
-Write-Host "Pulling $fileName ..."
-scp "${PiHost}:${latestFile}" "$localPath"
-
-if (Test-Path $localPath) {
-    Write-Host "=== Success ==="
-    Write-Host "Saved to: $localPath"
-    Write-Host "OneDrive will sync it automatically."
-} else {
-    Write-Error "Transfer appears to have failed - file not found at $localPath"
-    Read-Host "Press Enter to close"
-    exit 1
-}
-
+Write-Host ""
+Write-Host "=========== Summary ===========" -ForegroundColor Cyan
+$results | ForEach-Object { Write-Host "  $_" }
+Write-Host ""
+Write-Host "Files are in: $LocalDir"
 Read-Host "Press Enter to close"
