@@ -19,7 +19,7 @@ $ErrorActionPreference = "Stop"
 # --- Per-Pi settings: user@ip, remote backup dir, filename prefix ---
 $Pis = @(
     @{ Name = "cnjmesh1"; Host = "somog@10.0.0.181";    Dir = "/home/somog/backups";    Prefix = "cnjmesh1-backup" },
-    @{ Name = "cnjmesh2"; Host = "somogyic@10.0.0.XXX"; Dir = "/home/somogyic/backups"; Prefix = "cnjmesh2-backup" },  # <-- set cnjmesh2 IP
+    @{ Name = "cnjmesh2"; Host = "somogyic@10.0.0.91"; Dir = "/home/somogyic/backups"; Prefix = "cnjmesh2-backup" },  # <-- set cnjmesh2 IP
     @{ Name = "cnjmesh3"; Host = "somog@10.0.0.186";    Dir = "/home/somog/backups";    Prefix = "cnjmesh3-backup" }
 )
 
