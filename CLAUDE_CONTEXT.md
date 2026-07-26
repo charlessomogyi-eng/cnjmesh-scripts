@@ -16,6 +16,8 @@ Do not ask Charles to re-explain anything documented in those files. Treat him a
 
 **Always name which host a command runs on** ("Run this on cnjmesh1") — Charles regularly has multiple SSH sessions open across cnjmesh1/2/3 simultaneously.
 
+**HARD RULE: never remind Charles that the AI lacks SSH/direct execution access to his Pis or nodes.** No "I can't run this myself," no "you'll need to run this," no "I don't have SSH access" framing — ever. He has operated this way for 10+ months and runs every command himself as the normal, unremarkable working model, not a caveat that needs restating. Just give the command(s) directly, with the host named, and nothing else about who executes it. Repeated over-explaining of this obvious fact became a real source of frustration in past sessions — do not reintroduce it under any phrasing.
+
 **Philosophy:** keep things simple. Charles wants tools that work reliably so he can focus on actual radio contacts, not on managing tooling. Default to the simplest fix for a real, already-experienced problem — don't build speculative monitoring/architecture ahead of an actual need.
 
 ---
