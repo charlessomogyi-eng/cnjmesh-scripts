@@ -18,9 +18,9 @@ $ErrorActionPreference = "Stop"
 
 # --- Per-Pi settings: user@ip, remote backup dir, filename prefix ---
 $Pis = @(
-    @{ Name = "cnjmesh1"; Host = "somog@10.0.0.181";    Dir = "/home/somog/backups";    Prefix = "cnjmesh1-backup" },
-    @{ Name = "cnjmesh2"; Host = "somogyic@10.0.0.91"; Dir = "/home/somogyic/backups"; Prefix = "cnjmesh2-backup" },  # <-- set cnjmesh2 IP
-    @{ Name = "cnjmesh3"; Host = "somog@10.0.0.186";    Dir = "/home/somog/backups";    Prefix = "cnjmesh3-backup" }
+    @{ Name = "cnjmesh1"; Host = "somog@10.0.0.181"; Dir = "/home/somog/backups"; Prefix = "cnjmesh1-backup" },
+    @{ Name = "cnjmesh3"; Host = "somog@10.0.0.186"; Dir = "/home/somog/backups"; Prefix = "cnjmesh3-backup" }
+    # cnjmesh2 intentionally excluded: Pi Zero 2W, not backed up (recovers from git config instead)
 )
 
 # Adjust if your Documents folder isn't the default OneDrive location
