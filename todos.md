@@ -8,13 +8,8 @@
 
 ---
 
-### 🔴 URGENT (hardening — do these first)
-
-- **[URGENT] Pin cnjmesh3's ACM serial devices (udev / by-id).** Same failure class as the July 25 Graywolf ttyUSB outage, but WORSE here because it fails silently with plausible-wrong behavior: if `/dev/ttyACM0` and `/dev/ttyACM1` swap on a reboot or bumped cable, the Observer container starts driving KPR2's radio and vice-versa. Bind each Docker container to a stable `/dev/serial/by-id/...` path (or udev symlink by serial), not the raw ACM number. **Blocked on first confirming which physical board is which** (device-mapping item below) — confirm, then pin.
-
 ### Active / Recent (July 25, 2026 session)
 
-- **Verify cnjmesh3 hardware/host device mapping** — the July 25 audit lists `/dev/ttyACM0` = Heltec V4 (observer) and `/dev/ttyACM1` = RAK4631 (companion/hub). Standing notes have it REVERSED: Observer = RAK4631 on ttyACM0, KPR2 = Heltec V4 on ttyACM1. Confirm reality with `ls -l /dev/serial/by-id/` on cnjmesh3 before trusting either. **Prerequisite for the ACM-pinning URGENT item above.**
 - **Audit `whorepeated` / path-lookup scripts for 2-char hex truncation** — KPR2's short path prefix `97` collides with WSMZ997-Fence, so the full `977f` is required to disambiguate. Confirm `/opt/whorepeated/merge_contacts.py` and `path_lookup.py` aren't truncating to 2 hex chars anywhere and misattributing KPR2-relayed packets. (Audit-flagged July 26.)
 - **Explicit K2GIA-10 mobile RF-reach test** — CA2RXU firmware doesn't self-gate its own outgoing packets, so aprs.fi only ever shows `TCPIP*, qAC` (internet) and real over-the-air reach is unproven. Until the stuck RX board arrives, confirm reach with a mobile test: take a 433.775 LoRa APRS RX out and see if K2GIA-10 is actually heard, or arrange a cooperating listener. (Independent of the USPS-stuck RX board.)
 - **Graywolf PTT device pinning (Digirig stable path)** — point Graywolf at `/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_beb31e2f33c6ef1186b171527a5e3baa-if00-port0` so PTT survives ttyUSB renumbering. Field could NOT be found in the 0.13.13 web UI (config lives in SQLite `/var/lib/graywolf/graywolf.db`). **Approach: (1) ask Graywolf Discord / check handbook for the correct 0.13.13 UI page FIRST, and confirm the app actually honors a by-id symlink; (2) direct SQLite edit is a LAST RESORT only** — the live service writes that DB, the schema is undocumented, and an edit can be overwritten or corrupt config. Do not lead with DB surgery.
