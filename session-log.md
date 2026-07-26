@@ -871,3 +871,15 @@ Long session. Three real outcomes.
 **5. MeshCore audit (done via another AI) reviewed.** Correct root cause on the meshcore-mqtt-bridge queue-fill (broker restart severed it, no auto-recover). Feedback given: the real finding is the bridge can't self-heal after a broker restart — needs a restart policy check, reconnect-logic check, and ideally a watchdog (same pattern as CoreScope/graywolf). Also flagged a hardware-mapping conflict: audit says ttyACM0=Heltec V4 observer / ttyACM1=RAK4631, standing notes say the reverse — verify on cnjmesh3. Both captured in todos.
 
 **Also discussed (no action):** ISS-via-APRS (possible but wants a directional/Arrow antenna, not the fixed setup); antenna-contention planning for getting the Icom back on the roof (one mast at the eave can't cleanly hold 2x 2m + LoRa — the two 2m radios can't share an antenna since they're same-band; leaning toward UV-5R/APRS on the good antenna since it's the always-on job and the Icom is occasional).
+
+
+---
+
+### July 26, 2026 — meshcore-mqtt-bridge watchdog DEPLOYED (urgent hardening item, DONE)
+Closed the highest-priority hardening item from the July 25/26 audit. The bridge (`meshcore-mqtt:local` on cnjmesh3) has `restart: unless-stopped` but that only covers a crash — the real failure is it stays running while going deaf after a Mosquitto restart (fills its 1000-msg queue, never reconnects), silently killing the MeshCore Hub feed on any routine cnjmesh1 maintenance. Confirmed the container config has NO reconnect/keepalive env var (`MQTT_BROKER=10.0.0.181`, `MQTT_PORT=1883`, QOS 1, retain true — nothing to flip), so a watchdog was the correct fix.
+
+Deployed on cnjmesh3:
+- `/opt/meshcore-mqtt-watchdog/watchdog.sh` — greps `docker logs --tail 40 meshcore-mqtt-bridge` for the unhealthy signature (last MQTT status line = `MQTT: stopped`, and/or `Queue: 1000/1000` with no later `MQTT: connected`) and issues `docker restart`. Healthy line format confirmed: `MQTT: connected | Queue: 0/1000 | Dropped: 0`. Optional Discord alert via `DISCORD_WEBHOOK` var (currently empty = silent auto-heal).
+- `meshcore-mqtt-watchdog.service` (oneshot) + `.timer` (OnBootSec=2min, OnUnitActiveSec=3min) — runs every 3 min, enabled at boot. Verified `active (running)` with a real NEXT trigger and a first successful fire; dry-run correctly reported healthy.
+
+Follow-ups (optional, not blocking): (1) paste the #cnjmesh webhook into the script for restart pings; (2) end-to-end proof by deliberately restarting Mosquitto on cnjmesh1 and watching the watchdog heal the bridge within 3 min (same validation approach used for the graywolf watchdog).
