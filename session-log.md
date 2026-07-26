@@ -853,3 +853,21 @@ Confirmed real (not imagined): used to see NYC/distant nodes regularly, now rare
 ### Misc this session
 - Claude Code installed and working on Charles's Windows laptop (v2.1.219, C:\Users\charl\.local\bin\claude.exe, PATH configured, logged in).
 - Graywolf API auth mechanics documented: session cookie `graywolf_session`, login via `POST /api/auth/login` with JSON `{"username","password"}` (meshdev/large4cats). Packet log ring buffer is capped at ~1000 packets / 30 min — not useful for anything older than that; use aprs.fi for historical checks instead.
+
+
+---
+
+### Session — July 25, 2026 (evening/overnight) — APRS hub outage root-caused, Graywolf put behind Cloudflare Access, MeshCore audit
+Long session. Three real outcomes.
+
+**1. The "dead antenna" mystery was a dead USB hub.** Days of K2GIA looking deaf (69 RX packets in 37h, nothing heard on TX, "no signal" from the whip) turned out NOT to be the antenna. `lsusb` on cnjmesh1 showed only hubs, no Digirig; `dmesg` had zero USB events for it this boot — the Digirig had fallen off the bus entirely, behind a powered USB hub that stopped driving its downstream ports (failed/unplugged brick behavior). Moving the Digirig to a direct Pi USB port brought the whole bus back at once (CP2102N on ttyUSB0 = Digirig PTT, C-Media USB audio, plus a second CP210x on ttyUSB2). Confirmed the whip was working all along: the aprs.fi log showed K2GIA gating through KB2EAR-13 every 30 min all day until it hard-stopped at exactly 16:31:47 on 7-24 — the moment the hub died. Clean cliff = interface drop, not a fading antenna. Lesson logged: check the USB/interface chain before theorizing about RF.
+
+**2. Graywolf PTT device-pinning — dead end (see operations note).** Tried to pin the Digirig to a stable `/dev/serial/by-id/...` path so a future USB reshuffle can't renumber PTT (it had renumbered ttyUSB0->ttyUSB1). The by-id symlink exists and is permanent, but the PTT/serial device field could not be found in the Graywolf 0.13.13 web UI (not in Channels edit, not in Audio Devices edit — config is in the SQLite DB, set via UI only). Parked; revisit after confirming the exact UI page via the Graywolf Discord/handbook. No custom udev rule was left behind.
+
+**3. Graywolf now behind Cloudflare Access.** Added `graywolf.cnjmesh.me` to the cloudflared ingress (-> localhost:8082) and a DNS route, then created a Zero Trust self-hosted Access app with an email + PIN policy (same MFA model as the existing Malla app, ~24h session). Graywolf is TX-capable, so this closes the "open to the internet" hole — anyone hitting the hostname now gets the Cloudflare login wall first. Gotcha encountered: typing an address into the Private IP field triggered a stuck `use_clientless_isolation_app_launcher_url` error (known Cloudflare bug) — fixed by recreating the app cleanly via the "Public DNS" path and never touching the Private IP field. Note: activating the app required (re-)confirming the Zero Trust Free plan ($0).
+
+**4. Confirmed-done housekeeping:** the ACK/REJ Discord filter TODO is DONE (three filter layers already present in graywolf-discord-bridge.py at message-match and SQL levels).
+
+**5. MeshCore audit (done via another AI) reviewed.** Correct root cause on the meshcore-mqtt-bridge queue-fill (broker restart severed it, no auto-recover). Feedback given: the real finding is the bridge can't self-heal after a broker restart — needs a restart policy check, reconnect-logic check, and ideally a watchdog (same pattern as CoreScope/graywolf). Also flagged a hardware-mapping conflict: audit says ttyACM0=Heltec V4 observer / ttyACM1=RAK4631, standing notes say the reverse — verify on cnjmesh3. Both captured in todos.
+
+**Also discussed (no action):** ISS-via-APRS (possible but wants a directional/Arrow antenna, not the fixed setup); antenna-contention planning for getting the Icom back on the roof (one mast at the eave can't cleanly hold 2x 2m + LoRa — the two 2m radios can't share an antenna since they're same-band; leaning toward UV-5R/APRS on the good antenna since it's the always-on job and the Icom is occasional).
