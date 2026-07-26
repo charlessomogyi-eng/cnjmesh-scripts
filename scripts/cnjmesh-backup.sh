@@ -49,13 +49,17 @@ find /etc/systemd/system -maxdepth 1 -type f \( -name '*.service' -o -name '*.ti
 # This is the key to recreating containers that have NO compose file or bind mount
 # (their config lives in the run command itself). Secrets ARE included here since
 # this archive is private (goes to your laptop/OneDrive, NOT git).
-if command -v docker >/dev/null 2>&1; then
+# SKIPPED on cnjmesh2 (Pi Zero 2W, 416MB RAM) — the inspect loop + tar overloaded
+# it into unresponsiveness on 2026-07-26. cnjmesh2 recovers from git, not a backup.
+if [ "${HOST}" = "cnjmesh2" ]; then
+  echo "[docker] skipped on cnjmesh2 (Pi Zero 2W — too memory-constrained; config is in git)."
+elif command -v docker >/dev/null 2>&1; then
   echo "[docker] capturing container run-state + compose files ..."
   mkdir -p "${STAGING}/docker"
   docker ps -a --format '{{.Names}}' > "${STAGING}/docker/container-list.txt" 2>/dev/null || true
   while IFS= read -r c; do
     [ -z "$c" ] && continue
-    docker inspect "$c" > "${STAGING}/docker/inspect-${c}.json" 2>/dev/null || true
+    nice -n 19 docker inspect "$c" > "${STAGING}/docker/inspect-${c}.json" 2>/dev/null || true
   done < "${STAGING}/docker/container-list.txt"
   docker image ls > "${STAGING}/docker/images.txt" 2>/dev/null || true
 fi
@@ -94,8 +98,17 @@ case "${HOST}" in
     ;;
 
   cnjmesh2)
-    echo "[cnjmesh2] meshtastic-mqtt stack (mosquitto, malla, oktomqtt) ..."
-    copy_if "${HOME_DIR}/meshtastic-mqtt" "meshtastic-mqtt"
+    # cnjmesh2 is a Pi Zero 2W (416MB RAM). The full tar/gzip/docker-inspect
+    # backup OVERLOADED it into unresponsiveness on 2026-07-26 (load avg hit 11+,
+    # tripped a false peer-check alert). It is NOT worth backing up here:
+    #   - its config (mosquitto.conf, docker-compose.override.yml) is committed to
+    #     git under cnjmesh2/config/ (mosquitto password redacted there — real value
+    #     is the standard MQTT pw, see Charles)
+    #   - oktomqtt is an upstream git clone (re-clonable), malla's DB is transient
+    #   - it's the lowest-priority host to rebuild (per README)
+    # So: recover cnjmesh2 from git, not from a backup archive. Nothing captured here
+    # beyond the generic systemd/docker/cloudflared items above (which are light).
+    echo "[cnjmesh2] Pi Zero 2W — heavy backup intentionally skipped (config is in git; see cnjmesh2/config/). Only light generic items captured."
     ;;
 
   cnjmesh3)
@@ -121,9 +134,10 @@ esac
   ( cd "${STAGING}" && find . -maxdepth 2 -type d | sort | sed 's/^/  /' )
 } > "${STAGING}/MANIFEST.txt"
 
-# ---- package ----
+# ---- package (low priority so it can't spike load on small Pis) ----
 echo "Creating archive ..."
-tar -czf "${ARCHIVE}" -C /tmp "${HOST}-backup-${TS}"
+nice -n 19 ionice -c3 tar -czf "${ARCHIVE}" -C /tmp "${HOST}-backup-${TS}" 2>/dev/null \
+  || tar -czf "${ARCHIVE}" -C /tmp "${HOST}-backup-${TS}"
 rm -rf "${STAGING}"
 
 SIZE=$(du -h "${ARCHIVE}" | cut -f1)

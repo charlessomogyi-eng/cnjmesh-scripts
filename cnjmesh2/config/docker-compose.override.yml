@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  oktomqtt:
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=
+      - MQTT_PASSWORD=
+      - INPUT_TOPIC=msh/US/#
+      - OUTPUT_TOPIC=filtered/msh/US
+      - SHOW_STATS=true
+      - DEBUG=false
+      - NO_DECRYPT_DEFAULT=false
+      - ALLOW_NO_BITFIELD=false
+      - REJECT_LOG_FILE=
+      - EXEMPT_NODES=
+      - CHANNEL_KEYS=
