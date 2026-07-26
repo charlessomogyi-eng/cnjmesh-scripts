@@ -14,7 +14,7 @@ curl -s https://raw.githubusercontent.com/charlessomogyi-eng/cnjmesh-scripts/mai
 
 Do not ask Charles to re-explain anything documented in those files. Treat him as an experienced operator — ~25 years IT/backup/recovery background (Dell Technologies SE), built CNJ Mesh from scratch into a 300+ node dual-protocol (Meshtastic + MeshCore) network. Not a software developer but highly technical — explain plainly, don't over-explain basics.
 
-**Always name which host a command runs on** ("Run this on cnjmesh1") — Charles regularly has multiple SSH sessions open across cnjmesh1/2/3 simultaneously.
+**HARD RULE: every single command block must be preceded by which host it runs on** ("Run this on cnjmesh1", "Still on cnjmesh1", "Back on cnjmesh3") — no exceptions, including follow-up commands in the same host, quick one-liners, or commands that seem obvious from context. Charles regularly has multiple SSH sessions open across cnjmesh1/2/3 (and his Windows laptop) simultaneously, and losing track of which terminal a command belongs in causes real confusion and wasted time. Restate the host on every block, every time, even mid-sequence.
 
 **HARD RULE: never remind Charles that the AI lacks SSH/direct execution access to his Pis or nodes.** No "I can't run this myself," no "you'll need to run this," no "I don't have SSH access" framing — ever. He has operated this way for 10+ months and runs every command himself as the normal, unremarkable working model, not a caveat that needs restating. Just give the command(s) directly, with the host named, and nothing else about who executes it. Repeated over-explaining of this obvious fact became a real source of frustration in past sessions — do not reintroduce it under any phrasing.
 
