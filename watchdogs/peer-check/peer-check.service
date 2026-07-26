@@ -6,6 +6,9 @@ After=network.target
 Type=oneshot
 Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
 Environment="NODE_LABEL=REPLACE_ME_NODE_LABEL"
+# Consecutive failed checks before alerting DOWN. 12 = 1 hour at the 5-min timer
+# interval (quiet through reboots/room-moves). Default in the script is 3 (15 min).
+Environment="DOWN_THRESHOLD=12"
 # PEERS: comma-separated label:ip pairs for the OTHER two Pis (not this one).
 # Example for cnjmesh2 to check cnjmesh1 and cnjmesh3:
 # Environment="PEERS=Node 1:10.0.0.181,Node 3:10.0.0.186"
