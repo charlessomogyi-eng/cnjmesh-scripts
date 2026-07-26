@@ -905,3 +905,15 @@ Follow-up (see todos): immediately after the restart the Observers page showed t
 - **Confirmed cnjmesh1 does NOT run peer-check** — the "deploy to cnjmesh1 too" step from an earlier session was never done. cnjmesh1-down is still detected (both peers watch it + UptimeRobot), but cnjmesh2/3 each have only one watcher instead of two. Logged as a todo to close the redundancy gap (deploy on cnjmesh1 with DOWN_THRESHOLD=12), not urgent.
 
 **Design confirmed (answering Charles's questions):** peer-check is edge-triggered — it sends exactly ONE down alert per outage (when the debounce threshold is crossed) and ONE "back online" on recovery; it does NOT re-alert every interval while down. It also lists affected services in the down alert and cross-posts Node 1/2 alerts to the Meshtastic community server. Note surfaced: there is NO periodic "still down" reminder — if the single down alert is missed, nothing repeats it. A daily still-down reminder could be added if wanted (not built).
+
+---
+
+### July 26, 2026 (night) — cnjmesh3 ACM device pinning — CLOSED (urgent hardening item)
+Resolved the hardware-mapping conflict first: dmesg evidence from the original relocation session (confirmed in this repo) already had it right — `/dev/ttyACM0` = Observer (RAK4631/WisMesh Pocket, serial `06308D8BE14915FD`), `/dev/ttyACM1` = KPR2 (Heltec V4, serial `E8F60AC9DEB4`). The July 25 audit that flagged a conflict had it backwards; it was a secondhand review, not a fresh device check. Confirmed live via `udevadm info` on cnjmesh3 — matches standing notes exactly.
+
+Discovered the OS had already auto-generated stable `/dev/serial/by-id/` symlinks for both boards (standard udev behavior for USB serial devices with unique serial numbers) — no custom udev rule needed. Recreated both containers to bind to those by-id paths instead of the raw ACM numbers, container-internal path kept identical (`/dev/ttyACM0`/`/dev/ttyACM1`) so no TOML config or env var changes were needed:
+
+- `meshcore-packet-capture`: `--device /dev/serial/by-id/usb-RAKwireless_WisCore_RAK4631_Board_06308D8BE14915FD-if00:/dev/ttyACM0`
+- `meshcore-mqtt-bridge`: `--device /dev/serial/by-id/usb-Espressif_Systems_heltec_wifi_lora_32_v4__16_MB_FLASH__2_MB_PSRAM__E8F60AC9DEB4-if00:/dev/ttyACM1`
+
+Both verified healthy post-recreate with real traffic, not just container-up: packet-capture logs show live captured packets from the Observer (SNR/RSSI data, MQTT 3/3 → connected to local as 4th), and the bridge log shows `Serial Connection started`, MeshCore CONNECTED event on `/dev/ttyACM1`, and `MQTT: connected`. A future reboot or cable reshuffle can no longer cross-wire the Observer and KPR2 containers — each is now bound to a specific USB serial number, not an enumeration slot.
