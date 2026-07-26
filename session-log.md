@@ -883,3 +883,15 @@ Deployed on cnjmesh3:
 - `meshcore-mqtt-watchdog.service` (oneshot) + `.timer` (OnBootSec=2min, OnUnitActiveSec=3min) — runs every 3 min, enabled at boot. Verified `active (running)` with a real NEXT trigger and a first successful fire; dry-run correctly reported healthy.
 
 Follow-ups (optional, not blocking): (1) paste the #cnjmesh webhook into the script for restart pings; (2) end-to-end proof by deliberately restarting Mosquitto on cnjmesh1 and watching the watchdog heal the bridge within 3 min (same validation approach used for the graywolf watchdog).
+
+
+---
+
+### July 26, 2026 — CoreScope "no packets from meshomatic in 64h" — FIXED (dead template sources were starving the ingestor)
+The persistent CoreScope banner ("No packets from meshomatic in 3841 min" ≈ 64 h) was NOT a meshomatic-side outage. Root cause: two leftover template mqttSources in `/home/somog/meshcore-data/config.json` — `lincomatic` (ssl://mqtt.lincomatic.com:8883, not Charles's server) and `wsmqtt` (wss://wsmqtt.example.com/mqtt, a literal RFC-2606 placeholder domain with `your-username`/`your-password` creds) — were jamming the ingestor's connection loop with endless 30-second connect timeouts and retries (attempt #6000+). This starved the real `meshomatic` source of a clean connection slot. (These were previously logged as "harmless/cosmetic log spam" — that was WRONG; they were actively degrading ingest.)
+
+Fix: removed both by name via a backup-first Python edit, then `docker restart corescope`. Result: `MQTT [meshomatic] connected ... attempt #1` in ~1 second, `Running — 2 MQTT source(s) connected`, and live status packets flooding in (incl. "CNJ Mesh Observer (EWR)" — Charles's own observer echoing back through the meshomatic cloud). Remaining sources: `local` + `meshomatic`. The banner clears on its own as fresh packets age in.
+
+MeshOmatic MQTT access confirmed (screenshots): user `user_somog`, WebSocket host `mqtt.meshomatic.net:443` topic `meshcore/#`, TCP direct `us-east.meshomatic.net:31883`. **Access level is "Limited": max 2 simultaneous connections per account, and SNR/RSSI signal fields are filtered** unless you request Full Access from an admin. (Another reason the dead sources hurt — they were burning connection slots against that cap.)
+
+Follow-up (see todos): immediately after the restart the Observers page showed the `local` source disconnected and the CNJ Mesh Observer row reading "6d ago / 0/hr" — but that snapshot was ~3 min post-restart, so likely restart-settling artifacts, not a real local-path outage. Needs a recheck after 10+ min of clean uptime before treating as real. Also captured a monitor idea: a per-source freshness watchdog so a stale CoreScope source pings Discord instead of relying on eyeballing the UI (this whole thing went unnoticed for 64 h precisely because nothing alerted).
