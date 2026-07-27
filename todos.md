@@ -39,7 +39,7 @@
 - **rename "APRS 2m (Graywolf)" → "Graywolf APRS 2M"** in peer-check's SERVICES config on cnjmesh2 and cnjmesh3 (Charles's preferred wording, cosmetic only).
 - **cnjmesh1's own peer-check deployment** — confirmed NOT installed on cnjmesh1 (July 26). Only cnjmesh2 + cnjmesh3 run peer-check. cnjmesh1-down IS still detected (both peers watch it, plus UptimeRobot), but cnjmesh2/3 are each watched by only ONE peer instead of two — minor redundancy gap (a cnjmesh2 outage goes unreported only if cnjmesh3 is also down at that moment). To close: deploy peer-check on cnjmesh1 with PEERS=Node 2 + Node 3, NODE_LABEL=Node 1, and DOWN_THRESHOLD=12 to match the others. Small new install, not urgent.
 - **USB drive for swap (optional, only if RAM pressure recurs)** — Charles is looking for an old spare thumb drive to test rpi-swap's file-based/hybrid swap mode as a lower-risk alternative to pushing zram size further. Not urgent, not needed unless the RAM pressure issue comes back.
-- **Second RX-only ESP32 LoRa board** — ordered, in transit. Needed because K2GIA-10's iGate firmware doesn't self-gate its own outgoing messages to APRS-IS.
+- **Second RX-only ESP32 LoRa board** — ordered, in transit. Needed because K2GIA-10's iGate firmware doesn't self-gate its own outgoing messages to APRS-IS. **Also on order/in transit (as of July 27): 433MHz antennas for LoRa APRS, and cases for the LoRa APRS nodes** — once all three arrive, this is ready for final assembly/deployment.
 
 ## Carried over from mid-July sessions (status uncertain — verify before assuming still open)
 
