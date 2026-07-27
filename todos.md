@@ -90,7 +90,9 @@
     tx_delay_max_ms: 5000
   ```
 
-  **PLAN for CNJ's side (endpoint "b") — not yet done as of this writing:**
+  **Mechanism clarification from Tilly (2:28 PM):** this does direct raw packet transmission between the two bridged nodes/devices themselves — NOT injection into the wider mesh directly. His suggestion: set the bridge node's own TX power LOW, so the effect is: bridge node receives via MQTT → transmits at low power → your actual repeater (KPR2/etc.) hears that low-power transmission locally and rebroadcasts it for real at normal power. Framed by Tilly as "an MQTT replacement for a repeater-to-repeater RF link" specifically for cases where two repeaters can't hear each other directly over RF — i.e. this is meant to patch a *specific missing RF link between two repeaters that should logically connect*, not a general internet-wide relay. Good conceptual model to keep in mind when configuring TX power on whichever device ends up running the CNJ-side bridge.
+
+
   1. Requires a serial MeshCore connection (per README: "Requires serial MeshCore connection") — confirm which physical companion node on CNJ's side will run this (likely reuses the existing cnjmesh3 MeshCore companion setup, or a dedicated one — TBD).
   2. Mirror Tilly's config with these changes: `endpoint_id: b`, `peer_ids: [a]`, and a **unique** `dedup_db` filename (e.g. `packet-bridge-b.sqlite3` — must NOT match Tilly's filename/instance). `link_id: backhaul-1` must match exactly on both sides. `envelope_ttl_ms`, `dedup_ttl_ms`, `max_bridge_hops`, `tx_delay_min/max_ms` should also match Tilly's values (or be explicitly agreed if changed) since they govern shared behavior between both ends.
   3. Add this `packet_bridge` block to the relevant `config.yaml` (likely on cnjmesh3, alongside the existing `meshcore-mqtt-bridge` config — needs confirming whether this is the same container/config or a separate instance).
