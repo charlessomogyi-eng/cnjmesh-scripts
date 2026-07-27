@@ -62,6 +62,8 @@
 
 *(These are from the July 13 session and predate several major changes — cnjmesh3's full setup, the KPR1 retirement, and K2GIA-10's arrival all happened since. Listed here only so nothing's silently lost; several are probably already done or no longer relevant.)*
 
+- **[SOMEDAY, after software/config todos are closed out] Physical workshop organization.** Charles wants to get the physical workshop organized — cables, boards, adapters, cases currently scattered vs. a real system (labeling scheme, parts bins, inventory sheet). Explicitly deferred until after the current CNJ Mesh software/infrastructure todo list is closed out (per July 27, 2026 session) — logged here specifically so it isn't forgotten, per Charles's own request to "keep me honest."
+
 - Explore deeper LetsMesh.net integration (see `docs/letsmesh-and-ozneteast-notes.md`)
 - Invite more NJ MeshCore operators to the meshcore-nj-mqtt channel
 - Get Tilly/y0gurt pointed at mqtt.cnjmesh.me or set up as LetsMesh observers
