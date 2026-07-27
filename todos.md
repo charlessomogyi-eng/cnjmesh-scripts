@@ -70,7 +70,7 @@
 - Node tagging in MeshCore Hub (KPR2, Observer)
 - Discord server security review
 - APRS Discord silent-alert monitor
-- T096 + Alfa mobile setup (needs SMA→RP-SMA adapter)
+- **Alfa antennas (2x, in transit as of July 27):** one for the **T-Deck** (KPN2, LilyGo T-Deck Plus, hasn't been used in a while — this revives that item), one for a **MeshCore companion** node. Still needs an SMA→RP-SMA adapter for at least one of these (was the original blocker on the old "T096 + Alfa mobile setup" note — confirm if still needed once antennas arrive and connector types are checked).
 - Broker-to-broker bridging with LV Mesh / SJ Mesh for meshcore-nj-mqtt
 - Cross-mesh bridge via mesh-api (duplicate of the item above, kept for visibility)
 - MeshOmatic relay script
