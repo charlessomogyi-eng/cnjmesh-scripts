@@ -94,6 +94,14 @@
 
   **Strategic framing from Tilly (2:29 PM):** he sees this as a temporary stopgap for connecting separated mesh "islands" across the state while real RF repeater links get filled in over time — not a permanent replacement for RF. Notably self-obsoleting by design: because bridged packets always carry the tx_delay, once a real (faster) RF path exists between two areas, the mesh will naturally prefer that lower-latency native link over the bridge without anyone needing to manually retire the bridge config.
 
+  **Confirmed from full README read (July 27, 2026):**
+  - **⚠️ CRITICAL REQUIREMENT, check this FIRST:** enabling `packet_bridge` requires `meshcore.connection_type: serial` AND **companion firmware supporting command `65` (`CMD_SEND_RAW_PACKET`)**. The serial requirement is already satisfied (existing `meshcore-mqtt-bridge` on cnjmesh3 connects via serial to KPR2 on `/dev/ttyACM1`), but **whether KPR2's current MeshCore companion firmware version actually implements command 65 is UNKNOWN and unverified.** This must be checked before attempting config — if unsupported, the bridge will fail even with perfect config, possibly silently. Check KPR2's firmware version/changelog for `CMD_SEND_RAW_PACKET` support, or just try enabling it and watch logs closely for a specific rejection.
+  - Topic structure confirmed exactly: endpoint `a` (Tilly) publishes to `meshcore/bridge/v1/backhaul-1/a/tx`; endpoint `b` (CNJ) subscribes to that exact topic and publishes to its own `meshcore/bridge/v1/backhaul-1/b/tx`.
+  - Bridge messages always force `QoS 1` and `retain=False` internally, regardless of the instance's general MQTT QoS/retain settings — not a configurable choice.
+  - Confirmed stronger than Tilly's chat summary: *"Native RF arrival during delay cancels MQTT injection"* — if the real RF packet arrives before the jitter window (tx_delay) expires, the MQTT-injected copy is cancelled outright, not merely deduped after transmission.
+  - This is a genuinely separate code path from the existing bridge's normal event/command topics (`meshcore/message/...`, `meshcore/command/...`) — packet_bridge is additive, doesn't change or risk the existing working setup.
+
+
 
   1. Requires a serial MeshCore connection (per README: "Requires serial MeshCore connection") — confirm which physical companion node on CNJ's side will run this (likely reuses the existing cnjmesh3 MeshCore companion setup, or a dedicated one — TBD).
   2. Mirror Tilly's config with these changes: `endpoint_id: b`, `peer_ids: [a]`, and a **unique** `dedup_db` filename (e.g. `packet-bridge-b.sqlite3` — must NOT match Tilly's filename/instance). `link_id: backhaul-1` must match exactly on both sides. `envelope_ttl_ms`, `dedup_ttl_ms`, `max_bridge_hops`, `tx_delay_min/max_ms` should also match Tilly's values (or be explicitly agreed if changed) since they govern shared behavior between both ends.
