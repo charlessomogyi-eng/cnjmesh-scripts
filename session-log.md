@@ -930,3 +930,14 @@ Confirmed healthy two independent ways:
 Note for future sessions: an initial `mosquitto_sub -t 'meshcore/#'` run through `docker exec` + `timeout` appeared to return nothing, which looked like a red flag — but cross-checking the broker's own log for that exact client ID showed the subscribed client (`auto-C4937B9B-...`) WAS receiving live PUBLISH messages the whole time. The empty terminal output was a display/buffering artifact of piping `mosquitto_sub` through `docker exec`+`timeout` in this terminal environment, not a real absence of data. **If a `mosquitto_sub` check ever again shows unexpected silence, cross-check `docker logs mosquitto` for the subscribing client's ID before concluding data isn't flowing** — the broker log is the more reliable source of truth than the terminal's own display in this setup.
 
 Item removed from `todos.md` — fully resolved, no further action needed.
+
+---
+
+### July 27, 2026 (early AM, cont'd) — CoreScope local source: attempted IP fix, made things worse, reverted
+Tried switching CoreScope's `local` mqttSource from the Docker bridge gateway (`172.17.0.1:1883`) to the LAN IP (`10.0.0.181:1883`), reasoning it was the same class of fragility as the original 8-day CoreScope outage. Backed up config first (`config.json.bak-20260726-2211`).
+
+Result: worse, not better. On the new address, connection attempts climbed to #6 with zero successful "connected" log lines — previously (old address) it did eventually connect, just with instability. Reverted to the backup and restarted; confirmed both `mqttSources` broker lines back to `172.17.0.1:1883`.
+
+While investigating, found the real symptom via Mosquitto's own broker log (not CoreScope's log, which doesn't show enough detail): CoreScope's client connects successfully (CONNACK accepted, auth fine) under a fresh random client ID, then closes ~15 seconds later with `disconnected due to protocol error` — a protocol-level issue, not a timeout or auth failure. This repeats continuously with a new client ID each cycle. Root cause NOT identified — added as a proper open investigation item in `todos.md` with suggested next steps (version compatibility check, packet capture, topic-subscribe syntax review) rather than guessing further tonight.
+
+Confirmed CoreScope's config also has a `meshomatic` mqttSource, connecting via `wss://mqtt.meshomatic.net:443/mqtt` — this is a legitimate, separate national community relay CoreScope was configured to also pull from, unrelated to and not requiring anything from the original meshomatic.net account signup. Worth remembering this distinction came up as a point of confusion tonight.
