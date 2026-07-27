@@ -917,3 +917,16 @@ Discovered the OS had already auto-generated stable `/dev/serial/by-id/` symlink
 - `meshcore-mqtt-bridge`: `--device /dev/serial/by-id/usb-Espressif_Systems_heltec_wifi_lora_32_v4__16_MB_FLASH__2_MB_PSRAM__E8F60AC9DEB4-if00:/dev/ttyACM1`
 
 Both verified healthy post-recreate with real traffic, not just container-up: packet-capture logs show live captured packets from the Observer (SNR/RSSI data, MQTT 3/3 → connected to local as 4th), and the bridge log shows `Serial Connection started`, MeshCore CONNECTED event on `/dev/ttyACM1`, and `MQTT: connected`. A future reboot or cable reshuffle can no longer cross-wire the Observer and KPR2 containers — each is now bound to a specific USB serial number, not an enumeration slot.
+
+---
+
+### July 27, 2026 (early AM) — CoreScope `local`/Observer feed recheck — CONFIRMED HEALTHY, item closed
+Hours after the meshomatic config fix and the ACM by-id pinning work, rechecked whether the `local` source (Observer feed, tcp://172.17.0.1:1883) had genuinely settled or was still stuck disconnected as briefly seen right after the CoreScope restart.
+
+Confirmed healthy two independent ways:
+1. `meshcore-packet-capture` logs on cnjmesh3 show continuous live packet captures with `MQTT: 4/4` — all 4 configured brokers (letsmesh-us, letsmesh-eu, meshomatic, local) successfully receiving every packet, varying SNR/RSSI confirming real RF traffic, not stale data.
+2. Mosquitto's own broker log on cnjmesh1 independently confirms it: `meshcore_client_A8C40BF_4` (the Observer's packet-capture client) is seen publishing to `meshcore/EWR/A8C40BF.../packets` roughly every 15 seconds, and the broker is actively forwarding those messages to subscribed clients in real time.
+
+Note for future sessions: an initial `mosquitto_sub -t 'meshcore/#'` run through `docker exec` + `timeout` appeared to return nothing, which looked like a red flag — but cross-checking the broker's own log for that exact client ID showed the subscribed client (`auto-C4937B9B-...`) WAS receiving live PUBLISH messages the whole time. The empty terminal output was a display/buffering artifact of piping `mosquitto_sub` through `docker exec`+`timeout` in this terminal environment, not a real absence of data. **If a `mosquitto_sub` check ever again shows unexpected silence, cross-check `docker logs mosquitto` for the subscribing client's ID before concluding data isn't flowing** — the broker log is the more reliable source of truth than the terminal's own display in this setup.
+
+Item removed from `todos.md` — fully resolved, no further action needed.
