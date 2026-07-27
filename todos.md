@@ -66,7 +66,38 @@
 
 - Explore deeper LetsMesh.net integration (see `docs/letsmesh-and-ozneteast-notes.md`)
 - Invite more NJ MeshCore operators to the meshcore-nj-mqtt channel
-- **Cross-mesh bridge with Tilly/LVMesh — CONFIRMED NOT POSSIBLE as a true raw packet bridge using `meshcore-mqtt` unmodified (July 27, 2026).** Tilly independently investigated (deep code-level review of `ipnet-mesh/meshcore-mqtt`) and confirmed: each bridge instance only publishes its own radio's parsed events and only subscribes to commands aimed at itself — there's no receive-to-transmit routing between two instances on the same broker. What IS possible without new code: a **text-level relay only** (a separate script watching radio A's channel-message topic and issuing a `send_chan_msg` command to radio B, and vice versa) — but this creates a brand-new packet under your own node's identity rather than retransmitting the original, risks feedback loops if both directions relay the same channel, and is slow (15s rate-limit on sends). A true raw bridge would need actual upstream code changes (raw RX event support, a raw-transmit command, loop prevention with TTL/hash tracking, directional topics) that don't exist today. **Consistent with Tilly's own earlier statement** that a real bridge "goes against the core of MeshCore." If a CNJ↔LVMesh link happens, it'll most likely be the simpler **shared MQTT visibility/analytics** approach (each side's CoreScope/observer sees the other's traffic) rather than an actual message-passing bridge — same architectural ceiling as the LetsMesh/observer approach already noted below.
+- **Cross-mesh bridge with Tilly/LVMesh — UPDATE July 27, 2026 (afternoon): Tilly built a real raw packet bridge mode, reversing the earlier "not possible" finding above.** He forked/extended `meshcore-mqtt` at `https://github.com/Tilton53/meshcore-mqtt` (see `README.md` for full docs) and added a `packet_bridge` config block that solves every concern from the earlier investigation:
+  - Genuine loop prevention via `dedup_ttl_ms` + a per-instance `dedup_db` (packet hash tracking, not just topic naming)
+  - Hop-limited via `max_bridge_hops` so even multi-link chains can't loop forever
+  - `tx_delay_min_ms`/`tx_delay_max_ms` (his config: 3000–5000ms) intentionally delays bridged retransmission so a faster native RF repeater path wins and the bridge copy gets deduped as redundant — bridge is a fallback, not competing with real hops
+  - Behaves like an actual repeater retransmission, not a new packet under your own node identity — addresses the earlier "identity spoofing" concern
+  - Observer/analytics functionality (the old visibility-only approach) is unchanged/unaffected — this is additive
+
+  **Tilly's config (his side, "endpoint a"):**
+  ```yaml
+  packet_bridge:
+    enabled: true
+    link_id: backhaul-1
+    endpoint_id: a
+    peer_ids: [b]
+    envelope_ttl_ms: 30000
+    dedup_ttl_ms: 120000
+    dedup_db: packet-bridge-a.sqlite3
+    max_queue: 128
+    max_bridge_hops: 2
+    transmit_priority: 0
+    tx_delay_min_ms: 3000
+    tx_delay_max_ms: 5000
+  ```
+
+  **PLAN for CNJ's side (endpoint "b") — not yet done as of this writing:**
+  1. Requires a serial MeshCore connection (per README: "Requires serial MeshCore connection") — confirm which physical companion node on CNJ's side will run this (likely reuses the existing cnjmesh3 MeshCore companion setup, or a dedicated one — TBD).
+  2. Mirror Tilly's config with these changes: `endpoint_id: b`, `peer_ids: [a]`, and a **unique** `dedup_db` filename (e.g. `packet-bridge-b.sqlite3` — must NOT match Tilly's filename/instance). `link_id: backhaul-1` must match exactly on both sides. `envelope_ttl_ms`, `dedup_ttl_ms`, `max_bridge_hops`, `tx_delay_min/max_ms` should also match Tilly's values (or be explicitly agreed if changed) since they govern shared behavior between both ends.
+  3. Add this `packet_bridge` block to the relevant `config.yaml` (likely on cnjmesh3, alongside the existing `meshcore-mqtt-bridge` config — needs confirming whether this is the same container/config or a separate instance).
+  4. Test with both sides live, watch for: successful cross-link message delivery, no duplicate/looping messages, and confirm RF-preferred routing behavior (i.e. a message that arrives via real RF repeater hop suppresses the bridged copy as expected).
+  5. Read `https://github.com/Tilton53/meshcore-mqtt/blob/main/README.md` in full before implementing — this summary is based on what Tilly pasted in chat, not a full read of the repo's docs.
+
+
 
 - NWS alerts — verify behavior on a real/live alert
 - meshcore-packet-capture health check / auto-restart on Observer disconnect
