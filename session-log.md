@@ -948,3 +948,14 @@ Confirmed CoreScope's config also has a `meshomatic` mqttSource, connecting via 
 Verified via the CoreScope Observers page (not the home-screen node search, which doesn't index observers) that CNJ Mesh Observer is Online: last status update and last packet observation both ~1 min ago, 33,936 total packets, 10 pkts/hr, 6d5h uptime, battery 4075 mV, no anomalies. Confirms the `local` source's periodic reconnect cycling (documented above) isn't currently causing meaningfully stale data in practice — it recovers fast enough that CoreScope's home screen shows no "no packets" warning for either `local` or `meshomatic`.
 
 Noted for future reference: CoreScope's home-screen search box ("Find your nodes to start monitoring them") only indexes **Nodes** (claimable mesh devices), not **Observers** (listening stations like the RAK4631). Searching an observer's name there will always return "No nodes found" — this isn't a bug, just an unlabeled category split in the UI. Observers must be found via the dedicated **Observers** tab in the top nav instead.
+
+---
+
+### July 27, 2026 (late night, Opus) — Tilly packet_bridge: CNJ side built & deployed, bridge-subscribe not yet active
+Full detail is in todos.md under the cross-mesh bridge item. Summary:
+- Confirmed KPR2 firmware v1.16.0-07a3ca9 (06-Jun-2026) supports CMD_SEND_RAW_PACKET (cmd 65, added v1.15.0). Method: `docker stop meshcore-mqtt-bridge` on cnjmesh3 to free /dev/ttyACM1, then `pipx install meshcore-cli` and `~/.local/bin/meshcli -r -s /dev/ttyACM1 ver` (the `-r` repeater flag is required).
+- Built Tilly's fork (github.com/Tilton53/meshcore-mqtt) as a NEW image `meshcore-mqtt:bridge` on cnjmesh3, leaving the working `meshcore-mqtt:local` untouched.
+- Recreated the container from the new image with packet_bridge env vars (endpoint b, peer a, link backhaul-1). Container healthy; KPR2's normal capture/status feed fully working on the new image.
+- Config loads perfectly and a hand-built worker gets `_bridge_topics={'meshcore/bridge/v1/backhaul-1/a/tx':'a'}` — BUT the running process never logs `Subscribed to bridge topic:` and its MQTT client connects as `meshcore-mqtt-8da2a76f` (random suffix) instead of the `meshcore-mqtt-backhaul-1-b` bridge naming. So packet_bridge is NOT active in the live process yet.
+- Next step (cheapest first): `docker ps -a | grep meshcore` on cnjmesh3 to check for a stale/duplicate OLD container still running — the random client ID suggests the old `:local` instance may still be up alongside the new one. Then LOG_LEVEL=DEBUG restart, then trace the on_connect callback. A "queue 1000 vs 128" lead was a confirmed red herring — do not rechase it.
+- Meta note: this diagnosis burned a lot of tokens on source-diving that a `docker ps -a` and a DEBUG restart should have short-circuited. Next session: check for duplicate containers and turn on DEBUG logging FIRST before reading source.
