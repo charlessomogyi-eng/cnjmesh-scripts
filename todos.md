@@ -66,7 +66,8 @@
 
 - Explore deeper LetsMesh.net integration (see `docs/letsmesh-and-ozneteast-notes.md`)
 - Invite more NJ MeshCore operators to the meshcore-nj-mqtt channel
-- Get Tilly/y0gurt pointed at mqtt.cnjmesh.me or set up as LetsMesh observers
+- **Cross-mesh bridge with Tilly/LVMesh — CONFIRMED NOT POSSIBLE as a true raw packet bridge using `meshcore-mqtt` unmodified (July 27, 2026).** Tilly independently investigated (deep code-level review of `ipnet-mesh/meshcore-mqtt`) and confirmed: each bridge instance only publishes its own radio's parsed events and only subscribes to commands aimed at itself — there's no receive-to-transmit routing between two instances on the same broker. What IS possible without new code: a **text-level relay only** (a separate script watching radio A's channel-message topic and issuing a `send_chan_msg` command to radio B, and vice versa) — but this creates a brand-new packet under your own node's identity rather than retransmitting the original, risks feedback loops if both directions relay the same channel, and is slow (15s rate-limit on sends). A true raw bridge would need actual upstream code changes (raw RX event support, a raw-transmit command, loop prevention with TTL/hash tracking, directional topics) that don't exist today. **Consistent with Tilly's own earlier statement** that a real bridge "goes against the core of MeshCore." If a CNJ↔LVMesh link happens, it'll most likely be the simpler **shared MQTT visibility/analytics** approach (each side's CoreScope/observer sees the other's traffic) rather than an actual message-passing bridge — same architectural ceiling as the LetsMesh/observer approach already noted below.
+
 - NWS alerts — verify behavior on a real/live alert
 - meshcore-packet-capture health check / auto-restart on Observer disconnect
 - Node tagging in MeshCore Hub (KPR2, Observer)
