@@ -190,3 +190,7 @@
 - Remove dead meshshadow section from cloudflared config (verify first)
 - Rotate Discord webhook URLs (low priority)
 - Rotate MeshOmatic password (low priority)
+
+### peer-check DISABLED (July 28, 2026 evening)
+- **peer-check.timer disabled on both cnjmesh2 and cnjmesh3** (`sudo systemctl disable --now peer-check.timer` on each). Charles reported the Discord alerts were unwanted / "something isn't working right" — root cause not yet diagnosed. Nothing uninstalled, service/timer files still present at `/etc/systemd/system/peer-check.{service,timer}` on both hosts — re-enable anytime with `sudo systemctl enable --now peer-check.timer`.
+- **Open: diagnose what was misfiring before re-enabling.** Not yet investigated — Charles didn't specify the symptom (false down/up flapping? wrong service list? wrong peer IP?). Ask/check logs next session before turning back on blind.
