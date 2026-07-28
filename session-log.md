@@ -959,3 +959,10 @@ Full detail is in todos.md under the cross-mesh bridge item. Summary:
 - Config loads perfectly and a hand-built worker gets `_bridge_topics={'meshcore/bridge/v1/backhaul-1/a/tx':'a'}` — BUT the running process never logs `Subscribed to bridge topic:` and its MQTT client connects as `meshcore-mqtt-8da2a76f` (random suffix) instead of the `meshcore-mqtt-backhaul-1-b` bridge naming. So packet_bridge is NOT active in the live process yet.
 - Next step (cheapest first): `docker ps -a | grep meshcore` on cnjmesh3 to check for a stale/duplicate OLD container still running — the random client ID suggests the old `:local` instance may still be up alongside the new one. Then LOG_LEVEL=DEBUG restart, then trace the on_connect callback. A "queue 1000 vs 128" lead was a confirmed red herring — do not rechase it.
 - Meta note: this diagnosis burned a lot of tokens on source-diving that a `docker ps -a` and a DEBUG restart should have short-circuited. Next session: check for duplicate containers and turn on DEBUG logging FIRST before reading source.
+
+---
+
+### July 28, 2026 — Tilly packet_bridge: LOCAL subscribe bug RESOLVED (was pre-fix code)
+Last night's "bridge not subscribing" bug is fixed. Root cause: we built from Tilly's pre-fix code. He pushed a fix adding a `topic_root` field (env: `PACKET_BRIDGE_TOPIC_ROOT=meshcore/bridge`) — without it, the bridge silently never subscribed. Fixed by: git pull in ~/meshcore-mqtt-tilly, docker build -t meshcore-mqtt:bridge . (rebuild REQUIRED after pull), recreate container with the new TOPIC_ROOT env var + persistent dedup volume (-v ~/meshcore-bridge-data:/data, dedup_db=/data/packet-bridge-b.sqlite3) + LOG_LEVEL=DEBUG. Verified: client ID now `meshcore-mqtt-backhaul-1-b`, and `Subscribed to bridge topic: meshcore/bridge/v1/backhaul-1/a/tx` fires. CNJ endpoint b is fully live. The queue-1000 and duplicate-container theories from last night were both red herrings.
+
+Remaining blocker for end-to-end: broker reachability. Tilly can't reach mqtt.cnjmesh.me (Cloudflare tunnel = WSS not raw TCP 1883). Both endpoints need a shared reachable broker before any packets actually cross.
