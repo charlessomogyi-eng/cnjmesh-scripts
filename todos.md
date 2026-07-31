@@ -13,7 +13,7 @@
 - **cnjmesh2 oktomqtt filter DISABLED — TEMPORARY, pending Charles's decision on permanent.** malla2.cnjmesh.me now reads the raw `msh/US/#` topic directly (matching cnjmesh1's Malla) instead of oktomqtt's `filtered/msh/...` output. oktomqtt is `docker stop`ped (stays down across reboots; only a full-stack `docker compose up -d` with no service named revives it). Full context + literal reverse steps in `session-log.md` (July 31 entry). Compose backup on the Pi: `~/meshtastic-mqtt/docker-compose.yml.bak-preoktomqtt`.
   - **DECISION PENDING:** if permanent, remove the `oktomqtt` block from BOTH `docker-compose.yml` and `docker-compose.override.yml` (cnjmesh2), then regen the install-map. If reverting, `docker start oktomqtt` + restore the two topic env vars + `docker compose up -d malla-capture`.
   - **WATCH (Pi Zero 2 W, 512MB):** malla2 now eats the raw firehose + self-decrypts — glance at `free -h` / `docker stats`, DB+SD growth (confirm Malla retention is bounding `meshtastic_history.db`), and Docker log rotation on cnjmesh2 (`/etc/docker/daemon.json` 10MB×3). Re-enabling oktomqtt is the quickest volume cut if anything gets tight.
-  - **HOUSEKEEPING:** `install-map-cnjmesh2.md` still shows the old (pre-change, oktomqtt-running) state — run `collect-inventory.sh` on cnjmesh2 to refresh it.
+  - **HOUSEKEEPING:** install-map-cnjmesh2.md refreshed (July 31). Also fixed same session: cnjmesh2 had NO Docker log rotation (no daemon.json, all containers `{json-file map[]}`) — added `/etc/docker/daemon.json` (json-file, 10m×3) and recreated malla-capture/malla-web/mosquitto to apply it. oktomqtt left stopped (uncapped, but moot while stopped).
 
 ---
 
