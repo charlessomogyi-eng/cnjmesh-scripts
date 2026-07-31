@@ -1,6 +1,6 @@
 # Install Map — `cnjmesh2`
 
-_Generated 2026-07-26 17:03:34 EDT by `scripts/collect-inventory.sh`. Re-run to refresh — do not hand-edit._
+_Generated 2026-07-31 16:10:57 EDT by `scripts/collect-inventory.sh`. Re-run to refresh — do not hand-edit._
 
 ## Docker containers
 
@@ -12,10 +12,10 @@ _Generated 2026-07-26 17:03:34 EDT by `scripts/collect-inventory.sh`. Re-run to 
 - **Host bind mounts (config/data on disk):**
     - `/home/somogyic/meshtastic-mqtt/malla -> /app/data`
 - **Config env (secrets omitted):**
-    - `MALLA_MQTT_TOPIC_SUFFIX=/+/+/+/#`
+    - `MALLA_MQTT_TOPIC_SUFFIX=/US/#`
     - `MALLA_MQTT_BROKER_ADDRESS=mosquitto`
     - `MALLA_MQTT_PORT=1883`
-    - `MALLA_MQTT_TOPIC_PREFIX=filtered/msh`
+    - `MALLA_MQTT_TOPIC_PREFIX=msh`
     - `PATH=/app/.venv/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`
     - `UV_TOOL_BIN_DIR=/usr/local/bin`
     - `MALLA_HOST=0.0.0.0`
@@ -48,7 +48,7 @@ _Generated 2026-07-26 17:03:34 EDT by `scripts/collect-inventory.sh`. Re-run to 
 - **Config env (secrets omitted):**
     - `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`
 
-### `oktomqtt`  _(state: running, restart: unless-stopped)_
+### `oktomqtt`  _(state: exited, restart: unless-stopped)_
 
 - **Image:** `meshtastic-mqtt-oktomqtt`
 - **Compose project:** `meshtastic-mqtt`
@@ -92,7 +92,7 @@ _Only units whose file lives under `/etc/systemd/system` (i.e. you/we installed 
 ?)_
 
 - **Unit file:** `/etc/systemd/system/disk-temp-watchdog.service`
-- **ExecStart:** `{ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /opt/disk-temp-watchdog/watchdog.py ; ignore_errors=no ; start_time=[Sun 2026-07-26 17:00:58 EDT] ; stop_time=[Sun 2026-07-26 17:00:58 EDT] ; pid=82134 ; code=exited ; status=0 }`
+- **ExecStart:** `{ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /opt/disk-temp-watchdog/watchdog.py ; ignore_errors=no ; start_time=[Fri 2026-07-31 16:08:57 EDT] ; stop_time=[Fri 2026-07-31 16:08:57 EDT] ; pid=16811 ; code=exited ; status=0 }`
 
 ### `disk-temp-watchdog.timer`  _(enabled/active)_
 
@@ -102,9 +102,10 @@ _Only units whose file lives under `/etc/systemd/system` (i.e. you/we installed 
 ?)_
 
 - **Unit file:** `/etc/systemd/system/peer-check.service`
-- **ExecStart:** `{ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /opt/peer-check/peer-check.py ; ignore_errors=no ; start_time=[Thu 2026-07-23 22:23:35 EDT] ; stop_time=[Thu 2026-07-23 22:23:37 EDT] ; pid=74258 ; code=exited ; status=0 }`
+- **ExecStart:** `{ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 /opt/peer-check/peer-check.py ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }`
 
-### `peer-check.timer`  _(enabled/inactive
+### `peer-check.timer`  _(disabled
+?/inactive
 ?)_
 
 - **Unit file:** `/etc/systemd/system/peer-check.timer`
