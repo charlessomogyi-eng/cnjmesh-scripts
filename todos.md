@@ -8,6 +8,21 @@
 
 ---
 
+### Active / Recent (July 31, 2026 — cnjmesh1 outage session)
+
+**Outage resolved: root cause was Xfinity bill (service suspended → uplink blackholed).** Paid, restored, tunnel re-registered + stable, malla.cnjmesh.me confirmed public (302). Full post-mortem in session-log.md. **RUNBOOK RULE ADDED: cnjmesh1 loses all outbound + Pi's route/WiFi/ARP check out → CHECK XFINITY UPLINK/BILL FIRST.**
+
+Six chronic cnjmesh1 findings, all DEFERRED (do NOT do post-outage/tired), in priority order:
+- **[PRIORITY / DATA-LOSS] Malla 2.0GB DB on named volume `mqtt_malla_data`, likely NOT in DR backup.** Path `/var/lib/docker/volumes/mqtt_malla_data/_data/meshtastic_history.db`. Extend backup to cover named volumes. Verify BEFORE any DB prune. (cnjmesh2 Malla is a bind mount — inconsistent.)
+- `collect-inventory.sh` doesn't resolve named-volume paths (that's why the 2GB DB was invisible in git). Enhance script.
+- Malla slowness = 2GB DB + 77MB uncheckpointed WAL → 58s gateway-stats query. WAL checkpoint + retention/prune (AFTER backup confirmed).
+- Docker memory cgroups DISABLED (`docker stats` = 0B/0B). Add `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` — REQUIRES REBOOT, plan it.
+- Post-swap tooling not restored (no dig/nslookup). `apt install dnsutils` + audit baseline.
+- Xfinity link jittery post-restore (175-313ms). Optional gateway power-cycle when convenient.
+- **OPEN DECISION:** offload-vs-headroom-vs-rebuild for cnjmesh1 (over-subscribed: 16 containers / 1.8GB RAM / no mem guardrails). Now data-backed. Decide fresh, not tired.
+
+---
+
 ### Active / Recent (July 31, 2026 session)
 
 - **cnjmesh2 oktomqtt filter DISABLED — TEMPORARY, pending Charles's decision on permanent.** malla2.cnjmesh.me now reads the raw `msh/US/#` topic directly (matching cnjmesh1's Malla) instead of oktomqtt's `filtered/msh/...` output. oktomqtt is `docker stop`ped (stays down across reboots; only a full-stack `docker compose up -d` with no service named revives it). Full context + literal reverse steps in `session-log.md` (July 31 entry). Compose backup on the Pi: `~/meshtastic-mqtt/docker-compose.yml.bak-preoktomqtt`.
