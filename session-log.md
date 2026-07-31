@@ -1038,3 +1038,34 @@ Follow-up to the oktomqtt/malla2 change above. While checking whether the raw-fi
 **Fix applied (cnjmesh2):** created `/etc/docker/daemon.json` with `json-file` driver, `max-size: 10m`, `max-file: 3` (matches cnjmesh1's pattern — 30MB cap per container). Validated the JSON, `sudo systemctl restart docker` to load the default, then `docker compose up -d --force-recreate malla-capture malla-web mosquitto` (daemon defaults only apply to newly-created containers). Named those three explicitly so oktomqtt stayed stopped — confirmed via the compose output (only the three recreated) and inspect. All three now show `{json-file map[max-file:3 max-size:10m]}`. oktomqtt (still stopped) will only get the cap if/when it's ever recreated — moot while stopped, and it's slated for removal if the change goes permanent.
 
 Note: both cnjmesh2 compose files still carry an obsolete `version: '3.8'` line (harmless Compose warning) — optional future cleanup, not done.
+
+---
+
+### July 31, 2026 (cont.) — cnjmesh1: full outage post-mortem (ROOT CAUSE: Xfinity bill) + 6 chronic findings
+**Reported symptom:** malla.cnjmesh.me and meshview appeared down; Charles felt "something very off" with cnjmesh1 since the post-death board replacement, and asked about an OS upgrade. Started as OS-upgrade + diagnose-root-cause, became a live outage investigation.
+
+**ROOT CAUSE OF THE OUTAGE: Xfinity/Comcast service was suspended for non-payment.** The uplink was blackholed at the gateway. Everything downstream failed as symptoms:
+- `apt update` → `Temporary failure resolving` on every mirror (couldn't reach DNS).
+- cloudflared → `failed to dial to edge with quic: timeout: no recent network activity`, retrying endlessly; then `systemctl restart cloudflared` hit a **start timeout** because a startup DNS lookup (`cfd-features.argotunnel.com`) blocked >10s.
+- Malla/Meshview "down" publicly = tunnel down, not the apps.
+Resolved the moment Charles paid the bill: gateway ping recovered (0% loss), internet + DNS restored, `systemctl reset-failed cloudflared && restart` came up clean, tunnel re-registered edge connections and **stabilized** (no flapping after link settled), and **`https://malla.cnjmesh.me/` confirmed reachable end-to-end (302 in 6.5s)**. Meshview was healthy locally the whole time (302 on localhost:8080).
+
+**DIAGNOSTIC PATH (for the runbook):** the tell that isolated it to the gateway (not the Pi) — `ip route` showed correct `default via 10.0.0.1`, wlan0 UP/associated to C4Somogyi-24, NetworkManager `connected`, signal healthy (-63 dBm), ARP resolved the router MAC — i.e. **every layer on the Pi was correct**, yet `ping 10.0.0.1` = 100% loss and `10.0.0.1:53` unreachable. Config perfect + gateway won't pass traffic = problem is upstream of the Pi. **>> RUNBOOK: when cnjmesh1 loses all outbound (apt/tunnel/DNS all failing at once) and the Pi's own route/WiFi/ARP check out, CHECK THE XFINITY UPLINK / BILL FIRST before rabbit-holing into DNS, IPv6, cloudflared, or memory. This cost ~2 hours of symptom-chasing.**
+
+**SIX CHRONIC FINDINGS (real, none are emergencies, all deferred to a clear-headed session — NOT to be done post-outage/tired):**
+
+1. **[PRIORITY — DATA LOSS RISK] Malla DB is 2.0GB on a Docker NAMED VOLUME, likely NOT backed up.** Actual path: `/var/lib/docker/volumes/mqtt_malla_data/_data/meshtastic_history.db` (2.0G + 77M uncheckpointed WAL). The PowerShell DR backup-pull targets bind-mount paths under stack dirs; a named volume under `/var/lib/docker/volumes/` is almost certainly NOT covered. If cnjmesh1's SD card dies (this is the REPLACEMENT board, no track record), the entire Meshtastic history is lost. **FIX: extend backup to cover the named volume (or `docker run --rm -v mqtt_malla_data:/v -v ...:/backup ... tar` it). Verify before any DB prune.** NOTE: cnjmesh2's Malla is a bind mount (`~/meshtastic-mqtt/malla`) — inconsistent between boxes.
+
+2. **`collect-inventory.sh` doesn't resolve named-volume source paths.** The 2GB DB was invisible in install-map-cnjmesh1.md because the script surfaces bind mounts but not named-volume `/var/lib/docker/volumes/...` sources. **FIX: enhance the script to resolve named volumes to their host paths + sizes.**
+
+3. **Malla slowness root cause = 2GB DB + uncheckpointed 77MB WAL.** The 24h gateway-stats aggregation takes **58.3s** (logged: "Gateway statistics computed in 58.278s"), cached only 300s — so every cold-cache page load times out browsers. App is healthy (returns 200), just grinding a huge DB on a starved box. **FIX: WAL checkpoint + retention/prune on the DB (after backup is confirmed). CoreScope's own project added an hourly WAL checkpoint for exactly this class of problem (v3.8.2 release note).**
+
+4. **Docker memory cgroup accounting/limits DISABLED.** `docker stats` shows `0B / 0B` for ALL containers = kernel memory cgroup controller not enabled (missing `cgroup_enable=memory cgroup_memory=1` in `/boot/firmware/cmdline.txt`). Means NO per-container memory limits are enforceable → no guardrail against one container eating all RAM → contributes to the swap pressure/fragility. Likely a post-swap regression (fresh Trixie install never had the line re-added). **FIX: add to cmdline.txt — REQUIRES REBOOT, plan it, watch it come back up (16 containers slow to recover under swap).**
+
+5. **Tooling baseline not restored post-swap.** No `dig`, `nslookup` installed (had to diagnose DNS with getent/ping/bash-/dev/tcp). Another "replacement board never brought to original's baseline" item. **FIX: `apt install dnsutils` + audit what else the original had.**
+
+6. **Xfinity link up but jittery post-restore.** Gateway ping 175–313ms, cloudflared briefly flapped connections while settling. Common after suspend-clear. **FIX (optional, when convenient): power-cycle the Comcast gateway to force clean re-provision. NOT a Pi action.**
+
+**CAPACITY VERDICT (answers Charles's opening "something feels off"):** it wasn't one thing. The OUTAGE was purely Xfinity (Pi was healthy). The chronic "off" feeling = the replacement board was never restored to baseline (findings 4,5) AND the box is over-subscribed (16 containers, 1.8GB RAM, ~40-90MB free, 1.5GB swap, no memory guardrails) with a bloated Malla DB. NO OOM kills observed (kernel isn't reaping) so it's fragile/slow, not actively crashing. The offload-vs-headroom-vs-rebuild decision from the top of session is still open — now with data behind it — and deliberately deferred to a fresh session, not decided tired post-outage.
+
+**Confirmed NOT problems (ruled out this session):** OS is current Trixie (kernel 6.12.62, nothing to upgrade to). WiFi power-save correctly off. resolv.conf correct. Disk fine (54% / 26G free). Meshview healthy (systemd services meshview-db/meshview-web, NOT docker). Route/WiFi/ARP config all correct.
