@@ -1000,3 +1000,32 @@ Continuation of the disk-full incident logged earlier. Summary of everything don
 **CURRENT STATE as of end of session:** Malla is reachable, Cloudflare Access (email+PIN login) works fine — but the site itself loads very slowly due to the large, still-unpruned database. This is NOT the disk-full problem (that's fixed) — it's a separate, ongoing performance issue tied to dataset size. Cloudflare Access itself was investigated as a possible culprit for an "totally down" report mid-session but self-resolved before a root cause was found — worth noting Access wasn't confirmed broken, may have been transient or related to the same backend slowness (a login redirect timing out while the backend was still catching up).
 
 **Next session:** (1) check if DB size has dropped after retention had time to run; (2) if not, investigate Malla's actual retention/pruning mechanism (check its GitHub docs/source for how `data_retention_hours` is enforced — scheduled job vs on-write vs manual trigger); (3) if pruning genuinely isn't happening, may need a manual one-time cleanup query against the SQLite DB directly, or check for a Malla CLI/admin command that triggers it.
+
+---
+
+### July 31, 2026 — cnjmesh2: removed malla2 from the oktomqtt filter, pointed it at the raw topic (matches cnjmesh1's Malla)
+**Goal (Charles):** make `malla2.cnjmesh.me` on cnjmesh2 run the same as `malla.cnjmesh.me` on cnjmesh1 — i.e. drop the oktomqtt filter dependency. Temporary for now, possibly permanent.
+
+**Why this works / what was confirmed first:** cnjmesh1's Malla (`mqtt-malla-capture-1`) never used its filter either — it subscribes directly to raw `msh/US/#` (`MALLA_MQTT_TOPIC_PREFIX=msh`, `MALLA_MQTT_TOPIC_SUFFIX=/US/#`). cnjmesh2's Malla (`malla-capture`) was instead downstream of oktomqtt, subscribed to `filtered/msh/+/+/+/#`. oktomqtt's own INPUT was already `msh/US/#`, so the raw topic is present on cnjmesh2's local broker — pointing Malla straight at it means the same data with no gap. Confirmed both configs against the install-maps before touching anything.
+
+**Change made (cnjmesh2, `~/meshtastic-mqtt/docker-compose.yml`):** edited `malla-capture`'s two topic env vars:
+- `MALLA_MQTT_TOPIC_PREFIX`: `filtered/msh` → `msh`
+- `MALLA_MQTT_TOPIC_SUFFIX`: `/+/+/+/#` → `/US/#`
+Edit was done via a Python script (`/tmp/malla_topic_fix.py`) that required each old line to appear exactly once before touching anything, backed up the file, and printed a diff. **Backup on the Pi: `~/meshtastic-mqtt/docker-compose.yml.bak-preoktomqtt`.**
+
+Then `cd ~/meshtastic-mqtt && docker compose up -d malla-capture` (had to be `up -d`, not `restart`, to pick up the env change; named the service so oktomqtt was untouched at this step). Verified in `docker logs malla-capture`: connected to `mosquitto:1883`, **subscribed to `msh/US/#`** (raw, not filtered), existing DB intact (661 nodes / 151,200 packets carried over), live packets flowing, and a real decrypt succeeded on its own (SBNJ Kendall Park Roof Node 6, key 1/1) — so Malla is decoding the raw stream itself with no oktomqtt in the path. Active-node count ticked up across stats lines = stable ongoing ingest.
+
+**Then disabled the filter (cnjmesh2):** `docker stop oktomqtt`. Because its restart policy is `unless-stopped`, a manual `docker stop` keeps it down across Docker daemon restarts AND full host reboots. The ONLY thing that revives it is an explicit full-stack `docker compose up -d` (no service named) from `~/meshtastic-mqtt`, which reconciles against the compose files (both still define oktomqtt) and would recreate it.
+
+**Note on file layout:** cnjmesh2's compose is split across TWO files that Compose auto-merges — `docker-compose.yml` (main, all four services) and `docker-compose.override.yml` (an oktomqtt-only block with extra env vars: `CHANNEL_KEYS`, `NO_DECRYPT_DEFAULT`, `ALLOW_NO_BITFIELD`, `REJECT_LOG_FILE`, `EXEMPT_NODES`, `SHOW_STATS`, `DEBUG`). Both carry an obsolete `version: '3.8'` line (harmless Compose warning). If oktomqtt is ever made permanent-removed, it has to come out of BOTH files.
+
+**HOW TO REVERSE (temporary → back to filtered):**
+1. `docker start oktomqtt` (cnjmesh2) — brings the filter back.
+2. Revert the two env lines in `~/meshtastic-mqtt/docker-compose.yml` back to `MALLA_MQTT_TOPIC_PREFIX=filtered/msh` and `MALLA_MQTT_TOPIC_SUFFIX=/+/+/+/#` (or just restore `docker-compose.yml.bak-preoktomqtt` over it).
+3. `cd ~/meshtastic-mqtt && docker compose up -d malla-capture` to re-point Malla at the filtered topic.
+
+**IF MADE PERMANENT instead:** remove the `oktomqtt` service block from BOTH `docker-compose.yml` and `docker-compose.override.yml` (with backups), then re-run `collect-inventory.sh` on cnjmesh2 and this gets pushed. Left as a todo until Charles decides.
+
+**Pi Zero 2 W caution (512MB RAM board) — flagged, not yet a problem:** malla2 now eats the raw firehose instead of oktomqtt's validated/deduped output, so more volume + it does its own per-packet decrypt. Three gauges to watch on cnjmesh2 over the next day: (1) RAM/swap (`free -h`, `docker stats`) — 512MB shared across malla-capture + malla-web + mosquitto; (2) DB/SD growth — raw stream writes more rows to `meshtastic_history.db`, confirm Malla retention/cleanup is actually bounding it (same disk-fill risk that hit cnjmesh1 twice); (3) Docker log rotation — malla-capture logs per-packet, confirm cnjmesh2's `/etc/docker/daemon.json` has the 10MB×3 cap so the container log can't balloon. If any get tight, re-enabling oktomqtt is the quickest volume-reduction safety valve — another reason it was left stoppable rather than deleted.
+
+**Housekeeping still due:** `install-map-cnjmesh2.md` needs a `collect-inventory.sh` regen to reflect oktomqtt's stopped state + the new malla-capture topic values (the committed map still shows the old `filtered/msh` config and oktomqtt running). Not a reversal risk — full reversal detail is captured above.
