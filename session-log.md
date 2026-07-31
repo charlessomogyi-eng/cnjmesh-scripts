@@ -1078,3 +1078,15 @@ Took a manual consistency-safe snapshot of the Malla DB while addressing the bac
 Noted during this: the ~5-8 min it took to copy 2GB visibly degraded cnjmesh1 further (Charles reported malla.cnjmesh.me giving a Cloudflare "host error" on his phone during the copy) — consistent with the box's chronic memory/swap pressure (finding #4 above), not a new problem. Should clear once the box is idle.
 
 **Session closed here at Charles's request (token budget).** Malla's slowness is NOT resolved — explicitly deferred, not forgotten. Do not assume DB size is the confirmed root cause of the 58s query; verify via query plan/indexes (read-only) before any VACUUM next session.
+
+---
+
+### July 31, 2026 (cont.) — CORRECTION: malla.cnjmesh.me confirmed DOWN, not just slow. Session stopped here (credit budget).
+Earlier same-session entries said Malla was "healthy, just slow on cold cache" — that was true at the time it was checked (58s query, then returned 200) but is **NOT the current state**. After the manual 2GB DB backup copy, Charles reported a Cloudflare "host error" on his phone. Follow-up local checks confirmed a real outage, not cache coldness:
+- `curl localhost:5008` (local, bypassing tunnel): **timeout, 0 bytes, 15s and 20s** — consistent failure, not a one-off.
+- `docker restart mqtt-malla-web-1`: container restarted, but **still not serving 30+ seconds later** (still timing out at 20s).
+- Container `docker ps` shows `Up`, but the Flask process inside is not accepting/responding to requests.
+
+**Root cause NOT confirmed.** Leading hypothesis, not verified: the box's chronic memory/swap pressure (findings #4 in the outage post-mortem above) was pushed over the edge by the 2GB backup-copy I/O load, and malla-web can't fully start/serve under current memory conditions even after a restart. Not proven — could also be the 2GB DB itself blocking startup (e.g. WAL recovery, index load) rather than memory. **DO NOT ASSUME CAUSE — diagnose fresh next session with `docker logs mqtt-malla-web-1` (was not captured before session end) and `free -h` (was not captured after the failed restart).**
+
+**STATUS AT SESSION CLOSE: malla.cnjmesh.me / mqtt-malla-web-1 is DOWN — confirmed via local curl, not just tunnel/public access.** This is NOT resolved. Stopped here at Charles's request due to session credit budget, not because the issue was fixed. Next session: start with `docker logs --tail 30 mqtt-malla-web-1` and `free -h` on cnjmesh1 before any further action.
