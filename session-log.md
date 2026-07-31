@@ -1069,3 +1069,12 @@ Resolved the moment Charles paid the bill: gateway ping recovered (0% loss), int
 **CAPACITY VERDICT (answers Charles's opening "something feels off"):** it wasn't one thing. The OUTAGE was purely Xfinity (Pi was healthy). The chronic "off" feeling = the replacement board was never restored to baseline (findings 4,5) AND the box is over-subscribed (16 containers, 1.8GB RAM, ~40-90MB free, 1.5GB swap, no memory guardrails) with a bloated Malla DB. NO OOM kills observed (kernel isn't reaping) so it's fragile/slow, not actively crashing. The offload-vs-headroom-vs-rebuild decision from the top of session is still open — now with data behind it — and deliberately deferred to a fresh session, not decided tired post-outage.
 
 **Confirmed NOT problems (ruled out this session):** OS is current Trixie (kernel 6.12.62, nothing to upgrade to). WiFi power-save correctly off. resolv.conf correct. Disk fine (54% / 26G free). Meshview healthy (systemd services meshview-db/meshview-web, NOT docker). Route/WiFi/ARP config all correct.
+
+---
+
+### July 31, 2026 (cont.) — cnjmesh1: manual Malla DB backup taken; session closed
+Took a manual consistency-safe snapshot of the Malla DB while addressing the backup-gap finding above: `docker exec mqtt-malla-web-1 python3 -c "...sqlite3 .backup..."` inside the container (in-place page-copy, `sqlite3` CLI not present in the image so used Python's `sqlite3.backup()` API), then copied the resulting snapshot out of the Docker named volume to the host. **Result: `/home/somog/backups/malla-backup-20260731.db`, 2.0G, confirmed present.** This is a one-time manual backup, NOT yet automated — `cnjmesh1-backup.sh` still does not cover the named volume (see todos.md). Still needs to be copied off-Pi (scp to laptop / OneDrive) — not yet done as of session close.
+
+Noted during this: the ~5-8 min it took to copy 2GB visibly degraded cnjmesh1 further (Charles reported malla.cnjmesh.me giving a Cloudflare "host error" on his phone during the copy) — consistent with the box's chronic memory/swap pressure (finding #4 above), not a new problem. Should clear once the box is idle.
+
+**Session closed here at Charles's request (token budget).** Malla's slowness is NOT resolved — explicitly deferred, not forgotten. Do not assume DB size is the confirmed root cause of the 58s query; verify via query plan/indexes (read-only) before any VACUUM next session.
