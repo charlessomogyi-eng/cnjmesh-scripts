@@ -983,3 +983,20 @@ Both threads are real, active leads — not guesses — but require the next ses
 SGA reported Malla stuck loading. Traced through mqtt-malla-capture-1 logs (`OSError: No space left on device`) to `df -h` showing cnjmesh1's root filesystem at 100% full, 0 bytes free. Found the actual culprit via a full container-log-size scan: **mqtt-filter had a 35GB unrotated Docker log** (Malla's own capture log was a comparatively minor 1.1GB). This matches a previously-flagged suspect from months ago ("leak/backlog cause in mqtt_filter.py") — now confirmed as the real, dominant cause. Truncated both log files (`sudo truncate -s 0 <path>` — safe, doesn't touch the running container). Disk recovered from 100%/0 free to 43%/32GB free immediately.
 
 This is the second time an unrotated container log has filled the root disk (first was the 37GB Mosquitto log tied to the original board failure months ago). Log rotation is still only applied to Mosquitto — mqtt-filter and ~10 other containers remain unbounded. This needs to actually get finished, not firefought container-by-container as each one happens to hit the ceiling. Also worth investigating separately why mqtt-filter specifically produces so much log volume (35GB is a lot for a filtering service — possible verbose logging or an error retry loop).
+
+---
+
+### July 30-31, 2026 — Malla emergency: disk-full root cause fixed, retention set, current status = reachable but slow (not resolved)
+Continuation of the disk-full incident logged earlier. Summary of everything done and current confirmed state:
+
+**Fixed:** cnjmesh1 root disk (was 100% full due to mqtt-filter's 35GB unrotated log) truncated back to 32GB free. Malla's own 1.1GB log also truncated. Both mqtt-malla-capture-1 and mqtt-malla-web-1 restarted and confirmed healthy/ingesting live data (real packets flowing, e.g. AgentFourtyTwo, Rak Roof Bot, Sense Card).
+
+**Set:** `data_retention_hours: 2160` (90 days) uncommented in `/opt/stacks/malla/config.yaml` (was `0` = never delete). Restarted both malla containers to pick it up.
+
+**NOT confirmed:** whether retention pruning actually shrinks the existing 1.7GB database — checked immediately after restart and size was unchanged (still 1.7GB). No prune/retention/delete log lines found in either container's logs. Likely explanation: pruning may only apply going forward, or run on a delayed/scheduled basis rather than immediately at startup — Malla's exact retention-enforcement mechanics are NOT understood, only the config option's existence is confirmed. Worth checking again after some real time has passed (a day+) to see if the DB has actually shrunk.
+
+**Root cause of ongoing slowness:** confirmed via mqtt-malla-web-1 logs — a single "Gateway statistics" query took 50 seconds to compute, directly consistent with querying a 1.7GB unpruned SQLite database. This explains: SGA's original "stuck loading" report, a direct local `curl` to port 5008 timing out at both 5s and 8s windows, and tonight's final confirmed state.
+
+**CURRENT STATE as of end of session:** Malla is reachable, Cloudflare Access (email+PIN login) works fine — but the site itself loads very slowly due to the large, still-unpruned database. This is NOT the disk-full problem (that's fixed) — it's a separate, ongoing performance issue tied to dataset size. Cloudflare Access itself was investigated as a possible culprit for an "totally down" report mid-session but self-resolved before a root cause was found — worth noting Access wasn't confirmed broken, may have been transient or related to the same backend slowness (a login redirect timing out while the backend was still catching up).
+
+**Next session:** (1) check if DB size has dropped after retention had time to run; (2) if not, investigate Malla's actual retention/pruning mechanism (check its GitHub docs/source for how `data_retention_hours` is enforced — scheduled job vs on-write vs manual trigger); (3) if pruning genuinely isn't happening, may need a manual one-time cleanup query against the SQLite DB directly, or check for a Malla CLI/admin command that triggers it.
