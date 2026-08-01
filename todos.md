@@ -8,6 +8,15 @@
 
 ---
 
+### [PENDING ACTION] Aug 1, 2026 — cnjmesh1 unreachable from LAN, gateway pattern recurred 3rd time
+
+- **Power-cycle the Xfinity/Comcast gateway when Charles is home** (unplug 60s, plug back in, wait 3-5 min). This is the deferred fix from July 31, now needed a 3rd time. Verify with `Test-NetConnection -ComputerName 10.0.0.181 -Port 22` from laptop (`TcpTestSucceeded: True` = fixed).
+- **Pattern:** "Pi config correct (wlan0 UP, right IP, associated), gateway (10.0.0.1) 100% unreachable" — happened 3x in ~36 hrs (July 31 outage + 2x Aug 1). Pi's own config has checked out clean every time. If gateway reboot doesn't produce a LASTING fix, escalate to investigating router-side MAC/config handling (replacement Pi has a new WiFi MAC — flagged July 31, never fully investigated) rather than re-diagnosing the Pi again.
+- **Also found:** disk jumped 54%->85% in one day (8.4G free) — likely the 2GB Malla backup snapshot + DB rewrite churn left on the Pi. Backup snapshot (`/home/somog/backups/malla-backup-20260731.db`, 2GB) still needs to move off-Pi — scp attempt failed due to the network issue above, retry once connectivity is restored.
+- **Separate axis from the July 31 memory/capacity findings** — don't conflate. This is a network/gateway problem; July 31's findings were RAM/DB/cgroup capacity problems. Charles is questioning whether cnjmesh1 hardware is worth continuing to troubleshoot — worth addressing head-on once both axes are stabilized.
+
+---
+
 ### Active / Recent (Aug 1, 2026 — backup gap follow-up)
 
 - **[IN PROGRESS] Add step 7 to `cnjmesh1-backup.sh`: capture ALL databases in Docker named volumes not already covered.** Confirmed by reading the script: it backs up `/opt/stacks/`, meshing-around, graywolf-discord, cloudflared config, Graywolf DB, discord-shim seen_nodes.db, Postgres dump — but NOT anything under `/var/lib/docker/volumes/`. Malla's DB (`mqtt_malla_data` named volume, 1.7GB) is therefore NOT in the automated backup — the gap that forced tonight's manual snapshot. Enumerate all named-volume DBs and add a generic step that tars each out of its volume. (cnjmesh2's Malla is a bind mount by contrast — inconsistent between hosts; consider standardizing.) Note: a 1.7GB DB will bloat the tar.gz significantly — consider whether Malla history belongs in the main archive or a separate/less-frequent DB backup.
@@ -20,7 +29,7 @@
 
 Six chronic cnjmesh1 findings, all DEFERRED (do NOT do post-outage/tired), in priority order:
 - **[DONE — manual snapshot] Malla 2.0GB DB backed up:** `/home/somog/backups/malla-backup-20260731.db` (SQLite consistent copy, cnjmesh1). **STILL TODO:** copy off-Pi to laptop/OneDrive; add named-volume coverage to `cnjmesh1-backup.sh` (step 7) so this isn't manual going forward. Path `/var/lib/docker/volumes/mqtt_malla_data/_data/meshtastic_history.db` (cnjmesh2 Malla is a bind mount — inconsistent, note only).
-- **[URGENT] malla.cnjmesh.me / mqtt-malla-web-1 is DOWN, confirmed via local curl (not just tunnel).** Restarted once, still not serving 30s+ later. Root cause unconfirmed — leading guess is memory pressure from the 2GB backup copy, but NOT verified. **START NEXT SESSION HERE:** `docker logs --tail 30 mqtt-malla-web-1` + `free -h` on cnjmesh1 (neither was captured before this session ended on credit budget). Do underlying DB work (query plan / VACUUM) only after service is confirmed back up.
+- **[RESOLVED — root cause NOT DB size] Malla query still slow (~41s) after pruning 690K rows + 2x VACUUM + ANALYZE.** DB shrank 2.0GB->1.7GB but speed unchanged. Confirmed via Malla's own repo (`github.com/zenitraM/malla`, AI.md) it's an unoptimized hobby project — root cause is app-code-level (likely inefficient Python stats computation on single-threaded Flask dev server), NOT the database. **NEXT SESSION: read Malla's actual source (gateway_service.py or equivalent) — do not run more VACUUM/prune, that avenue is exhausted.** `malla-warmcache.timer` installed as a stopgap but its effectiveness is UNVERIFIED — test before relying on it.
 - `collect-inventory.sh` doesn't resolve named-volume paths (that's why the 2GB DB was invisible in git). Enhance script.
 - Malla slowness = 2GB DB + 77MB uncheckpointed WAL → 58s gateway-stats query. WAL checkpoint + retention/prune (AFTER backup confirmed).
 - Docker memory cgroups DISABLED (`docker stats` = 0B/0B). Add `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` — REQUIRES REBOOT, plan it.
