@@ -8,6 +8,12 @@
 
 ---
 
+### Active / Recent (Aug 1, 2026 — backup gap follow-up)
+
+- **[IN PROGRESS] Add step 7 to `cnjmesh1-backup.sh`: capture ALL databases in Docker named volumes not already covered.** Confirmed by reading the script: it backs up `/opt/stacks/`, meshing-around, graywolf-discord, cloudflared config, Graywolf DB, discord-shim seen_nodes.db, Postgres dump — but NOT anything under `/var/lib/docker/volumes/`. Malla's DB (`mqtt_malla_data` named volume, 1.7GB) is therefore NOT in the automated backup — the gap that forced tonight's manual snapshot. Enumerate all named-volume DBs and add a generic step that tars each out of its volume. (cnjmesh2's Malla is a bind mount by contrast — inconsistent between hosts; consider standardizing.) Note: a 1.7GB DB will bloat the tar.gz significantly — consider whether Malla history belongs in the main archive or a separate/less-frequent DB backup.
+
+---
+
 ### Active / Recent (July 31, 2026 — cnjmesh1 outage session)
 
 **Outage resolved: root cause was Xfinity bill (service suspended → uplink blackholed).** Paid, restored, tunnel re-registered + stable, malla.cnjmesh.me confirmed public (302). Full post-mortem in session-log.md. **RUNBOOK RULE ADDED: cnjmesh1 loses all outbound + Pi's route/WiFi/ARP check out → CHECK XFINITY UPLINK/BILL FIRST.**
