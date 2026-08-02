@@ -1117,3 +1117,26 @@ Attempted to scp the Malla backup off cnjmesh1 to Charles's laptop to reclaim sp
 **PATTERN NOTE for runbook:** "Pi config correct, WiFi associated, gateway unreachable" has now happened 3x in ~36 hours (July 31 outage, and twice more Aug 1). The July 31 instance was confirmed caused by an Xfinity billing suspension and resolved by payment — but recurrence AFTER payment/restoration suggests either (a) the link genuinely destabilized and needs the deferred gateway reboot, or (b) something router-side (possibly related to the replacement Pi's new WiFi MAC — flagged July 31, never fully investigated) is causing intermittent drops. **If the gateway power-cycle does not produce a lasting fix, escalate to investigating the MAC-address/router-config angle rather than re-diagnosing from the Pi side again — the Pi's own config has now checked out clean 3 times in a row.**
 
 **Charles's assessment, worth preserving verbatim in spirit:** frustration that this is recurring "every day" and questioning whether the hardware is worth continuing to troubleshoot vs. replacing. Noted for the offload/rebuild capacity decision still pending from July 31 (see prior entries) — this recurring connectivity issue is a separate axis from the memory/capacity issue, and should be evaluated separately (network/gateway problem vs. Pi capacity problem) rather than conflated.
+
+---
+
+### Aug 2, 2026 (~5am) — Malla root cause CONFIRMED: single-threaded Flask dev server, not DB size. Gunicorn fix identified but NOT completed.
+
+**CORRECTION to earlier same-session entries:** a 3.2s query time was observed and mistakenly reported as the pruning fix working. It was NOT — a later request in the same session logged `Gateway statistics computed in 42.999s`, confirming the query cost is essentially UNCHANGED from before any pruning/VACUUM work. The 3.2s reading was luck (landed on a warm cache), not a fix.
+
+**Real root cause, confirmed:** Malla runs on Flask's single-threaded dev server (`/app/.venv/bin/malla-web`, confirmed via `docker inspect`). While the ~40s dashboard stats computation runs, other request types (packets page, API endpoints) DO get served (different code path), but concurrent/dashboard requests queue or time out behind it. This is what produces the "up and down" experience Charles reported — not truly down, but effectively unusable because whether any given request lands during the ~40s window is unpredictable.
+
+**Fix identified: run Malla under gunicorn (multi-worker) instead of the Flask dev server.**
+- Confirmed factory function: `create_app()` at line 68 of `/app/src/malla/web_ui.py` — NOT a module-level `app` object (an `from malla.web_ui import app` import fails). Correct gunicorn target string: `"malla.web_ui:create_app()"`.
+- `pip install gunicorn` inside `mqtt-malla-web-1` succeeded cleanly (gunicorn 23.0.0 installed, confirmed via error banner on next run — no image rebuild needed, base image already has what gunicorn needs).
+- Test run on port 5009 (side-by-side, NOT touching live 5008): result was inconsistent/unresolved — gunicorn logged "Address already in use" on a second attempt (implying an earlier `-d` backgrounded instance WAS running), but curl to that port got instant "Connection refused" rather than a real response. Did not get this fully working before stopping for the night — this discrepancy needs to be understood before proceeding (worker startup timing? a stale/orphaned process? needs clean investigation, not more live trial-and-error at 5am).
+
+**NEXT SESSION — do this first, in order:**
+1. `docker exec mqtt-malla-web-1 ps aux | grep gunicorn` — check for orphaned/stuck gunicorn processes from tonight's testing; kill any found.
+2. Retest gunicorn on port 5009 cleanly (foreground, watch full startup output, confirm each of the 3 workers actually binds — don't background with `-d` until confirmed working foreground first).
+3. Once confirmed serving on 5009: make it permanent by editing the `mqtt-malla-web-1` service `command:` in `/opt/stacks/mqtt/docker-compose.yml` to launch gunicorn (`gunicorn -w 3 -b 0.0.0.0:5008 "malla.web_ui:create_app()"`) instead of the default entrypoint, then `docker compose up -d --force-recreate malla-web`.
+4. NOTE: `pip install gunicorn` done via `docker exec` tonight is NOT persistent — it lives only in the running container's writable layer and will be LOST on next recreate/restart. The permanent fix needs gunicorn baked in properly: either add it via a custom Dockerfile layer, or reinstall as part of an entrypoint override/init script in compose. Do not just flip the `command:` without re-solving the gunicorn-install-persistence problem first, or the container will fail to start post-recreate.
+
+**CoreScope: confirmed healthy tonight** — 200 response in 0.7s, clean ingest logs, no errors, no action needed.
+
+**Session ended here (~5am) at Charles's judgment — mid-fix, deliberately not pushed further live. This is the correct stopping point: root cause is finally understood and correct, fix is scoped and partially validated, remaining work is clear and bounded for next session.**
