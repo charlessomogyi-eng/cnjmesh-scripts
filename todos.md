@@ -8,6 +8,14 @@
 
 ---
 
+### [CHECK TOMORROW] Aug 2, 2026 — Malla DB + CoreScope functionality
+
+- **Malla:** DB prune (30-day retention) + VACUUM from Aug 1 DID reduce query time (3.2-3.3s observed in logs, down from 41-48s) — real improvement, contrary to earlier read tonight. BUT: concurrent requests can collide — saw TWO overlapping "cache miss" computations firing ~2s apart (04:49:17 and 04:49:20), which can stall the box entirely on simultaneous recomputes. Suspect the `malla-warmcache.timer` (installed Aug 1) is colliding with real visitor traffic. Restarted `mqtt-malla-web-1` at end of session to clear a stuck state — verify it's actually serving normally, and reconsider/remove the warmcache timer if collisions keep happening.
+- **CoreScope:** not checked at all tonight — verify it's up and functioning (`docker ps`, `docker logs corescope`, check corescope.cnjmesh.me). The `local` MQTT source instability noted in earlier session-log entries was never resolved — confirm current state.
+- **Network note:** cnjmesh1 lost gateway reachability again overnight (Aug 2, ~4:30am) — WiFi itself was healthy (good signal, associated) but new connections to 10.0.0.1 failed while an existing SSH session stayed alive. Fixed via `nmcli connection down/up "C4Somogyi-24"` (NOT a router reboot — confirmed the rest of the house's WiFi was unaffected, so this is local to cnjmesh1's own connection state, not the gateway). If this recurs, this specific command is the known fix — no router action needed.
+
+---
+
 ### Active / Planned (Aug 1, 2026 — Malla cloud migration TEST)
 
 - **Test-migrate Malla to a Hetzner cloud box (Option A, non-destructive).** Full plan in `docs/malla-cloud-migration-test.md`. Decision locked: Hetzner CPX11, Ashburn US-East, Ubuntu 24.04, ~$4.90/mo flat (€20 new-customer credit = ~4 months free). Goal: get public-facing Malla OFF the home connection so Xfinity/gateway outages stop blanking the public site.
