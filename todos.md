@@ -8,6 +8,15 @@
 
 ---
 
+### Active / Planned (Aug 1, 2026 — Malla cloud migration TEST)
+
+- **Test-migrate Malla to a Hetzner cloud box (Option A, non-destructive).** Full plan in `docs/malla-cloud-migration-test.md`. Decision locked: Hetzner CPX11, Ashburn US-East, Ubuntu 24.04, ~$4.90/mo flat (€20 new-customer credit = ~4 months free). Goal: get public-facing Malla OFF the home connection so Xfinity/gateway outages stop blanking the public site.
+- **KEY: parallel + reversible + fallback.** cnjmesh1 Malla stays running untouched. Cloud Malla runs from the EXISTING DB backup (`/home/somog/backups/malla-backup-20260731.db`). Test on `malla-test.cnjmesh.me`; real `malla.cnjmesh.me` stays on the Pi until/unless Charles likes it. Abandon = delete Hetzner box (billing stops immediately). Cutover = one reversible DNS change.
+- **Honest caveat baked into the plan:** the ~41s slow query is app-code, not DB/hardware — it MAY still be slow on the cloud box. The guaranteed win is reliability/decoupling from home internet, NOT necessarily speed. Verify on the test box before assuming.
+- **Next-session start:** laptop SSH keygen -> Hetzner signup -> create CPX11 -> Docker -> copy compose+DB -> test subdomain. Claude Code is a good fit for the command legwork.
+
+---
+
 ### [PENDING ACTION] Aug 1, 2026 — cnjmesh1 unreachable from LAN, gateway pattern recurred 3rd time
 
 - **Power-cycle the Xfinity/Comcast gateway when Charles is home** (unplug 60s, plug back in, wait 3-5 min). This is the deferred fix from July 31, now needed a 3rd time. Verify with `Test-NetConnection -ComputerName 10.0.0.181 -Port 22` from laptop (`TcpTestSucceeded: True` = fixed).
