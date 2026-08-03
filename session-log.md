@@ -1218,3 +1218,19 @@ Previous entry framed KPR1's MQTT-disconnect as "ties to retirement" — that's 
 3. Get dracoling's database-cleanup notes.
 4. THEN decide gunicorn vs upgrade vs both, informed by 1-3. Gunicorn addresses concurrency/blocking; a self-pruning upgrade addresses DB growth; bot-blocking addresses load. These are THREE different levers for what may be overlapping causes — don't fixate on one.
 Note the XSS/security angle (CVE-2026-43980, all versions <=0.1.7) also argues for upgrading — but confirm a newer version actually fixes it AND doesn't break our raw-topic/config setup before pulling.
+
+---
+
+### Aug 2, 2026 — KEY timeline ambiguity to resolve (from dracoling thread)
+
+Charles noted to dracoling: **"I started to see issues, then the pi died, I replaced it, so unsure if due to the replacement or just a continuation of what I was observing before the old pi died."**
+
+This is an important open question that NARROWS the diagnosis if resolved:
+- If the slowdown PREDATED the board swap (issues seen before the original Pi died) -> argues AGAINST the replacement board being the cause, and FOR something that carried over. The Malla DB persists on a Docker named volume (`mqtt_malla_data`) across the hardware swap, so if the problem followed the DATA not the hardware, it reinforces dracoling's DB-size / Malla-version angle over any hardware explanation.
+- If it started only AFTER the swap -> points more at the new board / its config regressions (cgroups disabled, tooling baseline, etc. — see July 31 findings).
+
+**Resolvable next session:** line up (a) when the Malla slowdown actually began (its logs / the DB's own record timestamps / when the DB crossed ~2GB) against (b) when the board was physically replaced. This dates the onset and tells us which side of the swap it started — turning "unsure" into a fact.
+
+Charles also told dracoling he's rebooting cnjmesh1 tomorrow "when I have time to actually monitor services starting" — consistent with the deliberate-reboot guidance already logged. Do the health-check sweep after that reboot.
+
+**Status of the dracoling thread:** productive. Leads captured (bot/scraper load + Anubis; auto-pruning in recent Malla versions; DB cleanup notes coming; medium-VM vs Pi RAM/disk-lag angle; this timeline question). All folded into the revised Malla next-session plan above. dracoling offered to dig up their DB-cleanup notes tomorrow.
