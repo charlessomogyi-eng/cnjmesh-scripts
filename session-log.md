@@ -1234,3 +1234,28 @@ This is an important open question that NARROWS the diagnosis if resolved:
 Charles also told dracoling he's rebooting cnjmesh1 tomorrow "when I have time to actually monitor services starting" — consistent with the deliberate-reboot guidance already logged. Do the health-check sweep after that reboot.
 
 **Status of the dracoling thread:** productive. Leads captured (bot/scraper load + Anubis; auto-pruning in recent Malla versions; DB cleanup notes coming; medium-VM vs Pi RAM/disk-lag angle; this timeline question). All folded into the revised Malla next-session plan above. dracoling offered to dig up their DB-cleanup notes tomorrow.
+
+---
+
+### Aug 2, 2026 — RESOLVED via Malla README: no version upgrade needed; three CONFIG features fix everything
+
+Read the full Malla README (github.com/zenitraM/malla). Definitive answers:
+
+**Charles was RIGHT that there's nothing to "upgrade" version-wise:** "No releases published" — no tags, no version numbers, no changelog. Rolling `main` / `:latest` only (105 commits). Only "upgrade" = pull a newer `:latest`.
+
+**BUT all three of dracoling's leads are REAL, DOCUMENTED features — and they're CONFIG, not version-gated. This is the fix, and it's low-risk (config, not migration):**
+
+1. **Auto-pruning = `data_retention_hours` config (THIS is what dracoling meant by "clears out old records").** Set `MALLA_DATA_RETENTION_HOURS` to a positive number -> deletes packet_history + node_info older than that, every hour, in background. Default `0` = disabled. **Charles's DB grew unbounded simply because this was never enabled — NOT because of an old version.** Fix: set e.g. `MALLA_DATA_RETENTION_HOURS=720` (30d) or `1440` (60d). Permanent self-pruning, ends the manual-prune cycle. (Note: this deletes rows but per SQLite won't shrink the file without a VACUUM — but ongoing it caps growth.)
+
+2. **Gunicorn = officially supported, the RIGHT way (supersedes our 5am manual pip-install fumble).** Set env `MALLA_WEB_COMMAND=/app/.venv/bin/malla-web-gunicorn`. There's a `malla-web-gunicorn` script AND a `docker-compose.prod.yml` for it. Auto-detects workers from CPU cores. Also tunable: `MALLA_GUNICORN_WORKERS`, `MALLA_GUNICORN_THREADS`. This is the proper fix for the single-threaded-Flask blocking problem — via env var, no manual install, no image hacking. NOTE: our Aug-2-5am manual `pip install gunicorn` in the container was NON-persistent and the wrong approach — use MALLA_WEB_COMMAND instead.
+
+3. **Anubis (bot-blocking, dracoling's first lead) = officially supported.** README has `trusted_proxy_client_ip_header: X-Real-IP` explicitly "Recommended for Anubis," plus `trusted_proxy_ips`. So putting Anubis in front to block AI/scrapers is a documented, supported integration.
+
+**REVISED PLAN (all config changes, low-risk, do together next session):**
+1. Set `MALLA_DATA_RETENTION_HOURS` (decide window — 30 or 60d) — stops unbounded DB growth permanently.
+2. Set `MALLA_WEB_COMMAND=/app/.venv/bin/malla-web-gunicorn` — fixes the single-threaded blocking (the "up and down").
+3. Optionally pull a fresh `:latest` while at it (gets any recent fixes incl. possibly the XSS CVE — verify) — but NOT required for the above two, which work on current image.
+4. Bot-check the public malla2 access logs; add Anubis if scraper load is heavy there.
+These are env-var/config changes in the compose files — far lower risk than the migration/gunicorn-hacking we were contemplating. Remember to preserve the raw-topic override (`MALLA_MQTT_TOPIC_PREFIX=msh`, `SUFFIX=/US/#`) on cnjmesh1.
+
+**This supersedes earlier hedged notes** about "upgrade may be the fix" and the 5am manual-gunicorn approach. The real answer: enable retention + gunicorn via config. Charles's skepticism about upgrades was correct.
