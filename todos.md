@@ -24,6 +24,9 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 ### [OPTIONAL] cnjmesh1 reboot
 Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
 
+### [AWAITING REPLY] Malla performance — reached out to dracoling (large-mesh Malla operator)
+Aug 2: Charles messaged Discord member **dracoling** — runs a Malla instance for a very large mesh (nyme). Asked how they handle Malla performance at scale (our malla.cnjmesh.me on a Pi4 has become incredibly slow — the ~40-48s gateway-stats query). dracoling was typing a reply. **Next session: check for dracoling's answer** — a large-scale operator's real-world fix (gunicorn? caching? DB tuning? a fork? different hardware?) is likely the best lead we have and may beat our own trial-and-error. Fold their advice into the Malla performance fix (gunicorn multi-worker was our scoped approach; see Aug 2 ~5am session-log entry). Also relevant context Charles shared: malla.cnjmesh.me = Cloudflare + email-verify gated (few users); malla2.cnjmesh.me = public, on a Pi Zero, oktomqtt filter temporarily removed for testing, running ok so far.
+
 ### [REVISIT] Malla upgrade / security
 Malla has an UNPATCHED public XSS vuln (CVE-2026-43980, GHSA-ch57-39q2-4crm, all versions <= 0.1.7) via Meshtastic node names — relevant because malla.cnjmesh.me is PUBLIC. No formal releases (rolling `:latest`). Maintained fork exists: `nytera/meshworks-malla` (`ghcr.io/nytera/meshworks-malla`). Charles undecided — options: check if latest fixes XSS / evaluate the fork / restrict public access / leave as-is. Revisit.
 
