@@ -1200,3 +1200,21 @@ Credentials in use: `meshdev`/`[REDACTED - broker password, scrubbed Aug 30 2026
 Previous entry framed KPR1's MQTT-disconnect as "ties to retirement" — that's WRONG per Charles. KPR1 is being dedicated to **Tilly's fork** (which is why its bridge points at `mqtt.aws.tillyandthefish.com`). This is an IN-PROGRESS integration that isn't working yet, NOT a node winding down. The MQTT-disconnect means the Tilly-fork integration is incomplete/broken and needs to be finished — this is an active TODO, not something to let lapse.
 
 **TODO (keep on list): Get Tilly's fork up and running on KPR1.** The bridge connects to the radio fine (serial /dev/ttyUSB3, MESHCORE connected) but can't reach Tilly's AWS broker (`mqtt.aws.tillyandthefish.com`, user meshdev, port 1883). Next steps to diagnose: (1) confirm with Tilly whether the AWS broker is up + creds current, (2) test reachability from cnjmesh1 to that host:port, (3) check whether it needs TLS/8883 vs plain 1883, (4) confirm what "Tilly's fork" specifically requires vs the standard meshcore-mqtt bridge config. Reference Tilly's fork repo (git.meshworks.ru / nytera meshworks-malla was a different thing — confirm the correct Tilly fork repo) and coordinate with Tilly directly.
+
+---
+
+### Aug 2, 2026 — dracoling follow-up: two refinements to the Malla diagnosis
+
+**1. "Suddenly hit a wall a couple weeks ago" is a diagnostic signal, not just frustration.** Charles told dracoling things were "humming until a couple weeks ago, then suddenly hit a wall." SUDDEN onset (vs gradual slowdown) points to a THRESHOLD being crossed — DB crossing a size where the gateway-stats query no longer fits in the 2GB Pi's RAM/cache and starts constantly paging through swap/disk. Aligns with: the DB crossing ~2GB, and/or the mqtt-filter disk-fill starting to bite around the same time. The timing correlation with mqtt-filter's log growth is worth checking.
+
+**2. dracoling's key leads:**
+- Runs Malla on a MEDIUM VIRTUAL SERVER, not a Pi. Explicitly flagged: "on a pi you might be running into disk lag trying to keep the whole thing loaded." = confirms our swap-bound-Pi finding. A 2GB Pi with DB too big to stay resident = constant disk paging during the query.
+- Their fix history: "had to do a serious database cleanup at one point." Offered to dig up those cleanup notes TOMORROW — **take them up on it.**
+- **CRITICAL LEAD: "if you're on a recent-ish version it should be clearing out old records regularly."** i.e. RECENT MALLA VERSIONS AUTO-PRUNE. If Charles is on an OLDER version, that's WHY the DB grew unbounded (we confirmed it wasn't auto-pruning — retention setting did nothing). This means the REAL root-cause fix may be **upgrading Malla to a self-pruning version**, NOT gunicorn. Reframes the shelved upgrade question: the upgrade may BE the fix, not optional polish.
+
+**Revised next-session priority order for Malla:**
+1. Check what Malla VERSION cnjmesh1 is running vs latest (does current version auto-prune? when was that feature added?). If we're old and newer auto-prunes -> upgrading is the root-cause fix.
+2. Check access logs for bot/scraper load (dracoling's first lead) — esp. on public malla2. Cheap to verify.
+3. Get dracoling's database-cleanup notes.
+4. THEN decide gunicorn vs upgrade vs both, informed by 1-3. Gunicorn addresses concurrency/blocking; a self-pruning upgrade addresses DB growth; bot-blocking addresses load. These are THREE different levers for what may be overlapping causes — don't fixate on one.
+Note the XSS/security angle (CVE-2026-43980, all versions <=0.1.7) also argues for upgrading — but confirm a newer version actually fixes it AND doesn't break our raw-topic/config setup before pulling.
