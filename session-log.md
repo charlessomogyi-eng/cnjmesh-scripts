@@ -1170,3 +1170,15 @@ Attempted to scp the Malla backup off cnjmesh1 to Charles's laptop to reclaim sp
 3. Re-run `collect-inventory.sh` on cnjmesh1 after the above to refresh install-map (it currently shows mqtt-filter as running).
 
 **Also confirmed healthy this session:** CoreScope (200 in 0.7s, clean ingest). KPR1 bridge (`meshcore-mqtt-kpr1-bridge`) shows MESHCORE connected but MQTT DISCONNECTED — flagged, likely downstream of the disk emergency (Mosquitto struggling at 100% disk); recheck now that disk is recovered. cnjmesh3 health check was started but not completed (KPR2 `meshcore-mqtt-bridge` + Observer `meshcore-packet-capture` publishing to 10.0.0.181:1883) — finish next session.
+
+---
+
+### Aug 2, 2026 (cont.) — mqtt-filter PERMANENTLY REMOVED (not just stopped)
+Followed through on the permanent removal:
+1. Backed up `/opt/stacks/mqtt/compose.override.yaml` → `.bak-preremove` (sudo).
+2. Rewrote compose.override.yaml to contain ONLY the `malla-capture` topic override (`MALLA_MQTT_TOPIC_PREFIX=msh`, `SUFFIX=/US/#`) — removed the entire `mqtt-filter` service block. Malla's raw-topic settings preserved.
+3. `docker rm mqtt-filter` — deleted the stopped container object.
+
+Result: mqtt-filter cannot return on reboot OR on `docker compose up -d` (no longer defined in compose). Image `meshtastic-oktomqtt-filter:latest` and source repo `/opt/stacks/mqtt/meshtastic-oktomqtt-filter/` remain on disk if ever wanted again. **Daily disk-fill root cause is now PERMANENTLY resolved.**
+
+Remaining (lower priority now that the flood source is gone): (1) Docker log rotation on cnjmesh1 still absent — worth adding as belt-and-suspenders for any future container, but no longer urgent; needs the docker-daemon restart, do when box is calm. (2) Re-run collect-inventory.sh on cnjmesh1 to refresh install-map (no longer shows mqtt-filter). (3) Clean up leftover cruft files in /opt/stacks/mqtt: mosquitto.env2, config/mossquitto.conf2, docker-compose.override.yaml1.
