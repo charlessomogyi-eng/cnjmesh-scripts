@@ -1288,3 +1288,20 @@ Two independent monitors, two services, same window = REAL outage, not a flaky s
 **Refinements this adds:**
 1. **Outage START is ~10:30-11:00 PM** (UptimeRobot fired 10:33, earlier than Fing's 11:03). Tighter window for log search: `journalctl --since "2026-08-02 22:20" --until "2026-08-03 04:15"` on cnjmesh1. Note 10:30pm is close to when we FINISHED working — check whether something we did, or a post-that-hour scheduled job, is implicated (vs coincidence).
 2. **Charles already has real uptime monitoring** — UptimeRobot (meshview.cnjmesh.me, likely other endpoints too) + Fing (network). CRITICAL NEXT STEP: pull UptimeRobot's INCIDENT HISTORY — it logs every past down/up event with timestamps. If past incidents CLUSTER at consistent times (e.g. always ~10:30-11pm, back ~4am) → confirms a SCHEDULED cause and gives exact times to correlate against cron/timers. If scattered → different story. This historical data likely answers "is it scheduled?" faster than anything else. Also check what OTHER endpoints UptimeRobot monitors (malla? corescope?) — tells us if the outage is whole-box or per-service.
+
+### Aug 3 — UptimeRobot INCIDENT HISTORY analyzed (meshview.cnjmesh.me, back to Mar 2026)
+Charles pasted the full incident list (free tier, no export). Key analysis:
+
+**1. STATUS CODES are the biggest tell — overwhelmingly 530 (a few 502, one T/O):**
+- **530 = Cloudflare-specific "can't reach origin"** = the TUNNEL to cnjmesh1 was DOWN = network/connectivity problem, NOT meshview crashing. The VAST MAJORITY of incidents are 530. This strongly supports the network/tunnel/DHCP theory over any app-level cause.
+- 502 (a few) = origin reached but bad gateway = service-level failure (different, rarer).
+- This means: most "meshview is down" alerts = Cloudflare couldn't reach the box, i.e. cnjmesh1's outbound/tunnel dropped. Consistent with the recurring gateway-unreachable pattern + the nmcli-fixes-it signature.
+
+**2. NO clean daily rhythm — but a clear ESCALATION / change-point ~July 20-22:**
+- Mar/Apr: sporadic clusters. **May: almost nothing (system was healthy).** June: a couple.
+- **July 20 onward: CONSTANT** — multiple incidents most days, several VERY long (Jul 20: 1d20h; Jul 23: 12h+9h; Jul 31: 12.5h; Aug 1: 14h; Aug 2: 5h).
+- This escalation matches Charles's "humming until a couple weeks ago then hit a wall." SOMETHING CHANGED ~July 20-22. Correlate with: board swap timing, when mqtt-filter disk-fill started compounding, or a config/load change. **The May-healthy / July-broken contrast is a strong diagnostic anchor — find what changed between.**
+
+**3. Recent long outages are NOT clockwork (varying start times: 10:33pm, 10:42am, 5:42am) →** NOT a simple nightly cron. More likely CONDITION-TRIGGERED (disk full / memory exhaustion / network flap) hitting at varying times. Fits the disk-fill root cause we JUST fixed — the long July 20-Aug 2 outages could largely BE the mqtt-filter disk saturation. **IMPORTANT: since mqtt-filter/disk is now fixed (Aug 2), watch whether these 530 outages STOP. If they do → disk was the cause. If they continue → separate network/DHCP issue remains.**
+
+**REVISED read on the overnight-outage investigation:** it's very likely NOT a scheduled job (times vary). It's condition-triggered — and the leading condition (disk-full from mqtt-filter) is now resolved. So: MONITOR UptimeRobot over the next few days. If 530s stop → solved by the disk fix. If they persist → the residual is the network/tunnel/DHCP flap (the nmcli-bounce pattern), investigate that next. Fing move-off-cnjmesh1 still fine as a side project once stable.
