@@ -24,6 +24,9 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 ### [OPTIONAL] cnjmesh1 reboot
 Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
 
+### [PLANNED — separate session] cnjmesh1 OS/kernel update
+Plan: `docs/cnjmesh1-os-update-plan.md`. Recommendation: `apt upgrade` (security+kernel patches, REVIEWED before applying), NOT `apt full-upgrade`. FIRST confirm anything's even upgradable (was already on current Trixie 6.12.62 as of Jul 31 — may be moot). Its OWN dedicated session AFTER the Malla fix + with full backup + time to watch the reboot (16 containers + services on a memory-tight box; kernel changes can disturb USB-serial radios & WiFi). Run health-check sweep after. Do NOT bundle with Malla work.
+
 ### [READY TO EXECUTE — Aug 3] Malla fix on cnjmesh1 (retention + gunicorn, Anubis deferred)
 Step-by-step plan: `docs/malla-fix-plan-cnjmesh1.md`. Two documented CONFIG changes (no version upgrade, no migration):
 1. `MALLA_DATA_RETENTION_HOURS` (60d=1440 recommended) on malla-capture → auto-prunes hourly, permanently caps DB growth (the root cause).
