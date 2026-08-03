@@ -8,6 +8,24 @@
 
 ---
 
+### [PLANNED] Health-check sweep — cnjmesh3 + RF/APRS services
+
+Full step-by-step plan in `docs/health-check-plan-aug2026.md`. Covers, in order:
+- cnjmesh3 general health (Pi 3B, 1GB — check load/swap/disk) + cnjmesh3->cnjmesh1 broker reachability (10.0.0.181:1883) + whether cnjmesh3 has Docker log rotation (same disk-fill risk we just fixed on cnjmesh1).
+- Observer (`meshcore-packet-capture`, RAK4631, cnjmesh3) — serial + 4-broker connectivity.
+- KPR2 (`meshcore-mqtt-bridge`, Heltec V4, cnjmesh3) — confirm BOTH MESHCORE + MQTT connected.
+- KPR1 (`meshcore-mqtt-kpr1-bridge`, cnjmesh1) — KNOWN: was `MQTT: disconnected` Aug 2 during the disk-100% emergency; RECHECK now disk is fixed. If still broken, may just accelerate the pending KPR1-retirement decision.
+- APRS on cnjmesh1: graywolf-discord.service + aprs-tnc-web (nextjs_app/mysql_database, port 8085).
+- LoRa APRS: K2GIA-10 iGate (10.0.0.74) reachability + lora-aprs-discord bridge (UDP 1514) — bridge was never confirmed posting to Discord end-to-end (open item). Also pending: check richonguzman/LoRa_APRS_iGate firmware source re: self-gating BEFORE buying the RX-only board.
+
+### [OPTIONAL] cnjmesh1 reboot
+Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
+
+### [REVISIT] Malla upgrade / security
+Malla has an UNPATCHED public XSS vuln (CVE-2026-43980, GHSA-ch57-39q2-4crm, all versions <= 0.1.7) via Meshtastic node names — relevant because malla.cnjmesh.me is PUBLIC. No formal releases (rolling `:latest`). Maintained fork exists: `nytera/meshworks-malla` (`ghcr.io/nytera/meshworks-malla`). Charles undecided — options: check if latest fixes XSS / evaluate the fork / restrict public access / leave as-is. Revisit.
+
+---
+
 ### [CHECK TOMORROW] Aug 2, 2026 — Malla DB + CoreScope functionality
 
 - **Malla:** DB prune (30-day retention) + VACUUM from Aug 1 DID reduce query time (3.2-3.3s observed in logs, down from 41-48s) — real improvement, contrary to earlier read tonight. BUT: concurrent requests can collide — saw TWO overlapping "cache miss" computations firing ~2s apart (04:49:17 and 04:49:20), which can stall the box entirely on simultaneous recomputes. Suspect the `malla-warmcache.timer` (installed Aug 1) is colliding with real visitor traffic. Restarted `mqtt-malla-web-1` at end of session to clear a stuck state — verify it's actually serving normally, and reconsider/remove the warmcache timer if collisions keep happening.
