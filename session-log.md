@@ -1140,3 +1140,33 @@ Attempted to scp the Malla backup off cnjmesh1 to Charles's laptop to reclaim sp
 **CoreScope: confirmed healthy tonight** — 200 response in 0.7s, clean ingest logs, no errors, no action needed.
 
 **Session ended here (~5am) at Charles's judgment — mid-fix, deliberately not pushed further live. This is the correct stopping point: root cause is finally understood and correct, fix is scoped and partially validated, remaining work is clear and bounded for next session.**
+
+---
+
+### Aug 2, 2026 — ROOT CAUSE FOUND & RESOLVED: cnjmesh1 daily disk-fill = unrotated mqtt-filter log (30GB/day). Filter retired.
+
+**The recurring daily disk-full problem on cnjmesh1 is finally root-caused and fixed** — not just cleared-and-recurring as it had been.
+
+**Symptom:** cnjmesh1 hits 100% disk daily; Charles clears space, it refills next day, making the environment unreliable. (This session it was found AT 100% full, load avg 12.6, 54MB free RAM — Docker daemon so wedged that `docker inspect`/`docker logs` hung for 30+ min.)
+
+**Root cause (confirmed, not inferred):** the `mqtt-filter` container (image `meshtastic-oktomqtt-filter:latest`) was writing a SINGLE json.log file that reached **30GB** — over half the 58GB disk — because (a) cnjmesh1 has NO Docker log rotation configured, and (b) the filter runs with `SHOW_STATS=true` + per-packet processing, emitting a huge volume of log lines continuously. Confirmed via `du` on `/var/lib/docker/containers/*/*-json.log`: the 30GB file mapped to container `mqtt-filter`; second-largest was mqtt-malla-capture-1 at 787MB.
+
+**What mqtt-filter does (confirmed via its on-disk README at `/opt/stacks/mqtt/meshtastic-oktomqtt-filter/README.md`):** enforces the Meshtastic "Ok to MQTT" firmware-2.5+ privacy opt-in bitfield + decrypts packets, republishing only authorized packets from INPUT `msh/US/#` to OUTPUT `filtered/msh/US`. Defined in `/opt/stacks/mqtt/compose.override.yaml` (NOT the main compose.yaml — that's why an earlier grep of compose.yaml missed it; same override-file pattern as cnjmesh2's oktomqtt).
+
+**Why stopping it is safe (confirmed, not assumed):**
+- Malla-capture on cnjmesh1 subscribes to RAW `msh/US/#` (`MALLA_MQTT_TOPIC_PREFIX=msh`, `SUFFIX=/US/#`) — confirmed via live `docker inspect` AND the compose.override.yaml. It does NOT read the filter's output.
+- Grep of `/opt/stacks/` + `/home/somog/` for `filtered/msh` found NO consumer — only the filter's own config files reference it. Nothing subscribes to `filtered/msh`.
+- Therefore the filter was producing a consent-filtered topic that NOTHING consumed = pure overhead + the log flood.
+
+**Charles's decision:** retire the OkToMqtt filter permanently. Rationale: the broader Meshtastic ecosystem (maps, public brokers, tools) largely does not honor the OkToMqtt flag anyway, so enforcing it locally into a topic nobody reads is effort without payoff.
+
+**Actions taken this session:**
+1. `sudo truncate -s 0` on the 30GB mqtt-filter json.log → disk 100% → 51% instantly (emergency space recovery to un-wedge the Docker daemon).
+2. `cd /opt/stacks/mqtt && docker compose stop mqtt-filter` → stopped the flood source. Disk stable at 52% afterward, confirmed NOT climbing → proves the filter was the daily-growth source.
+
+**REMAINING TO-DO (do next, when box is calmer):**
+1. **Make the filter retirement permanent** — it's only `stop`ped; a future `docker compose up -d` (no service named) would restart it and reintroduce the flood. Remove/comment the `mqtt-filter` service block from `/opt/stacks/mqtt/compose.override.yaml` (with a backup) so it can't come back. Also clean up the leftover duplicate config files noticed in that dir: `mosquitto.env2`, `config/mossquitto.conf2`, `docker-compose.override.yaml1` (odd numeric-suffixed backups/cruft — verify they're unused, then remove).
+2. **Add Docker log rotation on cnjmesh1** (it has NONE — this is the amplifier that let one container reach 30GB unbounded, and protects EVERY other container going forward). Create `/etc/docker/daemon.json` with json-file + max-size 10m + max-file 3 (same as we did on cnjmesh2 Aug 1), then `sudo systemctl restart docker`. NOTE: the restart bounces all 16 containers and will be SLOW on this loaded box — do it when it can be watched, not at end of a session. This is the belt-and-suspenders that permanently prevents ANY container from refilling the disk.
+3. Re-run `collect-inventory.sh` on cnjmesh1 after the above to refresh install-map (it currently shows mqtt-filter as running).
+
+**Also confirmed healthy this session:** CoreScope (200 in 0.7s, clean ingest). KPR1 bridge (`meshcore-mqtt-kpr1-bridge`) shows MESHCORE connected but MQTT DISCONNECTED — flagged, likely downstream of the disk emergency (Mosquitto struggling at 100% disk); recheck now that disk is recovered. cnjmesh3 health check was started but not completed (KPR2 `meshcore-mqtt-bridge` + Observer `meshcore-packet-capture` publishing to 10.0.0.181:1883) — finish next session.
