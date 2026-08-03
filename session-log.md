@@ -1259,3 +1259,22 @@ Read the full Malla README (github.com/zenitraM/malla). Definitive answers:
 These are env-var/config changes in the compose files — far lower risk than the migration/gunicorn-hacking we were contemplating. Remember to preserve the raw-topic override (`MALLA_MQTT_TOPIC_PREFIX=msh`, `SUFFIX=/US/#`) on cnjmesh1.
 
 **This supersedes earlier hedged notes** about "upgrade may be the fix" and the 5am manual-gunicorn approach. The real answer: enable retention + gunicorn via config. Charles's skepticism about upgrades was correct.
+
+---
+
+### Aug 3, 2026 — RECURRING OVERNIGHT OUTAGE PATTERN (Fing alerts) — needs dedicated investigation
+
+**Charles flagged a real, recurring, TIMED pattern via Fing agent alerts:**
+- Aug 2, 11:03 PM — Fing Agent "Home" (AGENT-88:A2:9E:3E:0E:7E) went OFFLINE — soon after we finished the session.
+- Aug 3, 3:56 AM — came BACK ONLINE.
+- ~5 hour overnight outage. Charles says this has been a COMMON/recurring thing.
+
+**Why this matters:** recurring + overnight + roughly same times = points at something SCHEDULED, not random flakiness. This may be behind a lot of the "it was down when I checked" frustration across the whole week. This is a DISTINCT investigation from the disk-fill (already fixed) and the Malla slowness — a separate axis.
+
+**Suspects to investigate (do NOT guess — verify each next session):**
+1. **Scheduled jobs / cron / systemd timers running overnight** — check `crontab -l`, `sudo crontab -l`, `systemctl list-timers --all` on cnjmesh1 (and other Pis). Look for anything firing in the 11pm / late-night window. Candidates: Charles's own backup scripts, logrotate, **apt unattended-upgrades** (runs early-AM, can restart network/services), any watchdog doing aggressive restarts.
+2. **DHCP lease renewal / networking flap** — ties directly to the recurring "nmcli connection down/up fixes it" gateway issue we saw MULTIPLE times this week. If the router's lease expires overnight and the Pi's renewal flaps, the Pi drops off the network at lease-expiry and recovers later. Check DHCP lease time on the router + NetworkManager renewal behavior. THIS IS LIKELY CONNECTED to the gateway-unreachable pattern (Pi config perfect, gateway unreachable, fixed by nmcli bounce — that's a DHCP/L2 renewal signature).
+3. **WHICH device is the Fing agent** — MAC 88:A2:9E:3E:0E:7E. Determine if the Fing agent runs on cnjmesh1 (fing-agent.service is in cnjmesh1's install-map) or elsewhere, AND whether "offline" = just the Fing agent process died vs. the whole Pi/network dropped. Different problems. (cnjmesh1 install-map lists `fing-agent` — so this is very likely cnjmesh1 itself or its network dropping.)
+4. Cross-reference: do the overnight outage times correlate with anything in `journalctl` on cnjmesh1 for that window? `journalctl --since "2026-08-02 22:45" --until "2026-08-03 04:15"` — look for network down/up, service restarts, OOM, scheduled job execution, cloudflared drops.
+
+**Priority: HIGH.** A nightly scheduled event knocking the box/network offline would explain the recurring "down when I check it" experience and possibly the recurring gateway issue. Investigate as its own focused item. Likely the same root as the gateway-unreachable pattern — treat them as possibly-one-problem until proven otherwise.
