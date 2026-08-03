@@ -27,6 +27,11 @@ Reasonable after today's work to clear 9+ days of swap/memory pressure — but d
 ### [PLANNED — separate session] cnjmesh1 OS/kernel update
 Plan: `docs/cnjmesh1-os-update-plan.md`. Recommendation: `apt upgrade` (security+kernel patches, REVIEWED before applying), NOT `apt full-upgrade`. FIRST confirm anything's even upgradable (was already on current Trixie 6.12.62 as of Jul 31 — may be moot). Its OWN dedicated session AFTER the Malla fix + with full backup + time to watch the reboot (16 containers + services on a memory-tight box; kernel changes can disturb USB-serial radios & WiFi). Run health-check sweep after. Do NOT bundle with Malla work.
 
+### [MASTER GATE] Pre-Tilly health checklist — everything 100% before finalizing Tilly
+Charles's requirement: confirm ALL of the below healthy BEFORE finalizing Tilly's-fork-on-KPR1. Full checklist: `docs/pre-tilly-master-checklist.md`. Covers: all 3 Pis' health; Malla; Meshview; APRS/Graywolf; LoRa APRS; MeshCore Observer; MeshCore repeaters (KPR2); Meshomatic; CoreScope; MeshCore Hub. Recommended order: Malla fix -> cnjmesh1 reboot -> full health sweep -> OS update -> THEN Tilly. (KPR1 itself = the Tilly work, so it's last, not a precondition.)
+
+**NEW ISSUE to diagnose (in checklist): MeshCore Discord new-node relay NOT working.** `mesh-discord-shim` (cnjmesh1, port 8084, `#cnj-new-node-relay` via NEW_NODE_WEBHOOK). Was working before -> regressed (likely disk-full-period casualty or webhook changed). Check container up, logs for webhook 401/404, confirm .env webhook still valid, test the shim's other relays to isolate. Rebuild: `cd /opt/stacks/mesh-discord-shim && sudo docker compose down && sudo docker compose up -d --build`.
+
 ### [READY TO EXECUTE — Aug 3] Malla fix on cnjmesh1 (retention + gunicorn, Anubis deferred)
 Step-by-step plan: `docs/malla-fix-plan-cnjmesh1.md`. Two documented CONFIG changes (no version upgrade, no migration):
 1. `MALLA_DATA_RETENTION_HOURS` (60d=1440 recommended) on malla-capture → auto-prunes hourly, permanently caps DB growth (the root cause).
