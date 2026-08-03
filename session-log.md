@@ -1313,3 +1313,26 @@ Charles pasted the full incident list (free tier, no export). Key analysis:
 **CORRECTION 2 — July 20 escalation aligns with the NEW PI DELIVERY.** Charles: the ~July 20 change-point ≈ when the replacement Pi arrived. This is a STRONG signal — the "healthy May → constant outages from July 20" timeline now has a concrete candidate: **the board swap introduced the instability.** Connects directly to the July 31 findings already logged (replacement board regressions: memory cgroups DISABLED, missing tooling baseline, Trixie dhcpcd→NetworkManager networking change). Reframes from "mystery escalation" to "what did the new Pi bring/fail-to-restore that the old one had right." Much more investigable.
 
 **Revised synthesis:** The outages are real, escalated at the board swap (~Jul 20), and are condition-triggered (varying times). 530 codes are just the outside symptom, not a cause-pointer. Leading candidate causes, in order: (a) mqtt-filter disk-fill — NOW FIXED Aug 2, so watch if outages drop; (b) new-board regressions (cgroups/networking) from the July 31 findings — still unaddressed; (c) the network/DHCP flap (nmcli-bounce signature) — real but frequency unknown. To actually diagnose next incident: pull `journalctl` on cnjmesh1 for the exact UptimeRobot incident window and read what the PI says happened — that's the only source that knows the real cause. MONITOR whether the disk fix reduces frequency in the meantime.
+
+### Aug 3 — CENTRAL FRAMING QUESTION (Charles, level-set) — put at TOP of the whole investigation
+
+**Timeline (Charles's high-level account):**
+1. Problems BEGAN while the ORIGINAL Pi was still running.
+2. Original Pi DIED ~1 day after problems first appeared.
+3. New Pi #1 — tried, didn't work out, replaced within 1-2 days.
+4. New Pi #2 — current board, in place now.
+**Critical fact: the problems PREDATE every board swap. They started on the original hardware.**
+
+**The organizing question:** Are we seeing NEW problems with the new Pi, or are the ORIGINAL problems FOLLOWING US across hardware?
+
+**Two hypotheses:**
+- **(A) Problem follows the DATA/CONFIG, not hardware.** Issues started on original Pi + persisted across TWO swaps → most likely the cause traveled with what was CARRIED OVER and restored onto each board: Docker volumes (2GB Malla DB), compose configs, images, service defs. New hardware can't fix a problem that lives in restored state. Evidence FOR: Malla DB grew unbounded regardless of hardware; mqtt-filter log flood was a config issue that restores onto any board; disk-fill is data-driven not hardware-driven. These don't care what Pi they run on.
+- **(B) Original problem killed original Pi; new Pis have SEPARATE issues.** Requires two unrelated causes overlapping (less parsimonious) but not impossible — e.g., original had failing SD card AND new board has cgroups/networking regressions.
+
+**Most likely answer: BOTH, in layers.**
+- Layer A (carried-over): DB bloat, mqtt-filter, service configs → would plague ANY board. **We've already been fixing these** (disk-fill RESOLVED Aug 2; retention+gunicorn PLANNED). This is probably the ORIGINAL problem, and it followed via the data.
+- Layer B (new-board-specific): memory cgroups DISABLED, missing tooling, Trixie dhcpcd→NetworkManager networking baseline (the July 31 findings) → these are genuinely new-hardware regressions, STILL UNADDRESSED.
+
+**Why this framing helps:** the two layers have DIFFERENT fixes and can be attributed separately. Don't conflate them. As we fix Layer A (disk done, Malla config next) and Layer B (cgroups/networking/tooling restore), watch which fixes actually reduce the outages — that TELLS us which layer was driving what. The UptimeRobot "healthy May → broken ~July 20 (new Pi arrival)" data is consistent with Layer B adding on top of a pre-existing Layer A.
+
+**Practical upshot:** stop thinking "is it the hardware" as a single yes/no. It's "what carried over that we keep restoring (fix the data/config)" + "what did the new board fail to match from the original (restore the baseline: cgroups, tooling, networking)." Both tracks proceed; attribute by observing which fix moves the needle.
