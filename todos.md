@@ -14,9 +14,12 @@ Full step-by-step plan in `docs/health-check-plan-aug2026.md`. Covers, in order:
 - cnjmesh3 general health (Pi 3B, 1GB — check load/swap/disk) + cnjmesh3->cnjmesh1 broker reachability (10.0.0.181:1883) + whether cnjmesh3 has Docker log rotation (same disk-fill risk we just fixed on cnjmesh1).
 - Observer (`meshcore-packet-capture`, RAK4631, cnjmesh3) — serial + 4-broker connectivity.
 - KPR2 (`meshcore-mqtt-bridge`, Heltec V4, cnjmesh3) — confirm BOTH MESHCORE + MQTT connected.
-- KPR1 (`meshcore-mqtt-kpr1-bridge`, cnjmesh1) — KNOWN: was `MQTT: disconnected` Aug 2 during the disk-100% emergency; RECHECK now disk is fixed. If still broken, may just accelerate the pending KPR1-retirement decision.
+- KPR1 (`meshcore-mqtt-kpr1-bridge`, cnjmesh1) — MQTT-disconnect DIAGNOSED Aug 3: bridge points at Tilly's EXTERNAL AWS broker (`mqtt.aws.tillyandthefish.com`), not local infra. **This is the in-progress "get Tilly's fork running on KPR1" integration — NOT retirement (corrected).** Still an active TODO to finish (see below).
 - APRS on cnjmesh1: graywolf-discord.service + aprs-tnc-web (nextjs_app/mysql_database, port 8085).
 - LoRa APRS: K2GIA-10 iGate (10.0.0.74) reachability + lora-aprs-discord bridge (UDP 1514) — bridge was never confirmed posting to Discord end-to-end (open item). Also pending: check richonguzman/LoRa_APRS_iGate firmware source re: self-gating BEFORE buying the RX-only board.
+
+### [ACTIVE] Get Tilly's fork running on KPR1
+KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt-kpr1-bridge` targets `mqtt.aws.tillyandthefish.com`. Integration NOT working yet: MESHCORE/serial connected (/dev/ttyUSB3), but MQTT to Tilly's AWS broker is disconnected. Finish it: confirm broker up + creds with Tilly, test host:port reachability from cnjmesh1, check TLS/8883 vs 1883, confirm the correct Tilly fork repo + its specific config requirements. Coordinate with Tilly.
 
 ### [OPTIONAL] cnjmesh1 reboot
 Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.

@@ -1193,3 +1193,10 @@ Rechecked KPR1 (`meshcore-mqtt-kpr1-bridge` on cnjmesh1) after the disk fix — 
 Credentials in use: `meshdev`/`[REDACTED - broker password, scrubbed Aug 30 2026]`, topic prefix `meshcore`, port 1883, QOS 1, retain true. Serial side healthy (`/dev/ttyUSB3` — note: install-map says ttyUSB1, path has shifted; docs stale on that detail).
 
 **Assessment:** low concern. Could be down because Tilly's AWS broker is offline, their creds changed, or an AWS network path issue — all outside Charles's control. AND KPR1 is already flagged for RETIREMENT (Charles didn't want 2 repeaters; KPR1 is in the garage, worse location than KPR2). So this experimental external bridge failing is not worth a fix — either ping Tilly to ask if their AWS broker is up (if keeping the experiment alive), or let it fold into the KPR1 retirement. NOT a late-night fix; captured for the health-check sweep.
+
+---
+
+### Aug 3, 2026 — CORRECTION on KPR1: it's being REPURPOSED to Tilly's fork, not retired
+Previous entry framed KPR1's MQTT-disconnect as "ties to retirement" — that's WRONG per Charles. KPR1 is being dedicated to **Tilly's fork** (which is why its bridge points at `mqtt.aws.tillyandthefish.com`). This is an IN-PROGRESS integration that isn't working yet, NOT a node winding down. The MQTT-disconnect means the Tilly-fork integration is incomplete/broken and needs to be finished — this is an active TODO, not something to let lapse.
+
+**TODO (keep on list): Get Tilly's fork up and running on KPR1.** The bridge connects to the radio fine (serial /dev/ttyUSB3, MESHCORE connected) but can't reach Tilly's AWS broker (`mqtt.aws.tillyandthefish.com`, user meshdev, port 1883). Next steps to diagnose: (1) confirm with Tilly whether the AWS broker is up + creds current, (2) test reachability from cnjmesh1 to that host:port, (3) check whether it needs TLS/8883 vs plain 1883, (4) confirm what "Tilly's fork" specifically requires vs the standard meshcore-mqtt bridge config. Reference Tilly's fork repo (git.meshworks.ru / nytera meshworks-malla was a different thing — confirm the correct Tilly fork repo) and coordinate with Tilly directly.
