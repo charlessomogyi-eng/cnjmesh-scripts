@@ -24,7 +24,25 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 ### [OPTIONAL] cnjmesh1 reboot
 Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
 
-### [AWAITING REPLY] Malla performance — reached out to dracoling (large-mesh Malla operator)
+### [LEAD RECEIVED] Malla performance — dracoling (nyme, large-mesh Malla operator) replied Aug 2
+
+**dracoling's answer, two parts:**
+1. "As the database gets larger it seems to take a bigger toll" — confirms DB size is a gradual factor (consistent with our findings), but not the whole story.
+2. **KEY INSIGHT we hadn't considered: their biggest performance hit was AI/scraper bot traffic.** Recommends **Anubis** (https://anubis.techaro.lol/) — a "web AI firewall" that blocks scrapers/bots before they hit the app. Their caveat: "Cloudflare with secured login should already do that for you."
+
+**Why this matters / how it reframes our problem:** every bot/scraper hitting Malla's `/` dashboard triggers the expensive ~40s gateway-stats query. Constant bot traffic would keep that query perpetually running / repeatedly blowing the 5-min cache — which explains the unpredictable "up and down" behavior BETTER than our DB/gunicorn theories. It's load, not (just) slowness.
+
+**CRITICAL DISTINCTION for our setup:**
+- `malla.cnjmesh.me` = behind Cloudflare + email-verify gate -> per dracoling, SHOULD already be scraper-protected. If it's still slow, bot traffic is likely NOT the cause here (points back to DB/app/gunicorn).
+- `malla2.cnjmesh.me` = FULLY PUBLIC, no gate, on the Pi Zero -> THIS is the one exposed to scraper load. If malla2 degrades, bot traffic is the prime suspect.
+
+**NEXT SESSION — test the bot-traffic theory (do this BEFORE more gunicorn/DB work):**
+1. Check Malla's/Cloudflare's access logs for both instances — what % of `/` requests are bots/scrapers vs real users? (User-agents, request rate, IPs.) This is the diagnostic that confirms or kills the theory.
+2. If bot traffic is heavy on the PUBLIC malla (esp. malla2): evaluate Anubis, OR put malla2 behind a Cloudflare gate too, OR add rate-limiting.
+3. If malla.cnjmesh.me is slow DESPITE the Cloudflare gate (bots already blocked): then it's genuinely the app/DB — proceed with the gunicorn multi-worker fix as planned.
+This is now the FIRST thing to check — cheap to verify (read logs), and if it's the cause, far easier than re-architecting the app.
+
+### [SUPERSEDED-note] original outreach entry:
 Aug 2: Charles messaged Discord member **dracoling** — runs a Malla instance for a very large mesh (nyme). Asked how they handle Malla performance at scale (our malla.cnjmesh.me on a Pi4 has become incredibly slow — the ~40-48s gateway-stats query). dracoling was typing a reply. **Next session: check for dracoling's answer** — a large-scale operator's real-world fix (gunicorn? caching? DB tuning? a fork? different hardware?) is likely the best lead we have and may beat our own trial-and-error. Fold their advice into the Malla performance fix (gunicorn multi-worker was our scoped approach; see Aug 2 ~5am session-log entry). Also relevant context Charles shared: malla.cnjmesh.me = Cloudflare + email-verify gated (few users); malla2.cnjmesh.me = public, on a Pi Zero, oktomqtt filter temporarily removed for testing, running ok so far.
 
 ### [REVISIT] Malla upgrade / security
