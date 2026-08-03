@@ -1278,3 +1278,13 @@ These are env-var/config changes in the compose files — far lower risk than th
 4. Cross-reference: do the overnight outage times correlate with anything in `journalctl` on cnjmesh1 for that window? `journalctl --since "2026-08-02 22:45" --until "2026-08-03 04:15"` — look for network down/up, service restarts, OOM, scheduled job execution, cloudflared drops.
 
 **Priority: HIGH.** A nightly scheduled event knocking the box/network offline would explain the recurring "down when I check it" experience and possibly the recurring gateway issue. Investigate as its own focused item. Likely the same root as the gateway-unreachable pattern — treat them as possibly-one-problem until proven otherwise.
+
+### Aug 3 — SECOND monitor corroborates the overnight outage (UptimeRobot)
+Independent confirmation of the Aug 2-3 overnight outage from a SECOND monitor:
+- **UptimeRobot: meshview.cnjmesh.me DOWN at 10:33 PM Aug 2** (alert@uptimerobot.com).
+- Fing: agent offline 11:03 PM Aug 2; back online ~3:56 AM Aug 3.
+Two independent monitors, two services, same window = REAL outage, not a flaky sensor. Rules out monitor error.
+
+**Refinements this adds:**
+1. **Outage START is ~10:30-11:00 PM** (UptimeRobot fired 10:33, earlier than Fing's 11:03). Tighter window for log search: `journalctl --since "2026-08-02 22:20" --until "2026-08-03 04:15"` on cnjmesh1. Note 10:30pm is close to when we FINISHED working — check whether something we did, or a post-that-hour scheduled job, is implicated (vs coincidence).
+2. **Charles already has real uptime monitoring** — UptimeRobot (meshview.cnjmesh.me, likely other endpoints too) + Fing (network). CRITICAL NEXT STEP: pull UptimeRobot's INCIDENT HISTORY — it logs every past down/up event with timestamps. If past incidents CLUSTER at consistent times (e.g. always ~10:30-11pm, back ~4am) → confirms a SCHEDULED cause and gives exact times to correlate against cron/timers. If scattered → different story. This historical data likely answers "is it scheduled?" faster than anything else. Also check what OTHER endpoints UptimeRobot monitors (malla? corescope?) — tells us if the outage is whole-box or per-service.
