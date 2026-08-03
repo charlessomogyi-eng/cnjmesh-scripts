@@ -24,6 +24,13 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 ### [OPTIONAL] cnjmesh1 reboot
 Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
 
+### [READY TO EXECUTE — Aug 3] Malla fix on cnjmesh1 (retention + gunicorn, Anubis deferred)
+Step-by-step plan: `docs/malla-fix-plan-cnjmesh1.md`. Two documented CONFIG changes (no version upgrade, no migration):
+1. `MALLA_DATA_RETENTION_HOURS` (60d=1440 recommended) on malla-capture → auto-prunes hourly, permanently caps DB growth (the root cause).
+2. `MALLA_WEB_COMMAND=/app/.venv/bin/malla-web-gunicorn` on malla-web → multi-worker, fixes single-threaded blocking (the "up and down").
+Order: fresh DB backup → show compose → retention → verify → gunicorn → verify (test 2 concurrent requests) → public check → reassess warmcache timer → doc+push. Preserve raw-topic override (msh + /US/#). Do on cnjmesh1 (gated) FIRST, not malla2. If rebooting cnjmesh1 tomorrow, do that + health sweep BEFORE this. Rollback: file backups + Step-0 DB backup.
+Anubis + malla2 changes = deferred.
+
 ### [LEAD RECEIVED] Malla performance — dracoling (nyme, large-mesh Malla operator) replied Aug 2
 
 **dracoling's answer, two parts:**
