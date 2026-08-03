@@ -1182,3 +1182,14 @@ Followed through on the permanent removal:
 Result: mqtt-filter cannot return on reboot OR on `docker compose up -d` (no longer defined in compose). Image `meshtastic-oktomqtt-filter:latest` and source repo `/opt/stacks/mqtt/meshtastic-oktomqtt-filter/` remain on disk if ever wanted again. **Daily disk-fill root cause is now PERMANENTLY resolved.**
 
 Remaining (lower priority now that the flood source is gone): (1) Docker log rotation on cnjmesh1 still absent — worth adding as belt-and-suspenders for any future container, but no longer urgent; needs the docker-daemon restart, do when box is calm. (2) Re-run collect-inventory.sh on cnjmesh1 to refresh install-map (no longer shows mqtt-filter). (3) Clean up leftover cruft files in /opt/stacks/mqtt: mosquitto.env2, config/mossquitto.conf2, docker-compose.override.yaml1.
+
+---
+
+### Aug 3, 2026 (~1:25am) — KPR1 "MQTT disconnected" DIAGNOSED: it's the external Tilly AWS broker, not local infra
+Rechecked KPR1 (`meshcore-mqtt-kpr1-bridge` on cnjmesh1) after the disk fix — still `MESHCORE: connected | MQTT: disconnected`, so NOT a side effect of the disk-100% emergency (that theory ruled out). Dug into its config:
+
+**Root cause: KPR1's bridge points at `MQTT_BROKER=mqtt.aws.tillyandthefish.com` (Tilly's EXTERNAL AWS broker), NOT the local Mosquitto.** So the disconnect is an OUTBOUND connection to someone else's internet-hosted broker failing — has nothing to do with cnjmesh1's local Mosquitto, disk, or network. This matches the git note that KPR1 is the "experimental cross-network packet_bridge" publishing outward to Tilly's AWS broker (a separate MQTT relationship from everything else). Local infra (CoreScope, Hub, Malla) is UNAFFECTED — they use the local broker.
+
+Credentials in use: `meshdev`/`large4cats`, topic prefix `meshcore`, port 1883, QOS 1, retain true. Serial side healthy (`/dev/ttyUSB3` — note: install-map says ttyUSB1, path has shifted; docs stale on that detail).
+
+**Assessment:** low concern. Could be down because Tilly's AWS broker is offline, their creds changed, or an AWS network path issue — all outside Charles's control. AND KPR1 is already flagged for RETIREMENT (Charles didn't want 2 repeaters; KPR1 is in the garage, worse location than KPR2). So this experimental external bridge failing is not worth a fix — either ping Tilly to ask if their AWS broker is up (if keeping the experiment alive), or let it fold into the KPR1 retirement. NOT a late-night fix; captured for the health-check sweep.
