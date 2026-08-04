@@ -1343,3 +1343,34 @@ Charles raised this, doesn't think so, wants it held loosely. Assessment:
 - **BUT one plausible minor-CONTRIBUTOR path, worth ruling out:** if the KPR1 bridge retries the failed external connection AGGRESSIVELY, it could (1) generate high-volume retry/error logs → with cnjmesh1 having NO log rotation, feeds the disk-fill pressure (same class as mqtt-filter/oktomqtt); (2) burn CPU/mem on retry loops on a memory-tight box. Neither = root cause, but either could add to resource pressure.
 - **How to rule out (during health sweep):** check the KPR1 bridge's LOG VOLUME (is its json.log large / growing fast?) and its CPU/MEM footprint (`docker stats`). Quiet modest retrying = exonerated. Hammering + spewing logs = throttle or disable it until the Tilly integration is actually finished.
 - **Weight: LOW probability driver; possible minor contributor; easy to check. Hold loosely, verify during sweep, don't fixate.**
+
+---
+
+### Aug 3-4, 2026 (Sonnet, Phase 1 Malla fix — IN PROGRESS, safe stopping point)
+
+Executed Phase 1 of the get-well plan (docs/malla-fix-plan-cnjmesh1.md). Status:
+
+**DONE + verified:**
+- **Fresh DB backup taken** (Step 0): `/home/somog/backups/malla-backup-20260803.db` (2.7GB). Note DB had grown from 1.7GB (post-Tue VACUUM) to 2.7GB in ~1.5 days — confirms high ingestion rate.
+- **Gunicorn IS working** (Step 3): after a detour to find the right mechanism. Key learnings documented below. Banner confirms Workers: 2 / Threads: 2, two worker PIDs booted (gthread worker type). Concurrency fix is in place.
+- **Retention IS working** (Step 2): log confirmed "Data cleanup started for retention hours: N" firing hourly. Initially set 1440 (60d), then changed to **720 (30d)** after discovering the table is 8.4M rows and growing ~2.5M rows/4 days — 60d was too generous to help query speed.
+
+**CONFIG MECHANICS LEARNED (important for future edits):**
+- `MALLA_WEB_COMMAND` is consumed via Docker Compose variable substitution `${MALLA_WEB_COMMAND:-...}` in compose.yaml's `command:` line → must go in `/opt/stacks/mqtt/.env` (created it there). `.env` values do YAML substitution but are NOT auto-injected into containers.
+- `MALLA_GUNICORN_WORKERS` / `MALLA_GUNICORN_THREADS`: Malla reads env vars as `MALLA_` + uppercased dataclass field name (confirmed in /app/src/malla/config.py line ~156). But these have NO `${...}` reference in compose.yaml, so putting them in `.env` did NOTHING (defaulted to 1 worker). FIX: added them to the `malla-web` service `environment:` list in compose.override.yaml — THAT injects them into the container. Now correctly 2 workers/2 threads.
+- Current /opt/stacks/mqtt/.env: MALLA_WEB_COMMAND + (redundant) MALLA_GUNICORN_* lines. The gunicorn worker/thread values that ACTUALLY work are in compose.override.yaml.
+- Backups made this session: compose.override.yaml.bak-preretention, .bak-pregunicorn, .bak-30day.
+
+**KEY FINDING — gunicorn alone does NOT fix the slowness:**
+- Post-gunicorn concurrency test: TWO concurrent requests + one single request all TIMED OUT. Logs show `Gateway statistics computed in 148.976s` — the query jumped from ~40-58s (earlier this week) to **149s**. Two gunicorn workers ran the same uncached heavy query in parallel, competing for CPU/disk, making BOTH slower.
+- Root cause confirmed: **packet_history is now 8,419,912 rows** (up from 5.86M), oldest row Jul 2 (33 days — so 60d retention had deleted nothing). The query is slow because it aggregates over 8.4M rows on a memory-starved Pi. Gunicorn fixes concurrency but CANNOT fix a 149s query; it exposed/worsened it.
+
+**RESOLUTION IN PROGRESS: 30-day retention (720h) now set** to cap the table smaller. BUT retention deletion + VACUUM not yet completed — that's the remaining work.
+
+**STOPPED HERE (safe).** State is stable: retention 30d active (will auto-prune hourly overnight), gunicorn 2-worker running, backup safe, Malla still serving (slow on cold cache = the existing issue being fixed, nothing broken).
+
+**PICK UP TOMORROW (Step remaining):**
+1. Confirm overnight hourly retention started deleting rows >30d (check `docker logs mqtt-malla-capture-1 | grep cleanup` + row count via the python one-liner; expect < 8.4M and oldest row ~30d).
+2. **Manual VACUUM to reclaim space + speed the query** (retention deletes rows but SQLite won't shrink the 2.8GB file or speed scans until VACUUM). Procedure: `cd /opt/stacks/mqtt && docker compose stop malla-capture malla-web`, then VACUUM via `docker run --rm -v mqtt_malla_data:/app/data ghcr.io/zenitram/malla:latest python3 -c "import sqlite3,time; c=sqlite3.connect('/app/data/meshtastic_history.db'); t=time.time(); c.execute('VACUUM'); c.close(); print(f'done {time.time()-t:.1f}s')"`, then `docker compose up -d`.
+3. **Re-test query speed** (`curl -m 120 localhost:5008`). If 30d still too slow (still multi-minute), go SHORTER (14d/7d) — the plan anticipated this; the Pi may simply not handle 30d of this ingestion rate. Measure, then decide.
+4. If satisfactory: verify public malla.cnjmesh.me, reassess malla-warmcache.timer (may be redundant/counterproductive with gunicorn), re-run collect-inventory.sh, update install-map.
