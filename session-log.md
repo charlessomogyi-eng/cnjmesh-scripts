@@ -1402,3 +1402,36 @@ Outbound bridges (meshtastic_public, meshomatic, sjmesh-bridge) left unchanged. 
 4. Re-test Malla query speed after VACUUM — expect dramatic improvement now that both the flood is stopped AND the table will shrink.
 5. Watch UptimeRobot/Fing over coming days — if the recurring 530 outages/overnight drops STOP, this flood was very likely also the driver of those (broker/CPU/disk overload cascading into instability), not just Malla's slowness.
 6. Update install-map-cnjmesh1.md to reflect the new bridge topic scoping.
+
+---
+
+### Aug 4, 2026 (cont.) — Junk purge + VACUUM COMPLETE. Malla speed DRAMATICALLY improved. Session summary.
+
+**Precise junk removal (not waiting on retention aging):**
+- Counted the split: 9,460,284 total rows, only 4,218,232 (45%) legitimate CentralNJ, **5,242,052 (55%) foreign junk** (GraveYard/SJMesh-wildcard/etc. accumulated before the bridge fix).
+- `corruptedstack` (Discord) correctly predicted a first VACUUM (972.1s) would do little — confirmed: file stayed at 3.1GB, because almost none of the junk had aged past 30-day retention yet, so nothing had actually been deleted for VACUUM to reclaim.
+- Deleted the 5,242,052 junk rows DIRECTLY by topic (`WHERE NOT (topic LIKE CentralNJ patterns)`) rather than waiting for retention — exact match to the pre-counted number.
+- Second VACUUM: 531.5s. **File shrank 3.1GB -> 1.4GB** (confirms deletion + VACUUM approach works when there's real data to reclaim).
+
+**FINAL SPEED VERIFICATION — dramatic improvement, confirms this was the real root cause:**
+- Cold-cache query: **149s (pre-fix) -> 24.2s (post-fix)** — ~6x faster.
+- Concurrent requests (warm cache): two simultaneous curls both returned in ~11-12s, running in PARALLEL (not blocking each other) — confirms gunicorn's 2-worker concurrency fix is genuinely effective now that the underlying query is faster too.
+- 24s cold-cache is still not "fast" by normal web standards, but it's the best result all week and reflects the DB's HONEST size (4.2M real rows) rather than being inflated by the flood.
+
+**SESSION SUMMARY — everything accomplished today, in order:**
+1. Enabled Malla data retention (finally set to 30d after starting at 60d — see earlier entries).
+2. Fixed gunicorn properly via `MALLA_GUNICORN_WORKERS`/`THREADS` in compose.override.yaml environment (not `.env` — that only works for `MALLA_WEB_COMMAND` via `${...}` substitution). 2 workers/2 threads confirmed running.
+3. Investigated WHY gunicorn alone didn't fix things (149s query) -> led to root-causing the mosquitto inbound bridge flood via top-sender/portnum/topic breakdown -> found 3 bridges pulling `msh/US/#`/`msh/#` (entire US/global firehose).
+4. Root-caused via comparison with cnjmesh2 (disciplined narrow-topic bridges) as the "done right" reference.
+5. Rescoped all 3 inbound bridges to CentralNJ+NJ only. Verified with live data: packet rate dropped ~3x, topics went from majority-foreign to 100% legitimate.
+6. Hit + fixed a RECURRING cnjmesh1 network issue mid-session (gateway unreachable, same nmcli-bounce fix as before) — confirms this pattern is still live and separate from tonight's fix.
+7. Purged the pre-existing junk (5.24M rows) directly + VACUUMed -> DB 3.1GB -> 1.4GB.
+8. Verified end-to-end: query 149s -> 24.2s, concurrency working correctly.
+9. Charles observed Fing came back online unprompted after the fix — a good sign the flood was straining more than just Malla, though not yet proven causally.
+
+**STILL TO WATCH / DO:**
+- Monitor UptimeRobot/Fing over the next several days — if the recurring 530 outages stop, this flood was very likely the main driver of the whole-box instability, not just Malla slowness.
+- 24s cold-cache is good but not great — if further speed is wanted later, the `data_retention_hours` could be tightened further now that it's ONLY real traffic (no rush, no longer urgent).
+- Re-run collect-inventory.sh / update install-map to reflect the bridge topology fix.
+- Consider whether corruptedstack's DB-cleanup notes (offered Aug 2) are still worth getting — may be redundant now given we found the actual flood, but could still contain useful Malla-specific tips.
+- The recurring cnjmesh1 gateway-unreachable pattern happened AGAIN this session (network dropped mid-restart) — still unresolved as a standalone issue; the flood fix does not explain this specific symptom (bridges failed to connect due to genuine network loss, confirmed via ping). Keep this on the investigation list separately.
