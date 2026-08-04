@@ -1374,3 +1374,31 @@ Executed Phase 1 of the get-well plan (docs/malla-fix-plan-cnjmesh1.md). Status:
 2. **Manual VACUUM to reclaim space + speed the query** (retention deletes rows but SQLite won't shrink the 2.8GB file or speed scans until VACUUM). Procedure: `cd /opt/stacks/mqtt && docker compose stop malla-capture malla-web`, then VACUUM via `docker run --rm -v mqtt_malla_data:/app/data ghcr.io/zenitram/malla:latest python3 -c "import sqlite3,time; c=sqlite3.connect('/app/data/meshtastic_history.db'); t=time.time(); c.execute('VACUUM'); c.close(); print(f'done {time.time()-t:.1f}s')"`, then `docker compose up -d`.
 3. **Re-test query speed** (`curl -m 120 localhost:5008`). If 30d still too slow (still multi-minute), go SHORTER (14d/7d) — the plan anticipated this; the Pi may simply not handle 30d of this ingestion rate. Measure, then decide.
 4. If satisfactory: verify public malla.cnjmesh.me, reassess malla-warmcache.timer (may be redundant/counterproductive with gunicorn), re-run collect-inventory.sh, update install-map.
+
+---
+
+### Aug 4, 2026 — ROOT CAUSE FIX APPLIED AND VERIFIED: mosquitto inbound bridge flood
+
+**FIX APPLIED on cnjmesh1.** The three inbound bridges (oceancounty, liamcottle, sjmesh) that were pulling the entire US/global Meshtastic firehose (`msh/US/# in 0` / `msh/# in 0`) were rescoped to CentralNJ + NJ only:
+```
+topic msh/US/2/e/CentralNJ/# in 0
+topic msh/US/NJ/2/e/CentralNJ/# in 0
+```
+Outbound bridges (meshtastic_public, meshomatic, sjmesh-bridge) left unchanged. Backup of pre-fix config preserved at `/opt/stacks/mqtt/config/mosquitto.conf.bak-preNJscope-20260804`. Sanitized (password-redacted) real config now committed to git at `cnjmesh1/configs/mosquitto-cnjmesh1.conf` — this is the first time the REAL bridge config (not just the generic .example) has been in git.
+
+**Applied via:** Python script edit (not sed) → `docker compose restart mosquitto`. Restart initially showed ALL bridges failing ("Error creating bridge: Try again") — INCLUDING untouched ones (meshtastic_public, meshomatic) — which correctly signaled this was NOT a config problem but the SAME recurring cnjmesh1-local network/gateway issue (confirmed: `ping 10.0.0.1` = 100% loss). Fixed via the known remedy: `sudo nmcli connection down/up "C4Somogyi-24"` (NOT a router reboot — local to cnjmesh1's own connection state). After that, all bridges connected cleanly.
+
+**VERIFIED WORKING — dramatic, immediate result:**
+- Before: ~68,000 packets/hour, 99.5% foreign UNKNOWN_APP junk (GraveYard, SJMesh-wildcard, etc.)
+- After fix: 1,849 packets in 5 min (~22,000/hr) — a ~3x reduction — and **100% of it is legitimate CentralNJ traffic** (confirmed via live topic query: all `msh/US/2/e/CentralNJ/...`, one `LongFast` packet, zero foreign channels).
+- **This is the real root cause of the whole multi-week saga** — Malla slowness (149s queries), disk-fill, DB bloat (9.4M rows), and very likely the recurring outages/530s were all downstream of this flood. Gunicorn (working, 2 workers) and retention tuning (30d) were correct improvements but were treating symptoms of this.
+
+**HOW WE FOUND IT:** Charles's insistence on finding "the offender" rather than just reducing retention led to querying top packet senders + portnum breakdown + topic breakdown by actual data (not assumption) — revealed 99.5% UNKNOWN_APP + foreign channel names (GraveYard) neither of us recognized. Traced to the 3 inbound bridge topic lines in mosquitto.conf. Cross-referenced against cnjmesh2's disciplined narrow-topic config as the "done right" template. Charles correctly pushed back multiple times on premature conclusions (git is NOT ground truth, only ~4 weeks old; don't guess at causes; find the actual offender not just cut packets) — this discipline is what got to the real root cause instead of another band-aid.
+
+**NEXT STEPS (remaining):**
+1. Monitor packet rate over the next hour+ to confirm it stays low and stable (not a temporary lull).
+2. **VACUUM the DB** to reclaim space from weeks of foreign-junk accumulation (9.4M rows / 3.1GB) — Malla stopped, same procedure as before. This is now MORE valuable since the flood won't refill it.
+3. Retention (currently 720h/30d) — now that the flood is stopped, 30d of REAL CentralNJ traffic will be tiny. Can stay at 30d or be extended; no longer urgent to shorten.
+4. Re-test Malla query speed after VACUUM — expect dramatic improvement now that both the flood is stopped AND the table will shrink.
+5. Watch UptimeRobot/Fing over coming days — if the recurring 530 outages/overnight drops STOP, this flood was very likely also the driver of those (broker/CPU/disk overload cascading into instability), not just Malla's slowness.
+6. Update install-map-cnjmesh1.md to reflect the new bridge topic scoping.
