@@ -1435,3 +1435,38 @@ Outbound bridges (meshtastic_public, meshomatic, sjmesh-bridge) left unchanged. 
 - Re-run collect-inventory.sh / update install-map to reflect the bridge topology fix.
 - Consider whether corruptedstack's DB-cleanup notes (offered Aug 2) are still worth getting — may be redundant now given we found the actual flood, but could still contain useful Malla-specific tips.
 - The recurring cnjmesh1 gateway-unreachable pattern happened AGAIN this session (network dropped mid-restart) — still unresolved as a standalone issue; the flood fix does not explain this specific symptom (bridges failed to connect due to genuine network loss, confirmed via ping). Keep this on the investigation list separately.
+
+---
+
+### Aug 4, 2026 (cont.) — PHASE 2 COMPLETE: deliberate cnjmesh1 reboot, full verification
+
+Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post verification.
+
+**Pre-reboot baseline:** 11 days uptime, load avg 8.49, 1.8GB swap in use, 16 containers.
+
+**Post-reboot checklist — full results:**
+- **12 Docker containers:** all confirmed Up/healthy. `meshcore-hub-migrate` exited(0) is expected (one-shot migration container).
+- **Systemd — zero failed units** (after fix, see below).
+- **14 documented services** (cloudflared, graywolf-discord, meshview-db/web, Fing agent, all watchdog timers, weather bots, mesh_bot) — ALL confirmed active/running or correctly waiting on their timers.
+- **Network/gateway:** confirmed working after initial recurring drop mid-session (see below).
+- **Mosquitto bridges:** confirmed reconnecting correctly post-reboot — the CentralNJ/NJ scoping fix from earlier tonight persisted through the reboot (bind-mounted config file, as expected).
+- **Web services:** meshview 302 (healthy), corescope 200, aprs-tnc-web 200, **Malla 200 in 11.1s** (even better than the 24.2s post-VACUUM result earlier — genuinely fast now).
+
+**TWO real issues found and handled:**
+
+1. **FIXED: `cloud-init-network.service` failing on EVERY boot since July 20** (matches the new-Pi-delivery date again). Root cause: `/etc/hosts` had the immutable (`i`) attribute set, so cloud-init's `cc_update_etc_hosts` module got `PermissionError: Operation not permitted` every single boot. Fixed: `sudo chattr -i /etc/hosts`. Origin of the immutable flag is UNKNOWN — not documented anywhere, no evidence it was deliberate. Verified NOT related to the recurring gateway/network-drop issue (cloud-init's own log explicitly stated network config was "unnecessary" for this stage — this was purely an /etc/hosts write failure, unrelated to actual network connectivity). Resolved via `systemctl reset-failed` + confirmed `systemctl --failed` now empty.
+
+2. **DIAGNOSED, LOW PRIORITY, NOT YET FIXED: `meshcore-mqtt-kpr1-bridge` (Tilly integration) exited (143) after reboot, would not restart.** Root cause: hardcoded to `/dev/ttyUSB3`, which doesn't exist post-reboot — the device now enumerates as `/dev/ttyACM0` (confirmed via `lsusb -t` showing a `cdc_acm` driver device, and `dmesg` showing a `1a86_USB_Single_Serial` device on replug). This is a DIFFERENT USB serial chip/driver (CDC-ACM, native USB) than the CP210x bridge chips used by Digirig/KPC1 — explains why it never showed as ttyUSB. Stable `/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EF089845-if00` path now confirmed to exist and point to ttyACM0 — should be used in the container's device mapping instead of the hardcoded ttyUSB3, so future reboots don't break it. NOT YET APPLIED (Charles deprioritized — KPR1/Tilly is the least important device right now). Do this whenever picking KPR1/Tilly back up: find its device mapping in the meshcore-mqtt-kpr1-bridge compose/run config, swap to the by-id path.
+
+**USB inventory confirmed correct (Digirig + KPC1, both non-KPR1 devices fine):**
+- Digirig (Graywolf PTT): serial `beb31e2f...` → `/dev/ttyUSB2` — confirmed via clean disconnect/reconnect in dmesg during manual replug test.
+- KPC1/Client 1 (MeshCore companion): serial `0001` → `/dev/ttyUSB0` — confirmed via clean disconnect/reconnect in dmesg during manual replug test.
+- KPR1 (Tilly integration): now on `/dev/ttyACM0` (see above) — was on `/dev/ttyUSB3` before reboot (unstable numbering, exactly the failure mode this class of bug produces).
+- LoRa APRS (K2GIA-10): NOT a USB device — separate standalone LilyGO board on the network at 10.0.0.74, feeds cnjmesh1 via UDP syslog 1514, no physical connection to check.
+- Powered USB hub: CONFIRMED WORKING CORRECTLY. Initial suspicion it was faulty was WRONG — traced via lsusb/dmesg that it cleanly detected and re-enumerated both devices actually connected to it (Digirig, KPC1) on manual replug. KPR1 connects DIRECTLY to the Pi, not through this hub, so the hub was never involved in the KPR1 issue.
+
+**LESSON for future USB troubleshooting on this Pi:** any container/service with a hardcoded `/dev/ttyUSB*` or `/dev/ttyACM*` path is fragile across reboots on this box (multiple devices, enumeration order not guaranteed). ALWAYS use `/dev/serial/by-id/...` stable paths instead. Digirig and KPC1 already happened to land on stable-seeming numbers this time, but that's not guaranteed either — worth eventually migrating ALL device mappings (Graywolf PTT config, KPC1 bridge, KPR1 bridge) to by-id paths as a durability improvement, not just fixing KPR1 in isolation.
+
+**Recurring network issue ALSO occurred mid-verification tonight** (separate from the reboot itself — happened during the mosquitto-bridge-fix testing, before the reboot): gateway unreachable, fixed via the known `nmcli connection down/up` remedy. Still unresolved as a standalone root cause — occurred AGAIN even after tonight's other fixes, so it is NOT solely caused by the mosquitto flood or the disk-fill (both already fixed). Remains an open, separate investigation.
+
+**PHASE 2 STATUS: COMPLETE.** cnjmesh1 fully verified healthy post-reboot except the two items above (cloud-init fixed; KPR1 diagnosed but deprioritized). Ready for Phase 3 (full health-check sweep across all 3 Pis) next session.
