@@ -1470,3 +1470,28 @@ Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post
 **Recurring network issue ALSO occurred mid-verification tonight** (separate from the reboot itself — happened during the mosquitto-bridge-fix testing, before the reboot): gateway unreachable, fixed via the known `nmcli connection down/up` remedy. Still unresolved as a standalone root cause — occurred AGAIN even after tonight's other fixes, so it is NOT solely caused by the mosquitto flood or the disk-fill (both already fixed). Remains an open, separate investigation.
 
 **PHASE 2 STATUS: COMPLETE.** cnjmesh1 fully verified healthy post-reboot except the two items above (cloud-init fixed; KPR1 diagnosed but deprioritized). Ready for Phase 3 (full health-check sweep across all 3 Pis) next session.
+
+---
+
+### Aug 4, 2026 (cont.) — Health sweep continued: cnjmesh3 fully healthy + LoRa APRS bridge fixed (partially) + Graywolf/aprs-tnc-web confirmed
+
+**cnjmesh3 (Part 1-3 of health-check plan): FULLY HEALTHY.**
+- General health: load avg 0.03 (idle), 610Mi available RAM, 27Mi swap used, disk 18%. 15 days uptime, clean.
+- Observer (`meshcore-packet-capture`): healthy, connected to all 4 brokers (letsmesh-us, letsmesh-eu, meshomatic, local@10.0.0.181), actively capturing.
+- KPR2 (`meshcore-mqtt-bridge`): healthy, confirmed BOTH MeshCore AND MQTT connected ("MeshCore status update: connected - connected") — this CONFIRMS the KPR1 MQTT-disconnect issue is bridge/config-specific (Tilly's external broker), NOT a problem with cnjmesh1's local Mosquitto, since KPR2 connects to the same local broker fine.
+- **PROACTIVE FIX: cnjmesh3 had NO Docker log rotation** (same unbounded-log risk that caused cnjmesh1's 30GB mqtt-filter disaster). Caught it BEFORE it became a problem — current logs were small (13MB, 39MB). Added `/etc/docker/daemon.json` (10m x3, same as cnjmesh1/cnjmesh2), `systemctl restart docker`, both containers recovered cleanly within 13 seconds, still healthy.
+- cnjmesh3->cnjmesh1 ping: reachable (0% loss) but unusually high latency (440-827ms vs normal <10ms local LAN). Not investigated further — noted as an anomaly to watch, likely cnjmesh1 still settling from tonight's heavy work (reboot, VACUUM x2, bridge restarts). Not urgent.
+
+**Part 5 (APRS, cnjmesh1): CONFIRMED HEALTHY.**
+- graywolf-discord.service: active/running, 43min uptime clean, no errors (no recent log entries = normal, quiet channel, not a problem).
+- aprs-tnc-web (nextjs_app + mysql_database): both up, 200 response in 53ms.
+
+**Part 6 (LoRa APRS, cnjmesh1): PARTIALLY FIXED, end-to-end NOT confirmed — DEPRIORITIZED per Charles.**
+- K2GIA-10 iGate (10.0.0.74): confirmed alive (401 on web UI = auth-required, working correctly; ping fails but that's expected, ICMP likely disabled on this embedded board — not a real problem).
+- **REAL BUG FOUND AND FIXED: the lora-aprs-discord-bridge-v2.py script reads `os.environ.get(...)` directly with NO dotenv-loading logic** — the `.env` file in `/opt/lora-aprs-discord/` was never actually being read by anything. It's pure documentation unless manually sourced. This is why it failed with "DISCORD_WEBHOOK_LORA not set" on direct launch. FIX: must `set -a; source .env; set +a` before running the script (or wrap in a proper systemd unit with EnvironmentFile= directive — NOT YET DONE, would be the durable fix).
+- Started the bridge manually this session (`nohup ... &`, disowned) — running, listening cleanly on UDP 1514, no errors.
+- **Confirmed K2GIA-10's syslog config is CORRECT**: Server 10.0.0.181, Port 1514, Syslog enabled — verified via screenshot of K2GIA-10's own web UI. This rules out the config-mismatch theory that was the leading suspect.
+- Attempted live end-to-end test via aprs-tnc-web ("Testing from k2gia" CQ message) — **INCONCLUSIVE.** No traffic appeared in the bridge log after send, but it's unclear whether the message was actually sent before the terminal/tail was interrupted, or genuinely didn't arrive. NOT resolved either way.
+- **Charles's call: deprioritize LoRa APRS entirely for tonight** — reasonable, it's not core infrastructure. 
+
+**CURRENT STATE if picking this back up:** bridge is running (manually started, NOT persistent across reboot — no systemd unit), env var bug is understood and fixable, K2GIA-10 config confirmed correct. Remaining unknowns: whether end-to-end delivery actually works (never conclusively tested), and building a proper systemd service so it survives reboots. Low priority — revisit only if/when Charles wants to circle back.
