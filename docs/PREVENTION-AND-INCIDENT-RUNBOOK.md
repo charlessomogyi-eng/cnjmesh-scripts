@@ -1,6 +1,6 @@
 # Prevention Framework & Catastrophic-Issue Runbook
 
-**Purpose:** Never go through the Jul-Aug 2026 multi-week saga again. That incident took days to resolve because (a) nothing caught the root cause (mosquitto bridge flood) early, (b) there was no baseline to notice drift against, and (c) there was no triage order — we chased symptoms (Malla slowness, disk fill) for days before finding the actual cause (foreign traffic flooding the broker).
+**Purpose:** Never go through the Jul-Aug 2026 saga again. That incident dragged on for WEEKS because (a) nothing caught the root cause (mosquitto bridge flood) early, (b) there was no baseline to notice drift against, and (c) there was no triage order — we chased symptoms (Malla slowness, disk fill) for days before finding the actual cause (foreign traffic flooding the broker).
 
 This document is two things: **prevention** (stop it happening) and a **runbook** (what to do when something IS wrong, in what order).
 
@@ -105,4 +105,4 @@ In priority order — each of these would have caught the last saga early:
 7. **Regular `collect-inventory.sh` runs** to keep the baseline current.
 8. **Capture a documented healthy-state baseline** (normal pkts/hr, query time, load, disk) so drift is detectable.
 
-Building #1 and #2 alone would have turned a multi-week saga into a same-day fix.
+Building #1 and #2 alone would have turned a WEEKS-LONG saga into a same-day fix. That is the entire point of this document.
