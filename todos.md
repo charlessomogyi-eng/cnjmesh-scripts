@@ -1,5 +1,9 @@
 # CNJ Mesh — Open To-Dos
 
+### [!!! THE PLAN TO NEVER REPEAT THIS] `docs/RESILIENCE-PLAN.md`
+Built Aug 5 in response to "come up with a resilience plan / I don't want to go through this again." Three pillars: EARLY WARNING (watchdogs — catch problems in minutes not weeks), SELF-HEALING (safe auto-restarts for low-risk services), FAST REBUILD (close backup gaps, off-Pi copies, tested restores). Concrete phased path to "lay back and let it run." **Single highest-leverage next action: build the broker ingest-rate watchdog + disk-space watchdog — those two ALONE would have prevented the entire weeks-long saga.** Also flags a CURRENT data-loss risk: Malla DB (named volume) is not in automated backup + last backup never copied off-Pi.
+
+
 ### [!!! READ FIRST — PREVENTION] `docs/PREVENTION-AND-INCIDENT-RUNBOOK.md`
 Built Aug 5 in response to "I never want to go through this again." Two parts: (1) PREVENTION — standing safeguards against the 3 failure classes that caused the saga (unbounded ingestion, unbounded growth, silent failures), and (2) a CATASTROPHIC-ISSUE RUNBOOK — the exact triage order to follow when things break (check UPSTREAM causes first: ingest rate → disk → memory → network, BEFORE chasing symptoms). Includes a prioritized TODO list of watchdogs to build — #1 (broker ingest-rate watchdog) and #2 (disk-space watchdog) would each have caught the entire last saga on day one. Building those two is the single highest-value prevention work.
 
