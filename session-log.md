@@ -1613,3 +1613,45 @@ Quick health check before Charles logged off. Findings:
 **CORRECTION: this was a WEEKS-LONG incident, not "days."** Claude repeatedly understated the duration in session notes and summaries. The instability escalated ~July 19-20 and was actively degrading Charles's environment through Aug 4 — that's roughly TWO+ WEEKS of an unreliable mesh, not a few days. This matters for how seriously the prevention framework should be taken: the cost of NOT having monitoring was weeks of a broken environment, not a minor inconvenience. Corrected in PREVENTION-AND-INCIDENT-RUNBOOK.md.
 
 **CONFIRMED: both mesh-discord-shim relays back online.** Charles confirms #cnj-new-node-relay AND #centralnj-mc-channel-relay are both posting to Discord again — real messages flowing after the ~16-day silence (since Jul 19). This is full live confirmation that the DNS-root-cause fix + container restart resolved it, AND that the new mesh-discord-shim-watchdog is now guarding against a recurrence. mesh-discord-shim issue fully CLOSED and confirmed.
+
+---
+
+### Aug 5, 2026 ~18:15-18:30 — NEW INCIDENT found via 24h pre-check: sjmesh bridge republish LOOP, root-caused + fixed live
+
+**24-hour pre-check (per Charles's request, before starting new work) revealed a NEW regression, not present at end of Aug 4 session:**
+- Load average 8.83-10.76 (worse than bedtime check), swap essentially FULL (3.0Gi/3.0Gi used)
+- Packet rate: **68,763 pkts/hr** — same magnitude as the ORIGINAL flood before the Aug 4 fix
+- Malla completely unresponsive (30s timeout, 0 bytes) — worse than Aug 4's 20.7s degradation
+- New systemd failure: `mesh_bot_reporting.service`
+
+**ROOT CAUSE FOUND: an sjmesh bridge republish LOOP, caused as a side effect of Aug 4's own fix.** cnjmesh1 had TWO separate bridge connections to mqtt.sjmesh.net:
+- `sjmesh` (inbound only) — scoped Aug 4 to `msh/US/2/e/CentralNJ/# in` + `msh/US/NJ/2/e/CentralNJ/# in`
+- `sjmesh-bridge` (outbound only, pre-existing, untouched by Aug 4) — `msh/US/2/# out`
+
+Because these were two DIFFERENT named connections (different/no clientid) to the SAME remote broker, Mosquitto's built-in bridge-loop protection did NOT apply between them. Sequence: cnjmesh1 publishes CentralNJ traffic out via `sjmesh-bridge` -> SJMesh's broker relays it back -> the NOW-TIGHTLY-SCOPED inbound `sjmesh` filter matches it (it's real CentralNJ traffic) -> comes back in -> gets sent back out via `sjmesh-bridge` again -> repeats indefinitely. Confirmed directly in mosquitto logs: identical node IDs (`!db51bb30`, `!699a9390`, `!698574b0`) cycling with "Received PUBLISH from local.cnjmesh1-sjmesh-bridge" immediately followed by "Sending PUBLISH to local.mosquitto.sjmesh-bridge" at the SAME timestamp, repeatedly.
+
+**This is a genuinely different bug than Aug 4's flood** (foreign traffic vs. our own traffic looping) but was LATENT/exposed by Aug 4's tightening of the inbound filter — before Aug 4, the inbound filter was broad enough that this specific loop pattern either didn't matter or wasn't as visible amid the much larger foreign-traffic flood.
+
+**FIX APPLIED AND VERIFIED:** merged the two separate bridge connections into ONE (`connection sjmesh`), using topic direction `both` on the CentralNJ scope instead of separate `in`/`out` blocks on two different connections. This lets Mosquitto's native loop protection work (same clientid handles both directions). Backup at `mosquitto.conf.bak-preloopfix-20260805`.
+```
+connection sjmesh
+address mqtt.sjmesh.net:1883
+remote_username meshuser
+remote_password mesh4life
+clientid cnjmesh1-sjmesh-bridge
+topic msh/US/2/e/CentralNJ/# both 0
+topic msh/US/NJ/2/e/CentralNJ/# in 0
+[...same other settings as before...]
+```
+**VERIFIED WORKING:** post-fix, packet rate dropped from 68,763/hr to **1 packet in 60 seconds** — genuinely healthy, not just quiet. Mosquitto logs confirmed single-direction flow (sjmesh -> CJG2/public-broker), no more echo pattern. Load average improved 8.83->5.64 and dropping; swap stabilized (stopped climbing) within a few minutes of the fix.
+
+**MALLA STATUS AT SESSION PAUSE: NOT YET FULLY RECOVERED.** Even after `docker restart mqtt-malla-web-1`, Malla was STILL timing out (30s, 0 bytes) immediately after restart. Checked logs: container IS healthy and NOT crash-looping — DB connects fine, gunicorn boots with 2 workers cleanly — but it's stuck grinding on a genuinely slow query: "Computing gateway statistics for 24h (cache miss)" logged at 22:27:42, still not returned by 22:28:41+ (60+ seconds and counting when last checked). Most likely explanation: the DB/disk is still recovering from being hammered by the loop combined with ongoing memory pressure slowing I/O — NOT a new crash, just very slow right now.
+
+**IMMEDIATE NEXT STEPS for next session:**
+1. **FIRST: check if Malla has recovered on its own** — the gateway-stats query may have simply been slow and eventually completed. Re-test: `curl -sS -m 60 -o /dev/null -w "malla: %{http_code} %{time_total}s\n" http://localhost:5008/`. Give it up to 60s this time.
+2. If STILL timing out after a fair wait, check whether malla-capture (not just malla-web) needs a restart too, and whether the DB itself needs another VACUUM (the loop may have inserted many duplicate rows in the ~10-15 min before it was caught — check `SELECT COUNT(*) FROM packet_history WHERE timestamp > <loop start time>` and dedupe/VACUUM if bloated again).
+3. Re-check `mesh_bot_reporting.service` — new failure found in the pre-check, NOT investigated yet (`systemctl status mesh_bot_reporting.service` + journalctl for the actual error).
+4. Re-run the same packet-rate + Malla-speed check ~30-60 min after the fix to confirm it's holding steady (not just momentarily quiet), before considering this fully closed.
+5. **IMPORTANT LESSON for future bridge config changes:** whenever adding/editing ANY mosquitto bridge topic scope, explicitly check for OTHER existing bridge connections to the SAME remote host that could create a similar loop. This bug was a direct, unintended side effect of a well-verified fix — the Aug 4 fix was tested and confirmed working at the time, but this second-order effect wasn't checked for. Worth a quick topology review of ALL bridge connections (which hosts, which directions, which client IDs) as a one-time sanity pass — commit that inventory to git so it doesn't need re-discovering.
+
+**Charles asked about USB thumb drive for swap — ADVISED AGAINST.** Poor random I/O performance + limited write endurance would likely make things worse, not better. Real fix for memory pressure remains Phase 4 (cgroups/resource tuning), not more/slower swap.
