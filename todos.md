@@ -1,5 +1,9 @@
 # CNJ Mesh — Open To-Dos
 
+### [!!! READ FIRST — PREVENTION] `docs/PREVENTION-AND-INCIDENT-RUNBOOK.md`
+Built Aug 5 in response to "I never want to go through this again." Two parts: (1) PREVENTION — standing safeguards against the 3 failure classes that caused the saga (unbounded ingestion, unbounded growth, silent failures), and (2) a CATASTROPHIC-ISSUE RUNBOOK — the exact triage order to follow when things break (check UPSTREAM causes first: ingest rate → disk → memory → network, BEFORE chasing symptoms). Includes a prioritized TODO list of watchdogs to build — #1 (broker ingest-rate watchdog) and #2 (disk-space watchdog) would each have caught the entire last saga on day one. Building those two is the single highest-value prevention work.
+
+
 **For AI assistants:** This is the current, lean action list. Fetch this alongside `cnjmesh1-operations.md` at the start of a session — both are short. Only fetch `session-log.md` (long, narrative, full history) if you need the backstory on *why* something is the way it is.
 
 **Housekeeping rule:** when an item is finished, delete it from this file — don't mark it "done" and leave it. If the fact that it's finished matters for later reference, a one-line note goes in `session-log.md` instead, not here.
