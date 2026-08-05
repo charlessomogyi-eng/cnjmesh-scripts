@@ -1537,3 +1537,19 @@ Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post
 
 ### Aug 4, 2026 (cont.) — MeshCore Hub finding: real 502, needs investigation next session
 `meshcore-hub-web` container reports Docker-healthy, and `meshcore-hub-api` is genuinely healthy (steady `/health` 200s). BUT: **no host port is published** (`docker port meshcore-hub-web` returns empty) — install-map's documented `8083->8080/tcp` mapping is STALE/no longer accurate. Service is actually routed via Cloudflare tunnel (`meshcorehub.cnjmesh.me` in `/etc/cloudflared/config.yml`), not a host port — that part is fine, just different from documented. **BUT the tunnel test itself returned a genuine 502** (`curl https://meshcorehub.cnjmesh.me/` = 502) — Cloudflare reached the tunnel but couldn't get a good response from the backend. This is a REAL unresolved finding, not a testing-methodology issue like the port confusion. NEXT SESSION: check cloudflared's ingress rule for meshcorehub (correct internal target port/host?), check meshcore-hub-web's actual internal listening port inside the container network, and whether the compose file's port config changed from what install-map documents. Re-run collect-inventory.sh to refresh the stale port documentation while at it.
+
+---
+
+### Aug 4, 2026 (cont.) — mesh-discord-shim new-node relay: root cause found (DNS), live fix unconfirmed
+
+**Root cause identified, NOT a broken/deleted webhook as suspected in the pre-Tilly checklist.** Every historical "NEW NODE" detection correctly fired, but every single Discord post attempt failed identically: `urlopen error [Errno -3] Try again` — this is a Python DNS-resolution-failure error code (EAI_AGAIN), not an HTTP/auth error. All failures seen were dated July 30 — consistent with cnjmesh1's known instability window (disk-fill/flood period) that's since been fixed.
+
+**Verified DNS is healthy NOW:** `docker exec mesh-discord-shim nslookup discord.com` resolved cleanly (multiple Cloudflare IPs returned via Docker's internal resolver 127.0.0.11). Container was restarted to clear any lingering bad state.
+
+**NOT YET LIVE-CONFIRMED:** no new-node event has occurred since the restart, so we have NOT seen a fresh Discord post actually succeed end-to-end. The shim IS actively processing real events (advertisements, channel messages from Observer a8c40bf3) with no errors — healthy operationally, just no NEW NODE trigger has fired yet to test against.
+
+**Two minor secondary observations, low priority:**
+- `WARNING Backfill failed (continuing anyway): <urlopen error [Errno 111] Connection refused>` fires on every container startup — different error (connection refused, not DNS) — looks like it tries to reach some internal service before it's ready; appears non-fatal ("continuing anyway").
+- A truncated `Exception occurred during processing of request from ('172.25.0.1', 56684)` traceback appeared in the logs, cut off before the actual exception type/message — worth a closer look if seen again, but not chased further tonight.
+
+**CONCLUSION: fixed (DNS confirmed healthy, container restarted clean), but awaiting a live NEW NODE event to fully confirm the actual fix.** No further action needed unless it fails again on the next real occurrence — if it does, the DNS theory would need to be reconsidered.
