@@ -1592,3 +1592,16 @@ Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post
 **Known limitation (same blind-spot class as corescope-watchdog):** detects Discord POST FAILURES, not total silence — if the shim process hangs/crashes without logging an error (no attempt made at all), this watchdog won't catch it. Lower-probability failure mode than the DNS issue just fixed, but worth knowing. Would need a "time since last successful post" check (not just error-scanning) to close that gap fully — not built tonight, noted for future improvement if it matters.
 
 **STATUS: mesh-discord-shim issue is CLOSED.** Root cause found (DNS, tied to Jul 30 instability), fix confirmed live (real messages posting after 16-day gap), and a watchdog is now in place to catch a recurrence within 15 minutes instead of 16 days.
+
+---
+
+### Aug 5, 2026 ~01:23 — Pre-bedtime health check: memory pressure trending up, Malla degrading gradually (not urgent)
+
+Quick health check before Charles logged off. Findings:
+- **cnjmesh1, 2h46m post-reboot:** load average 7.65-7.82 (high for this soon after reboot), swap climbed to 2.2GB/3GB used, only 49Mi truly free RAM. Trending upward from earlier tonight's numbers.
+- **All core containers healthy** — meshcore-hub-migrate exited(0) expected (one-shot), meshcore-mqtt-kpr1-bridge exited(143) is the known/deprioritized KPR1 device-path issue, not new.
+- **Malla: 20.7s response** (cold-ish), up from 11.1s a few hours ago post-reboot. Still 200 OK, still MUCH better than the pre-fix 149s, but a real measurable degradation as the evening's memory pressure built up.
+
+**Assessment: not urgent, but confirms Phase 4 (cgroups/resource tuning) is the real next step, not optional.** The bridge flood fix removed the biggest instability driver, but cnjmesh1's underlying memory pressure (1.8GB RAM, many services) is a SEPARATE unresolved issue causing this gradual within-session degradation. Nothing broken tonight — system still fully functional — but this is the trend Phase 4 needs to address (memory cgroups enablement, possibly resource limits per-container, maybe reconsidering what runs on cnjmesh1 vs migrating things to cnjmesh3 per the earlier-noted principle).
+
+**NO ACTION TAKEN tonight** — Charles going to bed, this is a "watch and address properly in Phase 4" finding, not an emergency.
