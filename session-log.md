@@ -1509,3 +1509,26 @@ Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post
 **RESOLUTION: schedule fully reverted and CONFIRMED correct.** `time = 07:00` restored, `mesh_bot.service` restarted, scheduler log confirms: `Every 1 day at 07:00:00 ... next run: 2026-08-05 07:00:00`. Tomorrow's 7am broadcast will fire normally.
 
 **Minor unrelated bug noticed (not investigated, low priority):** `WARNING | System: Error loading/saving Mesh Leaderboard: name 'pickle' is not defined` appears on every mesh_bot restart — looks like a missing `import pickle` in the bot's own persistence code. Cosmetic/non-blocking, leaderboard feature specifically, not the weather broadcast. Note for a future cleanup pass, not urgent.
+
+---
+
+### Aug 4, 2026 (cont.) — Watchdog test REVEALED two real findings: watchdog blind spot + CoreScope local-source root cause CONFIRMED
+
+**Original goal:** verify corescope-watchdog and graywolf-discord-watchdog actually catch and alert on a real failure (a planned-but-never-executed validation from earlier notes).
+
+**CORRECTION made before testing:** neither watchdog actually self-heals anything — both are ALERT-ONLY (confirmed by reading both scripts directly). `corescope-watchdog.sh` posts a Discord alert after 3 consecutive stalled checks (~15min) if `tx_inserted` stops climbing. `graywolf-watchdog.sh` explicitly states in its own alert text "NOT auto-restarted — check PTT before restarting manually" (deliberate, since auto-restarting a TX-capable radio unattended is risky). The earlier note about "watching it heal within 3 min" was imprecise language for "watching the alert correctly fire," not actual self-healing.
+
+**TEST EXECUTED:** stopped `mosquitto` on cnjmesh1 (`docker compose stop mosquitto`, 20:22:19) to trigger the local-source stall the watchdog is designed to detect.
+
+**FINDING 1 — Watchdog has a real blind spot.** `tx_inserted` kept climbing (223->228) even with local Mosquitto down, because CoreScope aggregates across MULTIPLE sources (local, meshomatic, and presumably letsmesh-us/eu per the multi-broker architecture seen on cnjmesh3's Observer). Other sources masked the local outage in the AGGREGATE counter the watchdog checks. **The watchdog as currently written cannot detect a single-source failure if other sources keep the total moving** — it would only catch a TOTAL stall across all sources simultaneously. This is a real monitoring gap worth fixing (a future improvement: track `tx_inserted` PER SOURCE, not just the aggregate, or specifically watch the `[local]` log lines).
+
+**FINDING 2 — Root cause of the chronic "CoreScope local source instability" bug CONFIRMED, not just suspected.** Live evidence captured: `corescope` logs showed the `[local]` MQTT client stuck in a repeated reconnect loop (`connection attempt #14, #15, #16...`) even well AFTER Mosquitto was restarted and healthy again — CoreScope's own internal watchdog logged `"client reports connected... but no messages received for 5m24s... possible half-open socket"` and force-issued a reconnect, which itself did not recover the connection. The `[local]` source stayed completely silent (zero log lines, not even failed attempts) after the Mosquitto restart. **`docker restart corescope` immediately fixed it** — local source resumed receiving data within 15 seconds of the CoreScope container restart.
+
+**CONCLUSION: this is a client-side (CoreScope ingestor) reconnection bug, not a Mosquitto-side problem.** Mosquitto itself came back up cleanly and fine; CoreScope's own MQTT client for the `local` source gets stuck in a broken state (half-open socket, per its own diagnostic message) that its internal reconnect logic cannot recover from — only a full container restart clears it. This matches and finally explains the "recurring local source instability" pattern documented across multiple earlier sessions.
+
+**PRACTICAL TAKEAWAY / recommended follow-up (not done tonight):**
+1. Whenever Mosquitto is restarted/recreated on cnjmesh1 going forward, ALSO restart `corescope` immediately after — don't assume it'll self-recover, it demonstrably won't.
+2. Consider whether corescope-watchdog should be enhanced to specifically watch the `[local]` source (not just the aggregate `tx_inserted`) and auto-restart the corescope container on a detected local-source stall — this WOULD be a legitimate, low-risk auto-heal (restarting a data-ingestion container is much safer than auto-restarting a TX-capable radio process like Graywolf).
+3. File/flag this as a genuine CoreScope bug if it's an open-source project with issue tracking — the "half-open socket, watchdog forces reconnect but reconnect logic doesn't actually recover" behavior sounds like a real client library or reconnect-handling defect worth reporting upstream.
+
+**Test cleanup:** Mosquitto was down ~5 minutes total (20:22-20:27), CoreScope container restarted at ~20:35, both fully healthy and confirmed receiving local traffic again. No lasting impact; Malla/cnjmesh3 bridges reconnected automatically once Mosquitto was back (standard bridge reconnect behavior, unaffected by the corescope-specific bug).
