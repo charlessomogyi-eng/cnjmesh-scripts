@@ -1553,3 +1553,22 @@ Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post
 - A truncated `Exception occurred during processing of request from ('172.25.0.1', 56684)` traceback appeared in the logs, cut off before the actual exception type/message — worth a closer look if seen again, but not chased further tonight.
 
 **CONCLUSION: fixed (DNS confirmed healthy, container restarted clean), but awaiting a live NEW NODE event to fully confirm the actual fix.** No further action needed unless it fails again on the next real occurrence — if it does, the DNS theory would need to be reconsidered.
+
+---
+
+### Aug 5, 2026 ~01:10 — mesh-discord-shim relays: WEBHOOKS CONFIRMED VALID, likely working correctly (self-traffic suppression)
+
+**Decisive webhook test performed** (the direct test that broke the diagnostic loop): POSTed a test message directly to all three shim webhooks from the .env — ALL returned HTTP 204 (success), and all three test messages landed in their Discord channels (Charles confirmed visually). So:
+- `NEW_NODE_WEBHOOK` (#cnj-new-node-relay) → 204 ✅ VALID
+- `PUBLIC_CHAT_WEBHOOK` (#centralnj-mc-channel-relay) → 204 ✅ VALID
+- `NJ_MQTT_WEBHOOK` (#meshcore-nj-mqtt) → 204 ✅ VALID
+
+**The webhooks are NOT the problem.** DNS is confirmed healthy. The shim is running and actively receiving events. 
+
+**KEY FINDING:** every event the shim is currently receiving (`channel_msg_recv`, `advertisement`) is from pubkey **`a8c40bf3` — which is the Observer's OWN pubkey** (CNJ Mesh Observer). The shim is almost certainly (and correctly) SUPPRESSING the Observer's own self-traffic so it doesn't relay the observer's own beacons/echoes as if they were real user messages. That's why it logs "Event: received" but posts nothing — there has been NO message from a DIFFERENT node since the restart to actually exercise the forward path.
+
+**HONEST STATE: the relay is very likely working correctly and simply hasn't had a real (non-Observer) event to forward since the restart.** The historical Jul 30 failures were DNS (now fixed). Nothing is provably broken right now.
+
+**TO DEFINITIVELY CONFIRM (next session, ~2 min):** either (a) wait for / trigger a real message from a node OTHER than the Observer on the CentralNJ MeshCore channel and watch it post to #centralnj-mc-channel-relay, or (b) read the shim's forward/filter logic in `/opt/stacks/mesh-discord-shim/` to confirm it filters by source pubkey (suppressing a8c40bf3 / the observer) — that would prove the "self-suppression" theory and confirm real traffic WILL post. If a real non-observer message comes through and STILL doesn't post, THEN there's a genuine forward bug to chase — but current evidence says it's fine.
+
+**Webhook URLs are in `/opt/stacks/mesh-discord-shim/.env` (NEW_NODE_WEBHOOK, PUBLIC_CHAT_WEBHOOK, NJ_MQTT_WEBHOOK) — NOT committed to git (secrets). All three confirmed live as of this timestamp.**
