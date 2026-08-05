@@ -70,5 +70,19 @@ This document captures process/technique lessons from executing the get-well pla
 
 ---
 
+## 9. Don't conflate two different services — when a specific thing is asked about, stay on THAT thing
+
+**The mistake:** Charles asked specifically about the `cnj-new-node-relay` Discord relay (the `mesh-discord-shim` container). Mid-diagnosis, the thread drifted into fixing the `meshcore-hub-web` 502 (a completely unrelated web-dashboard service) because both surfaced around the same time. This made Charles feel the actual question wasn't being answered, and he had to repeatedly redirect ("I wasn't asking about meshcore-hub"). The two share nothing — different containers, different purposes, different failure modes.
+
+**Fix going forward:** When the person names a specific service/symptom, keep every step tied to THAT service until it's resolved or explicitly parked. If a second unrelated issue surfaces during diagnosis, name it, note it as separate, and ask whether to switch — don't silently fold it into the current thread. Interleaving two investigations makes both feel unresolved and is a fast path to the person feeling like they're going in circles.
+
+## 10. Break the loop with the ONE definitive test — stop waiting on unpredictable events
+
+**The mistake:** For the new-node relay, the approach became "restart it and wait for a real new node to appear to confirm the fix," which is an unpredictable, potentially hours-long wait that left the question perpetually open and the person frustrated. There was a direct test available the whole time (POST directly to the webhook URL and read the HTTP status) that would have settled "is the webhook valid" in seconds, independent of whether a new node happened to show up.
+
+**Fix going forward:** When diagnosis stalls into "wait for an organic trigger," stop and ask: is there a way to *force* the exact code path or *directly test the dependency* right now? A direct webhook POST, a synthetic event, a manual invocation — these break the circle. Waiting on real-world events to confirm a fix is a last resort, not a first one, and it reads as going in circles to the person watching.
+
+---
+
 ## General theme across all of these
 Most of tonight's real mistakes were **process/communication failures, not technical ones** — moving too fast from "diagnose" to "act" without checking in, trusting stale documentation or paraphrased prior notes instead of live state, and not stating a plan clearly before executing something that touches production config. The technical diagnosis work tonight was strong (the bridge flood, the CoreScope reconnect bug, the cloud-init/etc-hosts bug were all genuinely well-found). The lesson is about slowing down at the handoff points between "I understand the problem" and "I am now changing something," not about diagnostic skill.
