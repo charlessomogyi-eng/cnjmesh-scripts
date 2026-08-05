@@ -1605,3 +1605,11 @@ Quick health check before Charles logged off. Findings:
 **Assessment: not urgent, but confirms Phase 4 (cgroups/resource tuning) is the real next step, not optional.** The bridge flood fix removed the biggest instability driver, but cnjmesh1's underlying memory pressure (1.8GB RAM, many services) is a SEPARATE unresolved issue causing this gradual within-session degradation. Nothing broken tonight — system still fully functional — but this is the trend Phase 4 needs to address (memory cgroups enablement, possibly resource limits per-container, maybe reconsidering what runs on cnjmesh1 vs migrating things to cnjmesh3 per the earlier-noted principle).
 
 **NO ACTION TAKEN tonight** — Charles going to bed, this is a "watch and address properly in Phase 4" finding, not an emergency.
+
+---
+
+### Aug 5, 2026 ~01:30 — Timeline correction + both Discord relays confirmed back online
+
+**CORRECTION: this was a WEEKS-LONG incident, not "days."** Claude repeatedly understated the duration in session notes and summaries. The instability escalated ~July 19-20 and was actively degrading Charles's environment through Aug 4 — that's roughly TWO+ WEEKS of an unreliable mesh, not a few days. This matters for how seriously the prevention framework should be taken: the cost of NOT having monitoring was weeks of a broken environment, not a minor inconvenience. Corrected in PREVENTION-AND-INCIDENT-RUNBOOK.md.
+
+**CONFIRMED: both mesh-discord-shim relays back online.** Charles confirms #cnj-new-node-relay AND #centralnj-mc-channel-relay are both posting to Discord again — real messages flowing after the ~16-day silence (since Jul 19). This is full live confirmation that the DNS-root-cause fix + container restart resolved it, AND that the new mesh-discord-shim-watchdog is now guarding against a recurrence. mesh-discord-shim issue fully CLOSED and confirmed.
