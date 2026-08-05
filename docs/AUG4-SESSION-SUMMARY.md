@@ -1,4 +1,7 @@
-# Aug 2-4, 2026 Get-Well Session — Top-Level Summary
+# Aug 2-5, 2026 Get-Well Session — Top-Level Summary
+
+## ⚠️ CURRENT STATE AS OF AUG 5 ~18:30 EDT — READ THIS FIRST
+**Malla is NOT confirmed recovered.** A NEW incident (sjmesh bridge republish loop — a different bug than Aug 4's flood, but a side effect of Aug 4's own fix) was found via a 24h pre-check, root-caused, and fixed live: packet rate dropped from 68,763/hr back to a healthy 1 packet/60s, confirmed. But Malla itself was STILL timing out (30s, 0 bytes) even after a direct container restart — though NOT crash-looping, logs show it alive and grinding on a genuinely slow query ("Computing gateway statistics," still running 60+ seconds in). **FIRST THING to do in a new session: re-test Malla (give it up to 60s this time), check if it recovered on its own once the underlying pressure eased over time, and follow the numbered next-steps at the bottom of the Aug 5 session-log entry** (search session-log.md for "sjmesh bridge republish LOOP"). Also uninvestigated: a new `mesh_bot_reporting.service` failure found in the same pre-check.
 
 Read this first for the full arc. Details are in `session-log.md` (chronological) and `lessons-learned-get-well-plan.md` (process lessons). This file is the map.
 
