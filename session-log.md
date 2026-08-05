@@ -1572,3 +1572,23 @@ Executed the deliberate reboot (Phase 2 of the get-well plan) with full pre/post
 **TO DEFINITIVELY CONFIRM (next session, ~2 min):** either (a) wait for / trigger a real message from a node OTHER than the Observer on the CentralNJ MeshCore channel and watch it post to #centralnj-mc-channel-relay, or (b) read the shim's forward/filter logic in `/opt/stacks/mesh-discord-shim/` to confirm it filters by source pubkey (suppressing a8c40bf3 / the observer) — that would prove the "self-suppression" theory and confirm real traffic WILL post. If a real non-observer message comes through and STILL doesn't post, THEN there's a genuine forward bug to chase — but current evidence says it's fine.
 
 **Webhook URLs are in `/opt/stacks/mesh-discord-shim/.env` (NEW_NODE_WEBHOOK, PUBLIC_CHAT_WEBHOOK, NJ_MQTT_WEBHOOK) — NOT committed to git (secrets). All three confirmed live as of this timestamp.**
+
+---
+
+### Aug 5, 2026 ~01:17 — mesh-discord-shim: LIVE CONFIRMED WORKING + prevention watchdog deployed
+
+**LIVE CONFIRMATION:** Charles confirmed real messages ARE now landing in #centralnj-mc-channel-relay. First message in that channel since **July 19** — a 16-day silent gap. Root cause (DNS resolution failure inside the container, tied to cnjmesh1's instability period) is genuinely fixed, not just theorized.
+
+**Root prevention question: why did this go unnoticed for 16 days?** Answer: ZERO monitoring existed for mesh-discord-shim (unlike corescope/graywolf which both have watchdogs). Nothing was watching whether Discord posts were actually succeeding.
+
+**PREVENTION DEPLOYED: `mesh-discord-shim-watchdog`** — new systemd timer, runs every 15 min:
+- Script: `/opt/mesh-discord-shim-watchdog/watchdog.sh`
+- State: `/opt/mesh-discord-shim-watchdog/state.json` (tracks last check timestamp)
+- Logic: scans `docker logs --since <last_check> mesh-discord-shim` for the literal string `Discord post failed`. If any found, posts an alert to the shared `#cnjmesh` Discord webhook (same one corescope-watchdog/graywolf-watchdog already use) with the failure count + latest sample line.
+- Systemd: `/etc/systemd/system/mesh-discord-shim-watchdog.service` (oneshot) + `.timer` (OnBootSec=5min, OnUnitActiveSec=15min)
+- **CONFIRMED enabled + active**: `systemctl status` showed `active (running)`, symlinked into timers.target.wants.
+- **Covers ALL THREE relays** (new-node, CentralNJ channel, NJ MQTT) — the error string is identical regardless of which webhook failed, so one watchdog catches all three.
+
+**Known limitation (same blind-spot class as corescope-watchdog):** detects Discord POST FAILURES, not total silence — if the shim process hangs/crashes without logging an error (no attempt made at all), this watchdog won't catch it. Lower-probability failure mode than the DNS issue just fixed, but worth knowing. Would need a "time since last successful post" check (not just error-scanning) to close that gap fully — not built tonight, noted for future improvement if it matters.
+
+**STATUS: mesh-discord-shim issue is CLOSED.** Root cause found (DNS, tied to Jul 30 instability), fix confirmed live (real messages posting after 16-day gap), and a watchdog is now in place to catch a recurrence within 15 minutes instead of 16 days.
