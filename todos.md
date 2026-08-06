@@ -1,7 +1,7 @@
 # CNJ Mesh — Open To-Dos
 
 ### [!!! THE PLAN TO NEVER REPEAT THIS] `docs/RESILIENCE-PLAN.md`
-Built Aug 5 in response to "come up with a resilience plan / I don't want to go through this again." Three pillars: EARLY WARNING (watchdogs — catch problems in minutes not weeks), SELF-HEALING (safe auto-restarts for low-risk services), FAST REBUILD (close backup gaps, off-Pi copies, tested restores). Concrete phased path to "lay back and let it run." **Single highest-leverage next action: build the broker ingest-rate watchdog + disk-space watchdog — those two ALONE would have prevented the entire weeks-long saga.** UPDATE Aug 6: the data-loss risk flagged here (Malla DB not in automated backup) is now RESOLVED — see `cnjmesh1-backup.sh` update in session-log.md. Off-Pi copy still needs a manual `pull-cnjmesh1-backup.ps1` run from the laptop.
+Built Aug 5 in response to "come up with a resilience plan / I don't want to go through this again." Three pillars: EARLY WARNING (watchdogs — catch problems in minutes not weeks), SELF-HEALING (safe auto-restarts for low-risk services), FAST REBUILD (close backup gaps, off-Pi copies, tested restores). Concrete phased path to "lay back and let it run." **Single highest-leverage next action: build the broker ingest-rate watchdog + disk-space watchdog — those two ALONE would have prevented the entire weeks-long saga.** UPDATE Aug 6: the data-loss risk flagged here (Malla DB not in automated backup) is now FULLY RESOLVED AND VERIFIED — see session-log.md.
 
 
 ### [!!! READ FIRST — PREVENTION] `docs/PREVENTION-AND-INCIDENT-RUNBOOK.md`
@@ -141,7 +141,7 @@ Malla has an UNPATCHED public XSS vuln (CVE-2026-43980, GHSA-ch57-39q2-4crm, all
 **Outage resolved: root cause was Xfinity bill (service suspended → uplink blackholed).** Paid, restored, tunnel re-registered + stable, malla.cnjmesh.me confirmed public (302). Full post-mortem in session-log.md. **RUNBOOK RULE ADDED: cnjmesh1 loses all outbound + Pi's route/WiFi/ARP check out → CHECK XFINITY UPLINK/BILL FIRST.**
 
 Six chronic cnjmesh1 findings, all DEFERRED (do NOT do post-outage/tired), in priority order:
-- **[DONE Aug 6, 2026] Malla DB backup automated.** `cnjmesh1-backup.sh` now covers Malla + CoreScope + aprs-tnc-web MySQL. Full record in `session-log.md`. **One manual step still needed:** run `pull-cnjmesh1-backup.ps1` on the laptop to actually copy the new archive off-Pi to OneDrive — the script produces the archive, but getting it off the Pi is still a manual trigger, not yet automated/scheduled.
+
 - **[RESOLVED — root cause NOT DB size] Malla query still slow (~41s) after pruning 690K rows + 2x VACUUM + ANALYZE.** DB shrank 2.0GB->1.7GB but speed unchanged. Confirmed via Malla's own repo (`github.com/zenitraM/malla`, AI.md) it's an unoptimized hobby project — root cause is app-code-level (likely inefficient Python stats computation on single-threaded Flask dev server), NOT the database. **NEXT SESSION: read Malla's actual source (gateway_service.py or equivalent) — do not run more VACUUM/prune, that avenue is exhausted.** `malla-warmcache.timer` installed as a stopgap but its effectiveness is UNVERIFIED — test before relying on it.
 - `collect-inventory.sh` doesn't resolve named-volume paths (that's why the 2GB DB was invisible in git). Enhance script.
 - Malla slowness = 2GB DB + 77MB uncheckpointed WAL → 58s gateway-stats query. WAL checkpoint + retention/prune (AFTER backup confirmed).
