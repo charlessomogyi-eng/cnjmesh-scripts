@@ -1716,3 +1716,19 @@ Full phase scope: (1) Docker log rotation — verify all containers covered, not
 - **What this does NOT fix:** the actual Tilly packet-bridge is still blocked on the separate, already-documented `RX_LOG_DATA`/companion-vs-repeater question (see the July 27-29 entries above) — that's a Phase 6 item, not touched tonight. This fix only closes the device-path fragility so the container survives future reboots without manual re-mapping.
 
 **PHASE 3 NOW FULLY COMPLETE.**
+
+### Aug 6, 2026 ~18:00-18:36 EDT — cnjmesh1-backup.sh now covers everything; closes the PRIORITY data-loss-risk item open since July 31
+
+Charles's ask: "1 backup script that covers everything" — if the SD card dies, recovery should be possible from a single archive, not scattered manual snapshots.
+
+**Audited every Docker named volume on cnjmesh1 first** (not just assumed Malla was the only gap): found CoreScope's `meshcore.db` (live WAL-mode SQLite, 226MB volume) and aprs-tnc-web's MySQL (`aprstncweb` DB) were also uncovered. Also found `meshmonitor_meshmonitor-data` and `meshshadow_meshprop-data` volumes with no owning container (confirmed via `docker ps -a` — zero matches) and stale May 30 timestamps — Charles confirmed these are retired/uninstalled tools, intentionally excluded from backup (not deleted yet, low-priority future cleanup).
+
+**Extended `cnjmesh1-backup.sh`** (steps 7-9): Malla + CoreScope via `sqlite3.backup()` API (both are live WAL-mode DBs — a plain file copy risks grabbing mid-write; no `sqlite3` CLI in either image, so Python's API is used, with a CLI fallback for CoreScope). aprs-tnc-web via `mysqldump --single-transaction`. Also extended `pull-cnjmesh1-backup.ps1` to show remote file size + transfer time, since the archive is now multi-GB.
+
+**First live run failed:** staged to `/tmp`, which turned out to be a tmpfs (RAM-backed) capped at ~925MB on this Pi — died with "no space left on device" 768MB into the 2.3GB Malla snapshot, and briefly filled `/tmp` system-wide, breaking unrelated `docker exec` calls until manually cleaned (`sudo rm -rf /tmp/cnjmesh1-backup-...`). Worse: because the script used `set -e` with no trap, the failure also stranded a 2.3GB `backup-tmp-*.db` file inside Malla's live data volume — the exact problem the temp-file approach was designed to avoid. Manually removed.
+
+**Fixed properly:** staging moved to `${BACKUP_DIR}/staging-TIMESTAMP` (real disk, 23G+ free, not tmpfs). Added a `trap cleanup EXIT` so any mid-run failure — not just the happy path — always removes container-side temp files and the staging dir. Verified working: forced the actual sequence (kill mid-run scenario already happened for real, then fixed and re-ran clean).
+
+**Second run: fully successful.** Malla (2.32GB) + CoreScope (54.2MB) both backed up via consistency-safe snapshot, MySQL dump included, final archive 534MB compressed at `/home/somog/backups/cnjmesh1-backup-2026-08-06_1826.tar.gz`. Confirmed via `tar -tzf` that all three new pieces are actually inside the archive (not just "script exited 0"). Confirmed no leftover temp files in either container's live volume afterward.
+
+**This closes the "PRIORITY — DATA LOSS RISK" item open since July 31** (Malla DB on a named volume, not covered by any automated backup). One thing NOT yet done: Charles still needs to manually run `pull-cnjmesh1-backup.ps1` on the laptop to get this specific archive off the Pi and into OneDrive — the script produces a complete, restorable archive, but getting it off-Pi is still a manual trigger each time, not scheduled/automatic.
