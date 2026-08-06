@@ -4,6 +4,11 @@
 # local OneDrive-synced Documents folder so it auto-uploads to OneDrive.
 # (cnjmesh2 intentionally excluded - Pi Zero 2W, recovers from git config instead)
 #
+# As of Aug 6 2026, cnjmesh1's archive includes Malla + CoreScope DB snapshots
+# and an aprs-tnc-web MySQL dump, so the archive is multi-GB (Malla's DB alone
+# is ~2.3GB). Expect the pull to take a while on a slower connection - this
+# script now shows the remote file size and elapsed transfer time.
+#
 # Usage:
 #   Open PowerShell, cd to where this script lives, then run:
 #     .\pull-cnjmesh1-backup.ps1
@@ -55,12 +60,17 @@ foreach ($pi in $Pis) {
             continue
         }
 
-        Write-Host "  Pulling $fileName ..."
+        $remoteSize = ssh $piHost "du -h '$latestFile' 2>/dev/null | cut -f1"
+        $remoteSize = $remoteSize.Trim()
+        Write-Host "  Pulling $fileName ($remoteSize) ..."
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
         scp "${piHost}:${latestFile}" "$localPath"
+        $sw.Stop()
 
         if (Test-Path $localPath) {
-            Write-Host "  Success -> $localPath" -ForegroundColor Green
-            $results += "$name : pulled $fileName"
+            $elapsed = [math]::Round($sw.Elapsed.TotalSeconds, 1)
+            Write-Host "  Success -> $localPath ($remoteSize in ${elapsed}s)" -ForegroundColor Green
+            $results += "$name : pulled $fileName ($remoteSize)"
         } else {
             Write-Host "  FAILED" -ForegroundColor Red
             $results += "$name : TRANSFER FAILED"
