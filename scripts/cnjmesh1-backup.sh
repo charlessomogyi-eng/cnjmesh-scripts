@@ -30,9 +30,33 @@ set -euo pipefail
 
 TIMESTAMP=$(date +%Y-%m-%d_%H%M)
 BACKUP_DIR="/home/somog/backups"
-STAGING_DIR="/tmp/cnjmesh1-backup-${TIMESTAMP}"
+# NOTE: staging MUST be on real disk, not /tmp. On cnjmesh1, /tmp is a
+# tmpfs (RAM-backed) capped at ~925MB - a 2.3GB Malla snapshot alone
+# blows through that. Learned the hard way Aug 6 2026: the script died
+# mid-copy with "no space left on device" and briefly filled /tmp system-
+# wide, blocking unrelated `docker exec` calls until cleaned up manually.
+STAGING_DIR="${BACKUP_DIR}/staging-${TIMESTAMP}"
 ARCHIVE_NAME="cnjmesh1-backup-${TIMESTAMP}.tar.gz"
 TOTAL_STEPS=9
+
+# Track container temp-file paths created during the run so cleanup() can
+# always remove them, even if the script dies partway through (set -e will
+# exit immediately on the next failing command - without this, a mid-run
+# failure leaves a multi-GB snapshot stranded inside a live data volume,
+# which happened on the Aug 6 2026 first run of this new script version).
+MALLA_TMP_TO_CLEAN=""
+CORESCOPE_TMP_TO_CLEAN=""
+
+cleanup() {
+    if [ -n "${MALLA_TMP_TO_CLEAN}" ] && [ -n "${MALLA_CONTAINER:-}" ]; then
+        docker exec "${MALLA_CONTAINER}" rm -f "${MALLA_TMP_TO_CLEAN}" 2>/dev/null || true
+    fi
+    if [ -n "${CORESCOPE_TMP_TO_CLEAN}" ] && [ -n "${CORESCOPE_CONTAINER:-}" ]; then
+        docker exec "${CORESCOPE_CONTAINER}" rm -f "${CORESCOPE_TMP_TO_CLEAN}" 2>/dev/null || true
+    fi
+    rm -rf "${STAGING_DIR}"
+}
+trap cleanup EXIT
 
 echo "=== CNJ Mesh cnjmesh1 backup starting: ${TIMESTAMP} ==="
 
@@ -103,6 +127,7 @@ echo "[7/${TOTAL_STEPS}] Backing up Malla database ..."
 MALLA_CONTAINER=$(docker ps --format '{{.Names}}' | grep -m1 '^mqtt-malla-web' || true)
 if [ -n "${MALLA_CONTAINER}" ]; then
     MALLA_TMP="/app/data/backup-tmp-${TIMESTAMP}.db"
+    MALLA_TMP_TO_CLEAN="${MALLA_TMP}"
     if docker exec "${MALLA_CONTAINER}" python3 -c "
 import sqlite3
 src = sqlite3.connect('/app/data/meshtastic_history.db')
@@ -114,9 +139,9 @@ src.close()
         mkdir -p "${STAGING_DIR}/malla-db"
         docker cp "${MALLA_CONTAINER}:${MALLA_TMP}" "${STAGING_DIR}/malla-db/meshtastic_history.db"
         docker exec "${MALLA_CONTAINER}" rm -f "${MALLA_TMP}"
+        MALLA_TMP_TO_CLEAN=""
     else
         echo "  WARNING: Malla sqlite backup failed"
-        docker exec "${MALLA_CONTAINER}" rm -f "${MALLA_TMP}" 2>/dev/null || true
     fi
 else
     echo "  No Malla web container found running - skipping"
@@ -127,6 +152,7 @@ echo "[8/${TOTAL_STEPS}] Backing up CoreScope database ..."
 CORESCOPE_CONTAINER=$(docker ps --format '{{.Names}}' | grep -m1 '^corescope$' || true)
 if [ -n "${CORESCOPE_CONTAINER}" ]; then
     CORESCOPE_TMP="/app/data/backup-tmp-${TIMESTAMP}.db"
+    CORESCOPE_TMP_TO_CLEAN="${CORESCOPE_TMP}"
     if docker exec "${CORESCOPE_CONTAINER}" sh -c "
 python3 -c \"
 import sqlite3
@@ -140,9 +166,9 @@ src.close()
         mkdir -p "${STAGING_DIR}/corescope-db"
         docker cp "${CORESCOPE_CONTAINER}:${CORESCOPE_TMP}" "${STAGING_DIR}/corescope-db/meshcore.db"
         docker exec "${CORESCOPE_CONTAINER}" rm -f "${CORESCOPE_TMP}"
+        CORESCOPE_TMP_TO_CLEAN=""
     else
         echo "  WARNING: CoreScope db backup failed (no python3 sqlite3 module or sqlite3 CLI in image)"
-        docker exec "${CORESCOPE_CONTAINER}" rm -f "${CORESCOPE_TMP}" 2>/dev/null || true
     fi
 else
     echo "  No CoreScope container found running - skipping"
@@ -172,10 +198,10 @@ fi
 
 # --- Package into archive ---
 echo "Creating archive ${ARCHIVE_NAME} ..."
-tar -czf "${BACKUP_DIR}/${ARCHIVE_NAME}" -C /tmp "cnjmesh1-backup-${TIMESTAMP}"
+tar -czf "${BACKUP_DIR}/${ARCHIVE_NAME}" -C "${BACKUP_DIR}" "staging-${TIMESTAMP}"
 
-# --- Cleanup staging ---
-rm -rf "${STAGING_DIR}"
+# --- Cleanup staging (also runs automatically via trap on any early exit) ---
+cleanup
 
 echo "=== Backup complete: ${BACKUP_DIR}/${ARCHIVE_NAME} ==="
 ls -lh "${BACKUP_DIR}/${ARCHIVE_NAME}"
