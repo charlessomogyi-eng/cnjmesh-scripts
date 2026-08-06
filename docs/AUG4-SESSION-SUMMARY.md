@@ -28,7 +28,7 @@ Read this first for the full arc. Details are in `session-log.md` (chronological
 ## THE GET-WELL PLAN PHASES — STATUS
 - ✅ Phase 1 (Malla fix) — DONE, exceeded scope
 - ✅ Phase 2 (deliberate reboot) — DONE, fully verified
-- 🟡 Phase 3 (health sweep) — DONE except KPR1 device-path fix (deprioritized, low stakes, tied to the still-blocked Tilly project so no urgency)
+- ✅ Phase 3 (health sweep) — FULLY DONE as of Aug 6 ~01:22 EDT (KPR1 device-path fixed using a stable by-id mapping, closing the last open item). Full record in `session-log.md`.
 - ✅ Phase 4 (new-board regressions: cgroups, tooling baseline, cruft cleanup) — FULLY DONE as of Aug 6 ~00:30 EDT (log rotation on all 14 containers + a real network_mode bug caught along the way, dnsutils installed, memory cgroups enabled + reboot verified, 3 orphaned images + build cache removed ~1GB reclaimed). Full record in `session-log.md`.
 - ⬜ Phase 5 (OS/kernel update) — NOT started, its own dedicated session. Note: 410 packages showed upgradable on cnjmesh1 as of Aug 5 — relevant context for this phase.
 - ⬜ Phase 6 (finalize Tilly's fork on KPR1) — NOT started, gated behind everything above
