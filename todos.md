@@ -16,7 +16,13 @@ Built Aug 5 in response to "I never want to go through this again." Two parts: (
 
 ---
 
-### [PLANNED] Health-check sweep — cnjmesh3 + RF/APRS services
+### [MONITOR — OPEN] Malla performance — watch for regression, cache-per-worker limitation left unresolved by design
+Aug 5 night: gateway-stats query improved 96.274s → 39.819s (loop-residue DB cleanup) → 20.1s (post cgroups-reboot, confirming memory pressure was part of the residual gap). Real, measured progress — but NOT a closed item:
+1. **No confirmation yet that it holds steady.** All three numbers are single point-in-time measurements from one night. Malla's history this project includes multiple "fixed" moments that regressed within days (Aug 1 prune, Aug 3 gunicorn, Aug 4 bridge-flood fix all showed initial improvement before slipping). Don't treat tonight's 20.1s as durable until it's been re-checked cold, at least once, a few days out.
+2. **The cache-per-worker root cause is understood but deliberately NOT fixed.** `GatewayService._cache` (upstream `ghcr.io/zenitram/malla:latest`, `/app/src/malla/services/gateway_service.py`) is a plain in-process dict, not shared across gunicorn's 2 workers — cache misses roughly every 2-3 min instead of the coded 300s. Decided against forking the image to fix this (not worth maintaining a permanent fork for a cosmetic dashboard stat) — but that means the underlying architecture issue is still there, just no longer the dominant driver of slowness. If DB/memory pressure builds again, this cache behavior will make it look worse than it otherwise would.
+3. **Next check-in:** re-run `curl -sS -m 60 -o /dev/null -w "malla: %{http_code} %{time_total}s\n" http://localhost:5008/` cold (i.e., after the 300s cache window has lapsed) in a few days, compare against tonight's 20.1s baseline. If it's held steady, close this out for good. If it's crept back up, revisit — but check `docker stats`/`free -h` memory pressure FIRST (per the now-cgroups-enabled guardrails) before assuming it's DB bloat again.
+4. Full technical detail on tonight's investigation: `session-log.md`, search "Malla cleanup + mesh_bot_reporting fix" (Aug 5 ~18:30-23:30 entry).
+
 
 Full step-by-step plan in `docs/health-check-plan-aug2026.md`. Covers, in order:
 - cnjmesh3 general health (Pi 3B, 1GB — check load/swap/disk) + cnjmesh3->cnjmesh1 broker reachability (10.0.0.181:1883) + whether cnjmesh3 has Docker log rotation (same disk-fill risk we just fixed on cnjmesh1).
