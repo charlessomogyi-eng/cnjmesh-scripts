@@ -1732,3 +1732,13 @@ Charles's ask: "1 backup script that covers everything" — if the SD card dies,
 **Second run: fully successful.** Malla (2.32GB) + CoreScope (54.2MB) both backed up via consistency-safe snapshot, MySQL dump included, final archive 534MB compressed at `/home/somog/backups/cnjmesh1-backup-2026-08-06_1826.tar.gz`. Confirmed via `tar -tzf` that all three new pieces are actually inside the archive (not just "script exited 0"). Confirmed no leftover temp files in either container's live volume afterward.
 
 **This closes the "PRIORITY — DATA LOSS RISK" item open since July 31** (Malla DB on a named volume, not covered by any automated backup). One thing NOT yet done: Charles still needs to manually run `pull-cnjmesh1-backup.ps1` on the laptop to get this specific archive off the Pi and into OneDrive — the script produces a complete, restorable archive, but getting it off-Pi is still a manual trigger each time, not scheduled/automatic.
+
+### Aug 6, 2026 ~19:00 EDT — Backup fully verified off-Pi, checksum-confirmed
+
+Completed the loop on the backup work from earlier tonight. Also updated `pull-cnjmesh1-backup.ps1` on the laptop itself (`C:\Users\charl\Documents\scripts\`) — the desktop-shortcut copy had drifted out of date (was still the pre-Aug-6 version without the size/timing display), replaced with current content from the repo.
+
+Ran the pull for real: `cnjmesh1-backup-2026-08-06_1826.tar.gz` (534MB / 546,333 KB) transferred from cnjmesh1 to `C:\Users\charl\OneDrive\Documents\cnjmesh-backups\` in 410.7s (~1.3MB/s). Confirmed byte-for-byte integrity via SHA256 checksum comparison — Pi side (`sha256sum`) and laptop side (`Get-FileHash`) both produced `ef9fd2ce4cddef21d08a85a20630345496476449fda8ebea38d34f6a3e9a73a0`, exact match. Confirmed synced to OneDrive (green checkmark, not just local).
+
+**This is now a fully closed, fully verified loop — not just "script works," but "actual backup exists off-Pi and is provably intact."** If cnjmesh1's SD card failed today, this archive is a confirmed-good, complete recovery point: Malla DB, CoreScope DB, MySQL dump, all compose configs, Postgres dump, Graywolf DB, mesh-discord-shim DB, meshing-around, cloudflared config.
+
+**Recommended cadence going forward:** re-run `cnjmesh1-backup.sh` + the PowerShell pull periodically (not yet scheduled/automated — still a manual two-step process: SSH in and run the shell script, then run the PowerShell script on the laptop). Automating this end-to-end (e.g. a cron job + a scheduled task) would be a reasonable future improvement, not done tonight.
