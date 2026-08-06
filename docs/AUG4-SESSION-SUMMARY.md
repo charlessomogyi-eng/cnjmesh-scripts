@@ -28,9 +28,9 @@ Read this first for the full arc. Details are in `session-log.md` (chronological
 ## THE GET-WELL PLAN PHASES — STATUS
 - ✅ Phase 1 (Malla fix) — DONE, exceeded scope
 - ✅ Phase 2 (deliberate reboot) — DONE, fully verified
-- 🟡 Phase 3 (health sweep) — DONE except KPR1 device-path fix (deprioritized)
-- 🟡 Phase 4 (new-board regressions: cgroups, tooling baseline, cruft cleanup) — NOT started
-- ⬜ Phase 5 (OS/kernel update) — NOT started, its own dedicated session
+- 🟡 Phase 3 (health sweep) — DONE except KPR1 device-path fix (deprioritized, low stakes, tied to the still-blocked Tilly project so no urgency)
+- 🟡 Phase 4 (new-board regressions: cgroups, tooling baseline, cruft cleanup) — 3 of 4 DONE Aug 5 evening/night (log rotation on all 14 containers, dnsutils installed, memory cgroups enabled + reboot verified working). Only cruft cleanup remains, deferred, low priority. Full writeup: `todos.md` Phase 4 entry.
+- ⬜ Phase 5 (OS/kernel update) — NOT started, its own dedicated session. Note: 410 packages showed upgradable on cnjmesh1 as of Aug 5 — relevant context for this phase.
 - ⬜ Phase 6 (finalize Tilly's fork on KPR1) — NOT started, gated behind everything above
 
 ## WATCHDOGS THAT EXIST NOW (as of tonight)
