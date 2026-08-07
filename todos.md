@@ -29,6 +29,9 @@ Full step-by-step plan in `docs/health-check-plan-aug2026.md`. Covers, in order:
 - Observer (`meshcore-packet-capture`, RAK4631, cnjmesh3) — serial + 4-broker connectivity.
 - KPR2 (`meshcore-mqtt-bridge`, Heltec V4, cnjmesh3) — confirm BOTH MESHCORE + MQTT connected.
 - KPR1 (`meshcore-mqtt-kpr1-bridge`, cnjmesh1) — MQTT-disconnect DIAGNOSED Aug 3: bridge points at Tilly's EXTERNAL AWS broker (`mqtt.aws.tillyandthefish.com`), not local infra. **This is the in-progress "get Tilly's fork running on KPR1" integration — NOT retirement (corrected).** Still an active TODO to finish (see below).
+
+**⚠️ CORRECTION Aug 7, 2026 — READ BEFORE TOUCHING THIS AGAIN:** every prior reference below to "KPR1" being bound to serial `58EF089845` / device `/dev/ttyACM0` was WRONG. That device is actually the LoRa APRS node. Confirmed via physical unplug testing — full detail in `session-log.md`, search "MAJOR CORRECTION". Real fix applied: `/dev/kpr1` and `/dev/kpc1` stable udev symlinks (port-based, not serial-based, since KPR1 and KPC1 share an identical generic factory serial `0001` and cannot be told apart by serial number at all). Container now correctly uses `--device /dev/kpr1:/dev/ttyUSB3`. If the Tilly integration below still shows issues, start fresh from the CORRECT device — don't trust any `ttyACM0`/`58EF089845` reference in the older notes below this line.
+
 - APRS on cnjmesh1: graywolf-discord.service + aprs-tnc-web (nextjs_app/mysql_database, port 8085).
 - LoRa APRS: K2GIA-10 iGate (10.0.0.74) reachability + lora-aprs-discord bridge (UDP 1514) — bridge was never confirmed posting to Discord end-to-end (open item). Also pending: check richonguzman/LoRa_APRS_iGate firmware source re: self-gating BEFORE buying the RX-only board.
 

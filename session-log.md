@@ -1742,3 +1742,35 @@ Ran the pull for real: `cnjmesh1-backup-2026-08-06_1826.tar.gz` (534MB / 546,333
 **This is now a fully closed, fully verified loop — not just "script works," but "actual backup exists off-Pi and is provably intact."** If cnjmesh1's SD card failed today, this archive is a confirmed-good, complete recovery point: Malla DB, CoreScope DB, MySQL dump, all compose configs, Postgres dump, Graywolf DB, mesh-discord-shim DB, meshing-around, cloudflared config.
 
 **Recommended cadence going forward:** re-run `cnjmesh1-backup.sh` + the PowerShell pull periodically (not yet scheduled/automated — still a manual two-step process: SSH in and run the shell script, then run the PowerShell script on the laptop). Automating this end-to-end (e.g. a cron job + a scheduled task) would be a reasonable future improvement, not done tonight.
+
+### Aug 7, 2026 ~19:00-19:25 EDT — MAJOR CORRECTION: `meshcore-mqtt-kpr1-bridge` was bridging the wrong physical device since July 28
+
+**Summary: the container named `meshcore-mqtt-kpr1-bridge`, and every prior session's "KPR1 device-path fix" (including the Aug 6 by-id fix), was actually talking to the LoRa APRS node — not KPR1.** This was discovered via direct physical unplug testing, not inferred, and corrected. If Tilly's fork has been receiving traffic through this bridge, it's been from the wrong radio — worth flagging to Tilly.
+
+**How this was found:** during a routine health check, `lsusb -t` showed 3 separate CP210x (Silicon Labs) devices on the bus, but only 2 had ever been tracked (Digirig + "KPC1"). Investigating this led to systematically unplugging each of the 4 serial-connected boards one at a time and checking which `/dev/ttyUSB*`/`/dev/ttyACM*` node disappeared — the only reliable way to get ground truth, since serial numbers turned out to be unreliable (see below).
+
+**Confirmed device map (by physical unplug test, Aug 7 2026):**
+| Device | Serial (factory) | Connection | Notes |
+|---|---|---|---|
+| LoRa APRS node | `58EF089845` (1a86/QinHeng, unique) | Powered hub | **This is what `ttyACM0` actually is — NOT KPR1** |
+| KPC1 (companion, Heltec V3) | `0001` (10c4/CP210x, generic — shared) | Powered hub | |
+| KPR1 (repeater, Heltec V3) | `0001` (10c4/CP210x, generic — shared with KPC1) | **Direct to Pi** | Cannot be distinguished from KPC1 by serial number alone |
+| Digirig (Graywolf PTT + audio) | `beb31e2f33c6ef1186b171527a5e3baa` (unique) | Direct to Pi | Confirmed correct, unaffected by this finding |
+
+**Root cause of the original mistake:** back on July 28/Aug 4, whoever first plugged in KPR1 and identified its device likely actually had the LoRa APRS node connected/tested at that moment (or confused the two 1a86-adjacent findings), and the serial `58EF089845` got permanently mislabeled as "KPR1" in the container name and in every doc since. The Aug 6 "KPR1 device-path fix" (pinning `by-id/usb-1a86_..._58EF089845-if00`) was technically a correct, working fix — just for the wrong physical device. It's been stable and reboot-proof this whole time, just bridging the wrong radio's traffic to Tilly's broker.
+
+**Also newly discovered: KPR1 and KPC1 share an identical generic factory serial (`0001`)**, a limitation of the cheap/generic Heltec V3 boards not having unique serials programmed. This means `/dev/serial/by-id/` can NEVER reliably distinguish these two boards — any future fix attempted via by-id for either one has a 50/50 chance of silently binding to the wrong board. Do not attempt an by-id fix for KPR1 or KPC1 specifically for this reason.
+
+**Real fix applied — custom udev rules keyed to physical USB port, not serial number:**
+```
+# /etc/udev/rules.d/99-meshcore-boards.rules
+SUBSYSTEM=="tty", KERNELS=="1-1.4", SYMLINK+="kpr1"
+SUBSYSTEM=="tty", KERNELS=="1-1.2.4", SYMLINK+="kpc1"
+```
+This creates permanent `/dev/kpr1` and `/dev/kpc1` symlinks that survive reboots (port-based, not tty-number-based) and correctly distinguish the two boards despite their identical serials. **Caveat: this ties the identity to the physical USB port** — if KPR1 or KPC1 are ever moved to a different port (including a different port on the powered hub, or a different port on the Pi), the symlink will need updating (edit the `KERNELS==` value to match the new port, found via `lsusb -t` or `dmesg`).
+
+**Container recreated correctly:** `meshcore-mqtt-kpr1-bridge` now uses `--device /dev/kpr1:/dev/ttyUSB3` (internal path unchanged, only the host-side source changed). **Verified via a real unplug/replug test** (not just log inspection) that this is genuinely bound to KPR1: unplugging KPR1 made `/dev/kpr1` disappear on the host (confirmed via `ls`); plugging it back in and restarting the container produced a clean `CONNECTED` event.
+
+**Byproduct fix — Digirig's serial number was independently confirmed correct** during this same testing (unplug test: unplugging Digirig made `ttyUSB3` disappear, matching its known unique serial `beb31e2f...`). No change needed there, but good to have independent reconfirmation.
+
+**Open follow-up, not done tonight:** worth applying the same `/dev/kpc1` stable symlink to wherever KPC1's device path is actually consumed (if anything currently reads it — the `meshcore-hub` `observer` service's `SERIAL_PORT` env var was found unused/dead earlier, so there may be nothing currently depending on KPC1's raw path, but worth a final check before considering this fully closed).
