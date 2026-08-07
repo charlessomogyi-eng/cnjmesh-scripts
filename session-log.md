@@ -1774,3 +1774,11 @@ This creates permanent `/dev/kpr1` and `/dev/kpc1` symlinks that survive reboots
 **Byproduct fix — Digirig's serial number was independently confirmed correct** during this same testing (unplug test: unplugging Digirig made `ttyUSB3` disappear, matching its known unique serial `beb31e2f...`). No change needed there, but good to have independent reconfirmation.
 
 **Open follow-up, not done tonight:** worth applying the same `/dev/kpc1` stable symlink to wherever KPC1's device path is actually consumed (if anything currently reads it — the `meshcore-hub` `observer` service's `SERIAL_PORT` env var was found unused/dead earlier, so there may be nothing currently depending on KPC1's raw path, but worth a final check before considering this fully closed).
+
+### Aug 7, 2026 ~19:30 EDT — cnjmesh3 USB device mapping re-verified clean (context: same-day cnjmesh1 USB misidentification)
+
+Given the significant cnjmesh1 finding above (KPR1/LoRa APRS node mislabeling), checked cnjmesh3 for the same class of issue. **Confirmed clean, no action needed** — this was already fixed correctly in an earlier session (see the July 29 entry on stable by-id paths for Observer/KPR2), this was just fresh re-verification:
+- Observer (RAK4631, unique serial `06308D8BE14915FD`) → `meshcore-packet-capture` container confirmed using the by-id path, not raw `ttyACM0`
+- KPR2 (Heltec V4, unique serial `E8F60AC9DEB4`) → `meshcore-mqtt-bridge` container confirmed using the by-id path, not raw `ttyACM1`
+
+Both devices have genuine unique factory serials (unlike KPR1/KPC1 on cnjmesh1) — cnjmesh3 was never exposed to the shared-generic-serial ambiguity problem. No fix needed here; cnjmesh1 was the only affected host.
