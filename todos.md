@@ -16,6 +16,11 @@ Built Aug 5 in response to "I never want to go through this again." Two parts: (
 
 ---
 
+---
+
+### [PLANNED — future, once DB settled] Loosen Malla retention back to 60 days
+Currently `MALLA_DATA_RETENTION_HOURS=720` (30 days) — deliberately tightened from 60d in an earlier session because the DB was 8.4M rows and growing ~2.5M rows/4 days, and 60d wasn't enough to keep queries fast. Charles's plan (Aug 7): once the 30-day window has fully "settled" (i.e. the DB has actually shrunk to its new steady-state size, not just capped growth) and query speed is confirmed to hold, revisit bumping retention back up to 60d (1440) for more historical node/packet visibility, trading some of today's speed margin for more history. **Before flipping it back:** check current row count/DB size and the actual growth rate (should be genuinely lower now post-sjmesh-loop-fix, not just capped) — this was a real speed-vs-history tradeoff once already, so re-test Malla's cold-cache response time after the change rather than assuming it'll still be fast at 60d.
+
 ### [MONITOR — OPEN] Malla performance — watch for regression, cache-per-worker limitation left unresolved by design
 Aug 5 night: gateway-stats query improved 96.274s → 39.819s (loop-residue DB cleanup) → 20.1s (post cgroups-reboot, confirming memory pressure was part of the residual gap). Real, measured progress — but NOT a closed item:
 1. **No confirmation yet that it holds steady.** All three numbers are single point-in-time measurements from one night. Malla's history this project includes multiple "fixed" moments that regressed within days (Aug 1 prune, Aug 3 gunicorn, Aug 4 bridge-flood fix all showed initial improvement before slipping). Don't treat tonight's 20.1s as durable until it's been re-checked cold, at least once, a few days out.
