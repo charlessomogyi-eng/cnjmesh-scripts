@@ -41,19 +41,26 @@ Run this to see what's connected:
 ls -l /dev/ttyACM* /dev/ttyUSB*
 ```
 
-**As of July 23, 2026** (post board-replacement, all devices now on a powered USB 3.0 hub into a blue/USB3 port):
-| Device | What it is | Identifying signature |
-|---|---|---|
-| /dev/ttyACM0 | K2GIA-10 (LoRa APRS board, ESP32-S3) | CH340-family chip, vendor ID 1a86 |
-| /dev/ttyUSB0 | Client 1 (MeshCore companion) | CP2102, serial `0001` |
-| /dev/ttyUSB1 | Digirig — APRS PTT | CP2102N, unique serial `beb31e2f...` |
+**As of Aug 7, 2026** (confirmed via physical unplug-testing, not assumption — see session-log.md "MAJOR CORRECTION" entry):
+| Device | What it is | Identifying signature | Connection |
+|---|---|---|---|
+| /dev/ttyACM0 (or via `/dev/serial/by-id/usb-1a86_...`) | K2GIA-10 / LoRa APRS board (ESP32-S3) | CH340-family chip, vendor 1a86, unique serial `58EF089845` | Powered hub |
+| KPC1 (MeshCore companion) | Heltec V3 | CP2102, generic serial `0001` (shared with KPR1 — cannot be told apart by serial) | Powered hub, stable symlink `/dev/kpc1` |
+| **KPR1 (MeshCore repeater, dedicated to Tilly integration — NOT retired, this doc was wrong)** | Heltec V3 | CP2102, generic serial `0001` (shared with KPC1) | **Direct to Pi**, stable symlink `/dev/kpr1` |
+| Digirig — APRS PTT + audio | — | CP2102N, unique serial `beb31e2f...`; audio side is C-Media USB Audio (ALSA card name "Device") | Direct to Pi |
 
-**KPR1 is retired — no longer connected to cnjmesh1.** Observer and KPR2 physically live on **cnjmesh3** now (see cnjmesh3 section below), not cnjmesh1.
+**KPR1 and KPC1 share an identical generic factory serial (`0001`) and can NEVER be distinguished by serial number/by-id.** Custom udev rules create permanent `/dev/kpr1` and `/dev/kpc1` symlinks keyed to physical USB port instead:
+```
+# /etc/udev/rules.d/99-meshcore-boards.rules
+SUBSYSTEM=="tty", KERNELS=="1-1.4", SYMLINK+="kpr1"
+SUBSYSTEM=="tty", KERNELS=="1-1.2.4", SYMLINK+="kpc1"
+```
+**Caveat:** this ties identity to physical port — if either board moves to a different port, edit the `KERNELS==` value to match (find the new port via `lsusb -t` or `dmesg`). The `meshcore-mqtt-kpr1-bridge` container uses `--device /dev/kpr1:/dev/ttyUSB3`.
 
-USB paths are NOT guaranteed stable across reboots/reconnects — always verify with `udevadm info -q property -n /dev/ttyUSBx | grep -E "ID_SERIAL|ID_MODEL"` rather than assuming the table above. If Digirig's path changes, update Graywolf's PTT config to match:
+For the LoRa board and Digirig (both have unique serials), use `/dev/serial/by-id/` paths, which ARE safe across reboots. USB raw paths (`ttyUSB0`, `ttyACM0`, etc.) are NEVER guaranteed stable — always verify current mapping with `udevadm info -q property -n /dev/ttyUSBx | grep -E "ID_SERIAL|ID_MODEL"` rather than trusting any cached table, including this one. If Digirig's path changes, update Graywolf's PTT config to match:
 ```bash
 sqlite3 /var/lib/graywolf/graywolf.db "SELECT * FROM ptt_configs;"   # check current
-sqlite3 /var/lib/graywolf/graywolf.db "UPDATE ptt_configs SET device='/dev/ttyUSBx' WHERE id=1;"
+sqlite3 /var/lib/graywolf/graywolf.db "UPDATE ptt_configs SET device='/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_beb31e2f33c6ef1186b171527a5e3baa-if00-port0' WHERE id=1;"
 systemctl restart graywolf
 ```
 
