@@ -41,8 +41,8 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 ### [OPTIONAL] cnjmesh1 reboot
 Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
 
-### [PLANNED — separate session] cnjmesh1 OS/kernel update
-Plan: `docs/cnjmesh1-os-update-plan.md`. Recommendation: `apt upgrade` (security+kernel patches, REVIEWED before applying), NOT `apt full-upgrade`. FIRST confirm anything's even upgradable (was already on current Trixie 6.12.62 as of Jul 31 — may be moot). Its OWN dedicated session AFTER the Malla fix + with full backup + time to watch the reboot (16 containers + services on a memory-tight box; kernel changes can disturb USB-serial radios & WiFi). Run health-check sweep after. Do NOT bundle with Malla work.
+### ✅ cnjmesh1 OS/kernel update — DONE Aug 6, 2026
+Kernel upgraded 6.12.62 → 6.18.39. Full record in `session-log.md` ("Phase 4" and the Aug 6 kernel-upgrade entries) — includes the post-upgrade USB renumbering fallout and its fixes (Graywolf PTT, then the major KPR1/LoRa APRS node correction on Aug 7).
 
 ### [HIGH PRIORITY — MONITOR then investigate] Recurring outage pattern (UptimeRobot 530s + Fing)
 **UptimeRobot incident history analyzed Aug 3:** mostly **530 = Cloudflare-can't-reach-origin = TUNNEL/network down, NOT meshview crashing.** No clean daily rhythm (start times vary: 10:33pm/10:42am/5:42am) → NOT a scheduled cron; CONDITION-triggered. **Clear escalation ~July 20-22** (May was healthy, July onward constant + long outages up to 1d20h) — matches "hit a wall a couple weeks ago." Leading trigger = the mqtt-filter disk-fill (now FIXED Aug 2). **ACTION: MONITOR UptimeRobot over next few days — if 530s STOP, the disk fix solved it; if they PERSIST, residual is the network/tunnel/DHCP flap (the nmcli-bounce signature) → investigate that.** Full analysis in session-log Aug 3.
