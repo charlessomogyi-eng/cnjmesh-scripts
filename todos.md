@@ -1,5 +1,8 @@
 # CNJ Mesh — Open To-Dos
 
+### [ACTION NEEDED — Aug 8] Confirm CentralNJ-MC channel etiquette before re-enabling weather bot schedule
+The NWS weather-forecast + alerts bot (`/home/somog/nws_mesh_broadcast.py` on cnjmesh1, sends via `meshcore-cli` direct serial to KPC1, targets CentralNJ-MC channel index 2) is built and confirmed WORKING, but its cron schedule was deliberately torn down (`crontab -r`) pending explicit confirmation from Charles on: (1) his standing/ownership to put a scheduled bot on this private community channel, (2) comfort with broadcast frequency (daily forecast is low-noise; alert-polling frequency needs his sign-off specifically). Full detail in session-log.md, Aug 8 entry. Do NOT re-enable cron without this confirmation.
+
 ### [!!! THE PLAN TO NEVER REPEAT THIS] `docs/RESILIENCE-PLAN.md`
 Built Aug 5 in response to "come up with a resilience plan / I don't want to go through this again." Three pillars: EARLY WARNING (watchdogs — catch problems in minutes not weeks), SELF-HEALING (safe auto-restarts for low-risk services), FAST REBUILD (close backup gaps, off-Pi copies, tested restores). Concrete phased path to "lay back and let it run." **Single highest-leverage next action: build the broker ingest-rate watchdog + disk-space watchdog — those two ALONE would have prevented the entire weeks-long saga.** UPDATE Aug 6: the data-loss risk flagged here (Malla DB not in automated backup) is now FULLY RESOLVED AND VERIFIED — see session-log.md.
 

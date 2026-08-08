@@ -1782,3 +1782,21 @@ Given the significant cnjmesh1 finding above (KPR1/LoRa APRS node mislabeling), 
 - KPR2 (Heltec V4, unique serial `E8F60AC9DEB4`) → `meshcore-mqtt-bridge` container confirmed using the by-id path, not raw `ttyACM1`
 
 Both devices have genuine unique factory serials (unlike KPR1/KPC1 on cnjmesh1) — cnjmesh3 was never exposed to the shared-generic-serial ambiguity problem. No fix needed here; cnjmesh1 was the only affected host.
+
+### Aug 8, 2026 — KPC1's role permanently changed: reflashed as serial companion for cnjmesh1, phone use moved to T-Deck (KPN2)
+
+Between the Aug 7 session (where KPC1 was diagnosed as unusable over USB serial, apparently BLE-only firmware) and the successful NWS weather-bot build (done in a separate Gemini-assisted session), **KPC1 was reflashed to `companion_radio_usb` firmware** to make the weather bot's direct-serial send path work. This resolved the Aug 7 "meshcore-cli gets no response from KPC1" finding — it wasn't a misdiagnosis, the firmware genuinely changed between sessions.
+
+**Real consequence:** KPC1 is no longer usable as Charles's personal BLE-paired messaging companion (a device only runs one companion role/transport at a time — this was correctly anticipated back on Aug 7 before the reflash). **Charles has moved his personal MeshCore messaging to his T-Deck (KPN2, LilyGo T-Deck Plus, `10.0.0.140`, MAC `80:b5:4e:ce:c3:14`)**, installing the BLE companion firmware there instead.
+
+**Current state (confirmed working):**
+- `/home/somog/nws_mesh_broadcast.py` on cnjmesh1 sends via `meshcore-cli` direct serial to `/dev/kpc1`, targeting `CentralNJ-MC` by **channel index 2** (not by key directly — confirmed via `meshcore-cli -s /dev/kpc1 get_channels`; index 0 = Public)
+- Correct send syntax: `chan <index> <message>` — NOT `-c` (that flag toggles color output) and NOT `msg` (expects a specific node name, not a channel)
+- Two modes: `forecast` (daily NWS high/low/conditions/wind) and `alert` (polls NWS active alerts, de-dupes against `/tmp/last_nws_alert.txt`, only sends new alert IDs)
+- Transmission verified successful over `/dev/kpc1` to channel index 2
+- **Scheduling (cron) was set up, tested, then deliberately torn down** (`crontab -r`) — **no automated broadcasts are currently running.** This was intentional, pending the channel-etiquette/ownership confirmation flagged in the original plan (`docs/` weather-bot execution brief) — scheduled bots on a private community channel need explicit buy-in before going live, not just technical readiness.
+
+**Open follow-ups:**
+1. Re-enable scheduling once channel etiquette/ownership is explicitly confirmed with Charles (not yet done as of Aug 8)
+2. KPN2/T-Deck's role as Charles's new personal companion should be reflected wherever KPC1 was previously assumed to be "the" personal companion device in older notes
+3. Update `cnjmesh1-operations.md`'s device table — KPC1's role there should note it's now dedicated to the weather-bot/cnjmesh1 integration, not general-purpose
