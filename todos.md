@@ -1,8 +1,13 @@
 # CNJ Mesh — Open To-Dos
 
-### [INVESTIGATE] CJG1/mesh_bot Meshtastic weather broadcast — user-reported fragmentation/missing delivery, Aug 8
+### [INVESTIGATE — root cause found, no code change made] CJG1/mesh_bot Meshtastic weather broadcast — user-reported fragmentation/missing delivery, Aug 8
 At least 3 people on the CentralNJ Meshtastic channel reported problems with the 7am weather broadcast today: one got the report split across multiple fragmented messages, another got nothing at all. Charles saw it fine on his own app. Notably, the channel allows MQTT messages (relevant since MQTT-relayed copies could behave differently than native RF delivery for different recipients).
 **First diagnostic step attempted, inconclusive:** checked `journalctl -u mesh_bot.service --since "06:55" --until "07:15"` on cnjmesh1 — **completely empty, zero log entries**, despite the bot clearly having sent something (confirmed by multiple users receiving at least partial content). This itself is a real finding worth investigating — either logging isn't capturing this bot's actual send activity, or the broadcast is happening through a different mechanism/service than expected. `weather-bot-alerts.service` was also noticed in a `failed` state during this check (likely unrelated leftover from the separate MeshCore weather-bot testing, not yet confirmed either way).
+
+**Root cause found (separate session):** the message hit 341 characters vs. Meshtastic's 200-char limit, forcing a split into 4 fragile packets — any one fragment failing to arrive would explain both symptoms (partial fragmented receipt, or total no-show if an early fragment was lost). **Decision: not changing the code based on a single occurrence** — worth seeing if it recurs before treating message length as a confirmed root cause requiring a fix (e.g., shortening the template or forcing a hard length cap).
+
+**Genuinely unresolved:** (1) whether tomorrow's 7am report has the same issue — content/length varies day to day, can't be confirmed in advance; (2) why Charles personally received all 4 chunks intact while others didn't — an earlier guess about signal strength/MQTT relay behavior was speculation, not confirmed; no real investigation done on this sub-question yet.
+
 **Not yet tried:** checking `mesh_bot.service`'s actual log output location if it doesn't use journald (check `/opt/meshing-around/` for a dedicated log file), confirming whether the 7am send is even going through systemd/journald-logged code paths at all, or checking with the 3 reporting users for more detail (RF distance/signal quality could also just be a mundane explanation, unrelated to the bot itself).
 
 ### [DECISION NEEDED — Aug 8, before continuing weather bot work] Consider replacing the custom script with agessaman/meshcore-bot instead of debugging further
@@ -15,6 +20,18 @@ Full technical reference, script copy, and node inventory now saved: `docs/nws-w
 
 ### [ACTION NEEDED — Aug 8] Confirm CentralNJ-MC channel etiquette before re-enabling weather bot schedule
 The NWS weather-forecast + alerts bot (`/home/somog/nws_mesh_broadcast.py` on cnjmesh1, sends via `meshcore-cli` direct serial to KPC1, targets CentralNJ-MC channel index 2) is built and confirmed WORKING, but its cron schedule was deliberately torn down (`crontab -r`) pending explicit confirmation from Charles on: (1) his standing/ownership to put a scheduled bot on this private community channel, (2) comfort with broadcast frequency (daily forecast is low-noise; alert-polling frequency needs his sign-off specifically). Full detail in session-log.md, Aug 8 entry. Do NOT re-enable cron without this confirmation.
+
+### [DECIDED, not yet executed] Weather bot deployment plan
+Decided: run on cnjmesh1 using KPC1, watching resource impact as it goes live. Not yet actually deployed/scheduled — this is a placement/hosting decision, separate from the still-open script-vs-agessaman/meshcore-bot decision above and the Public-channel bug above. Do this only after both of those are resolved.
+
+### [DECIDED, not yet applied anywhere] Weather bot schedule time change: 7am → 7:05am
+New standard going forward, decided but not yet implemented on either the Meshtastic bot (mesh_bot.service / CJG1) or the MeshCore bot (nws_mesh_broadcast.py / KPC1). Apply to both when each is next touched.
+
+### [Back-burner, now technically unblocked] `whorepeated.sh`
+Previously parked; now unblocked since KPC1 is confirmed working (was the blocker). Not scheduled, no urgency assigned yet — revisit when convenient.
+
+### [FUTURE IDEA — not decided or scheduled] SATA SSD upgrade for cnjmesh1
+Flagged as a good future idea for reliability/performance (Pi SD cards are a common long-term failure point, and given cnjmesh1's history of disk-fill incidents, more headroom + SSD reliability could help). No decision made, nothing scheduled — revisit when there's bandwidth for a hardware project.
 
 ### [!!! THE PLAN TO NEVER REPEAT THIS] `docs/RESILIENCE-PLAN.md`
 Built Aug 5 in response to "come up with a resilience plan / I don't want to go through this again." Three pillars: EARLY WARNING (watchdogs — catch problems in minutes not weeks), SELF-HEALING (safe auto-restarts for low-risk services), FAST REBUILD (close backup gaps, off-Pi copies, tested restores). Concrete phased path to "lay back and let it run." **Single highest-leverage next action: build the broker ingest-rate watchdog + disk-space watchdog — those two ALONE would have prevented the entire weeks-long saga.** UPDATE Aug 6: the data-loss risk flagged here (Malla DB not in automated backup) is now FULLY RESOLVED AND VERIFIED — see session-log.md.
@@ -40,8 +57,18 @@ Currently `MALLA_DATA_RETENTION_HOURS=720` (30 days) — deliberately tightened 
 ### [RESOLVED Aug 9, 2026] Malla performance — 4-day-later cold re-confirmation done, closing out
 Aug 5 night: gateway-stats query improved 96.274s → 39.819s → 20.1s (cgroups-reboot). Aug 9 health check re-tested cold (full `docker restart mqtt-malla-web-1` + immediate first request, not a cache hit): **1.17s** — durable, ~17x faster than the Aug 5 baseline, held over 4 days rather than regressing like prior "fixed" moments did. The cache-per-worker limitation (`GatewayService._cache`, plain in-process dict, not shared across gunicorn's 2 workers) remains unfixed by design (not worth forking upstream `ghcr.io/zenitram/malla:latest` for a cosmetic stat) but is no longer the dominant factor — real DB/memory improvements did the heavy lifting. Considered closed unless a future check shows regression.
 
-### [NEW — Aug 9, 2026, not yet investigated] oceancounty MQTT bridge failing to connect
-`connection oceancounty` (`mqtt.oceancountyme.sh:8883`) failing on a persistent, tight ~10-11 second retry loop — connects then immediately closes (`Client local.cnjmesh1-oceancounty-bridge closed its connection`) every cycle, observed continuously throughout the Aug 9 session with no successful connection seen. Unrelated to the SJMesh bridge work done the same night (different broker, different connection block). Charles noted the operator may go by "OC" on Discord, not Compy (Compy confirmed separately as the SJMesh contact). Not yet diagnosed — worth checking whether creds/port/TLS requirements changed on their end, or whether this is a config issue on cnjmesh1's side.
+### [UPDATE — Aug 10, 2026] oceancounty MQTT bridge failing to connect — details sent to OC, awaiting his follow-up
+`connection oceancounty` (`mqtt.oceancountyme.sh:8883`) failing on a persistent, tight ~10-11 second retry loop — connects then immediately closes (`Client local.cnjmesh1-oceancounty-bridge closed its connection`) every cycle, observed continuously since Aug 9 with no successful connection seen. Discord user `takinglives3` (OC) confirmed on Aug 9 that `mqtt.oceancountyme.sh` is indeed his broker. Given channel-scoped Discord admin on `#ocean-county-mesh` (not server-wide) to help coordinate. Sent him our exact bridge connection details (broker, port, client ID, username/password, topic subscriptions) via DM on Aug 9 night so he can check his own broker/logs for what's rejecting us. **No resolution yet — waiting on OC's follow-up.**
+
+### [NEW — Aug 9-10, 2026] Weather bot (agessaman/meshcore-bot) — forecast working, 3 real polish items left
+Full detail in session-log.md, Aug 9-10 late-night entry. Summary: agessaman/meshcore-bot installed on cnjmesh1 (KPC1), running as systemd service `meshcore-bot`, config now lives at `/etc/meshcore-bot/config.ini` (NOT `~/meshcore-bot/config.ini` — install script creates a separate default copy there, easy to edit the wrong one). Confirmed working: 07:05 daily NWS forecast (real detailedForecast text, not Open-Meteo) sent to CentralNJ-MC as 2 properly-chunked messages (no truncation) via the bot's native `send_channel_messages_chunked`/`split_text_into_utf8_chunks`; weather alerts also confirmed working separately (10-min poll interval, real Severe T-storm Watch fired correctly). Both reached the Discord relay in testing.
+
+**Open items, not yet done:**
+1. **Alert formatting garbled** (e.g. "Severe Thunders Watch Kent til 9PM by NWS MOUN") — alert send path likely still uses old single-message send with aggressive char-count truncation (`event[:15]`, `office[:10]` confirmed in code) instead of the same chunked-send fix applied to the forecast. Needs its own patch in the alert-sending function (separate from `_send_daily_forecast_async`).
+2. **Forecast doesn't mention the location** ("Kendall Park, NJ") — NWS's own API response already includes this (`properties.relativeLocation.properties.city`/`state`, confirmed via live curl test returning exact match for the configured coordinates). Edit was planned (prepend `"{city}, {state}: "` to the returned forecast string in `_get_weather_forecast()`) but never actually typed in — confirmed via `grep` returning empty. Straightforward next-session fix.
+3. **Greeter plugin is on**, responding to random channel activity (waves/greetings) with unwanted chit-chat on what's meant to be a weather-only bot — worth disabling (`[Greeter_Command] enabled = false`), and worth a broader look at which of the ~45 default-loaded plugins (joke, dadjoke, magic8, dice, sports, etc.) should be scoped off a shared community channel.
+
+Also worth one more real-world check: confirm tomorrow's genuine 07:05 production send reaches the Discord relay — it worked in tonight's manual tests, but the very first 07:05 send (before tonight's fixes) reportedly didn't reach Discord even though it landed on RF fine.
 
 
 Full step-by-step plan in `docs/health-check-plan-aug2026.md`. Covers, in order:
@@ -58,21 +85,8 @@ Full step-by-step plan in `docs/health-check-plan-aug2026.md`. Covers, in order:
 ### [ACTIVE] Get Tilly's fork running on KPR1
 KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt-kpr1-bridge` targets `mqtt.aws.tillyandthefish.com`. Integration NOT working yet: MESHCORE/serial connected (/dev/ttyUSB3), but MQTT to Tilly's AWS broker is disconnected. Finish it: confirm broker up + creds with Tilly, test host:port reachability from cnjmesh1, check TLS/8883 vs 1883, confirm the correct Tilly fork repo + its specific config requirements. Coordinate with Tilly.
 
-### [OPTIONAL] cnjmesh1 reboot
-Reasonable after today's work to clear 9+ days of swap/memory pressure — but do it deliberately (15-20 min to watch all containers + services recover), NOT at end of a session. mqtt-filter removal is persistent; reboot won't undo it. Run the health-check plan after.
-
 ### ✅ cnjmesh1 OS/kernel update — DONE Aug 6, 2026
 Kernel upgraded 6.12.62 → 6.18.39. Full record in `session-log.md` ("Phase 4" and the Aug 6 kernel-upgrade entries) — includes the post-upgrade USB renumbering fallout and its fixes (Graywolf PTT, then the major KPR1/LoRa APRS node correction on Aug 7).
-
-### [HIGH PRIORITY — MONITOR then investigate] Recurring outage pattern (UptimeRobot 530s + Fing)
-**UptimeRobot incident history analyzed Aug 3:** mostly **530 = Cloudflare-can't-reach-origin = TUNNEL/network down, NOT meshview crashing.** No clean daily rhythm (start times vary: 10:33pm/10:42am/5:42am) → NOT a scheduled cron; CONDITION-triggered. **Clear escalation ~July 20-22** (May was healthy, July onward constant + long outages up to 1d20h) — matches "hit a wall a couple weeks ago." Leading trigger = the mqtt-filter disk-fill (now FIXED Aug 2). **ACTION: MONITOR UptimeRobot over next few days — if 530s STOP, the disk fix solved it; if they PERSIST, residual is the network/tunnel/DHCP flap (the nmcli-bounce signature) → investigate that.** Full analysis in session-log Aug 3.
-(Old note follows for reference:)
-### [HIGH PRIORITY — investigate] Recurring OVERNIGHT outage pattern (Fing alerts)
-Fing agent alerts show cnjmesh1/network went OFFLINE ~11:03 PM Aug 2, back ONLINE ~3:56 AM Aug 3 (~5hr). Charles says RECURRING/common. Recurring + overnight + same-ish times = something SCHEDULED, not random. LIKELY CONNECTED to the recurring gateway-unreachable pattern (Pi config perfect but gateway unreachable, fixed by `nmcli connection down/up` — a DHCP/L2 renewal signature). May explain much of the week's "down when I check it" frustration. Investigate next session (details in session-log Aug 3 entry): `systemctl list-timers --all` + `crontab -l` for overnight jobs; DHCP lease time on router + NetworkManager renewal; whether Fing "offline" = agent process vs whole Pi (MAC 88:A2:9E:3E:0E:7E, fing-agent.service on cnjmesh1); `journalctl --since "2026-08-02 22:45" --until "2026-08-03 04:15"` for what happened in that window. Treat as possibly-same-root as the gateway issue.
-
-- **CONFIRMED Aug 3 by TWO monitors:** UptimeRobot flagged meshview.cnjmesh.me DOWN at 10:33 PM; Fing agent offline 11:03 PM; both recovered by ~3:56 AM. Malla was also unreachable when Charles checked. = WHOLE cnjmesh1/network dropped, confirmed by independent monitors (not sensor error). Outage START ~10:30-11pm (tighter window). **NEXT: pull UptimeRobot INCIDENT HISTORY — if past outages cluster at consistent times, that CONFIRMS a scheduled cause + gives exact times to match against cron/`systemctl list-timers`. Also check which endpoints UptimeRobot monitors (whole-box vs per-service).**
-- **[SIDE PROJECT] Move Fing agent OFF cnjmesh1** (to laptop or elsewhere) to shed a non-essential service from the memory-tight box. BUT sequencing: KEEP it on cnjmesh1 as the outage canary UNTIL the overnight-drop is root-caused — it's how the pattern was caught, and it's tiny (not a cause). Remove it once the overnight outage is solved. `fing-agent.service` on cnjmesh1.
-
 
 ### [PHASE 2 COMPLETE Aug 4] Deliberate cnjmesh1 reboot — verified, 2 issues found
 Full post-reboot checklist run (12 containers, 14 systemd services, USB, network, mosquitto bridges, web services) — all healthy. Malla now 11.1s response (best result yet). TWO real findings: (1) FIXED — cloud-init-network.service was failing every boot since Jul 20 due to immutable flag on /etc/hosts (chattr -i removed, confirmed NOT related to the network-drop pattern). (2) DIAGNOSED not fixed — KPR1/Tilly bridge hardcoded to stale /dev/ttyUSB3, device now enumerates as /dev/ttyACM0 (different USB chip/driver than other devices); stable by-id path identified (`usb-1a86_USB_Single_Serial_58EF089845-if00`), needs container device-mapping update whenever KPR1/Tilly work resumes (low priority). Powered USB hub CONFIRMED WORKING CORRECTLY (was wrongly suspected) — KPR1 connects directly to Pi, not through hub. Recurring network/gateway drop ALSO occurred again mid-session (nmcli fix applied) — still unresolved, confirmed separate from tonight's other fixes. Full details in session-log Aug 4. NEXT: Phase 3 full health-check sweep.
@@ -140,12 +154,8 @@ Malla has an UNPATCHED public XSS vuln (CVE-2026-43980, GHSA-ch57-39q2-4crm, all
 
 ---
 
-### Active / Planned (Aug 1, 2026 — Malla cloud migration TEST)
-
-- **Test-migrate Malla to a Hetzner cloud box (Option A, non-destructive).** Full plan in `docs/malla-cloud-migration-test.md`. Decision locked: Hetzner CPX11, Ashburn US-East, Ubuntu 24.04, ~$4.90/mo flat (€20 new-customer credit = ~4 months free). Goal: get public-facing Malla OFF the home connection so Xfinity/gateway outages stop blanking the public site.
-- **KEY: parallel + reversible + fallback.** cnjmesh1 Malla stays running untouched. Cloud Malla runs from the EXISTING DB backup (`/home/somog/backups/malla-backup-20260731.db`). Test on `malla-test.cnjmesh.me`; real `malla.cnjmesh.me` stays on the Pi until/unless Charles likes it. Abandon = delete Hetzner box (billing stops immediately). Cutover = one reversible DNS change.
-- **Honest caveat baked into the plan:** the ~41s slow query is app-code, not DB/hardware — it MAY still be slow on the cloud box. The guaranteed win is reliability/decoupling from home internet, NOT necessarily speed. Verify on the test box before assuming.
-- **Next-session start:** laptop SSH keygen -> Hetzner signup -> create CPX11 -> Docker -> copy compose+DB -> test subdomain. Claude Code is a good fit for the command legwork.
+### ❌ ABANDONED Aug 9, 2026 — Malla cloud migration (Hetzner)
+Decided not to move forward — Hetzner's signup wanted too much personal information. cnjmesh1 Malla stays on the Pi. If a public-Malla-off-home-connection need resurfaces, would need a different provider.
 
 ---
 
@@ -237,7 +247,6 @@ Six chronic cnjmesh1 findings, all DEFERRED (do NOT do post-outage/tired), in pr
 ## Carried over from mid-July sessions (status uncertain — verify before assuming still open)
 
 - **CJG1 (Heltec V4) WiFi flapping** — was still actively flapping after a Mode change that fixed CJG2. Next test ideas noted: power supply/cable check, physical position, router channel (Auto → fixed 1/6/11).
-- **Client 1 replacement** — known CP210x serial flapping issue, replacement with a RAK/WisMesh planned. Side idea: check if the old V3's case is intact — could refurbish instead of buying new.
 - **Radio tuning (KPR1→ now N/A since retired, KPR2, Observer)** — apply the Capital District Mesh whitepaper §9.4.2 txdelay/rxdelay tuning. Neighbor counts never gathered, nothing started.
 - **MeshCore regioning talking points** — prepared but never actually brought back to the NY/NE Mesh Discord.
 - **Meshview coverage regression since July 21 Pi swap — confirmed RF-side, not bridging.** Used to see NYC/distant nodes (Rockefeller Center, Mt Kemble, etc.) regularly on meshview.cnjmesh.me; now rarely. Confirmed via comparison with MTX1's map (sbnj.meshview.comfx.com, ~1 mile away) that those distant nodes are RF-connected (neighbor/traceroute lines), not MQTT-bridged dots — so the gap is in what my own feeders (CJG1/CJG2) hear vs. before, not a bridge issue on the Meshview side. CJG1/CJG2 WiFi itself was confirmed NOT flapping (only phone↔node app connection flapped in the past — corrected assumption). **Corroborating evidence found same night: Malla's Gateway Diversity metric dropped from "much higher" historically to 1** — meaning almost all previously-diverse gateway sources (beyond my own local feeder) have stopped arriving at the broker. This points at a dead mosquitto bridge stanza or upstream broker outage rather than a feeder RF problem. **Next step:** check bridge connection status and configured stanzas: `docker logs mosquitto --tail 100 | grep -iE "bridge|connecting|connected|disconnect"` and `grep -iE "connection|address|topic|bridge" /opt/stacks/mqtt/config/mosquitto.conf` on cnjmesh1. Also verify which single gateway is the surviving "1" and confirm Malla's MQTT source didn't narrow after a restart.
@@ -258,7 +267,6 @@ Six chronic cnjmesh1 findings, all DEFERRED (do NOT do post-outage/tired), in pr
 - **[SOMEDAY, after software/config todos are closed out] Physical workshop organization.** Charles wants to get the physical workshop organized — cables, boards, adapters, cases currently scattered vs. a real system (labeling scheme, parts bins, inventory sheet). Explicitly deferred until after the current CNJ Mesh software/infrastructure todo list is closed out (per July 27, 2026 session) — logged here specifically so it isn't forgotten, per Charles's own request to "keep me honest."
 
 - Explore deeper LetsMesh.net integration (see `docs/letsmesh-and-ozneteast-notes.md`)
-- Invite more NJ MeshCore operators to the meshcore-nj-mqtt channel
 - **Cross-mesh bridge with Tilly/LVMesh — UPDATE July 27, 2026 (afternoon): Tilly built a real raw packet bridge mode, reversing the earlier "not possible" finding above.** He forked/extended `meshcore-mqtt` at `https://github.com/Tilton53/meshcore-mqtt` (see `README.md` for full docs) and added a `packet_bridge` config block that solves every concern from the earlier investigation:
   - Genuine loop prevention via `dedup_ttl_ms` + a per-instance `dedup_db` (packet hash tracking, not just topic naming)
   - Hop-limited via `max_bridge_hops` so even multi-link chains can't loop forever
@@ -429,8 +437,6 @@ Six chronic cnjmesh1 findings, all DEFERRED (do NOT do post-outage/tired), in pr
 - KPR2 watchdog
 - Remove dead MeshOmatic section from mosquitto.conf (verify first)
 - Remove dead meshshadow section from cloudflared config (verify first)
-- Rotate Discord webhook URLs (low priority)
-- Rotate MeshOmatic password (low priority)
 
 ### peer-check DISABLED (July 28, 2026 evening)
 - **peer-check.timer disabled on both cnjmesh2 and cnjmesh3** (`sudo systemctl disable --now peer-check.timer` on each). Charles reported the Discord alerts were unwanted / "something isn't working right" — root cause not yet diagnosed. Nothing uninstalled, service/timer files still present at `/etc/systemd/system/peer-check.{service,timer}` on both hosts — re-enable anytime with `sudo systemctl enable --now peer-check.timer`.
