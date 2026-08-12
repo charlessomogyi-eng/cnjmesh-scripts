@@ -1881,3 +1881,16 @@ Ran a broader "what's running that we don't want" sweep on cnjmesh1 (containers,
 **Important catch before deleting anything:** a third anonymous volume in the same batch, `4a735b3a...`, was found to be actively backing the live `corescope` container — confirmed via `docker ps -a --filter volume=<id>` before touching anything. **Left untouched.** Good reminder that anonymous-looking volume names aren't automatically safe to assume are cruft.
 
 Total reclaimed: ~471MB. Done with a verified backup from the prior night as a safety net; not re-verified again specifically for this change since it was a low-risk, already-confirmed-dead removal.
+
+### Aug 12, 2026 — Malla DB row-count baseline recorded (cnjmesh1 vs cnjmesh2)
+
+Checked in response to a question about whether cnjmesh1's hourly retention-prune job (30-day/720h window) was still working through backlog or had caught up. **Confirmed caught up**: oldest row is exactly ~30.0 days old, matching the retention window precisely — the job is now doing steady-state maintenance (trimming ~1 day off the back per hour), not grinding through old backlog. Row count is down to 6.49M from the 8.42M recorded when the retention fix was first applied — real, effective pruning.
+
+**Baseline snapshot (for future growth-rate tracking):**
+| | cnjmesh1 | cnjmesh2 |
+|---|---|---|
+| `packet_history` rows | 6,487,394 | 164,831 |
+| Oldest record | ~30 days ago (retention-capped) | ~178 days ago (no retention cap) |
+| Retention setting | 720h (30d), enforced hourly | None configured |
+
+cnjmesh2 covering ~6x the time span with ~40x fewer rows confirms cnjmesh1 genuinely handles much higher real packet volume/day — not just a retention-setting difference, an actual traffic-load difference between the two boxes.
