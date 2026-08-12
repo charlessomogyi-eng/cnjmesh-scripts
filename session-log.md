@@ -1868,3 +1868,16 @@ Between the Aug 7 session (where KPC1 was diagnosed as unusable over USB serial,
 **`Hello_Command` disabled.** Root-caused a random-language greeting response ("Shalom, biological droid! I'm CNJWeatherBot", "Ahoy, water-based organism!...") that was firing on CentralNJ-MC — initially suspected `Greeter_Command`, but that was confirmed already `enabled = false`. The actual culprit was the separate `Hello_Command` plugin (`enabled = true` by default), which responds to "hello"-type messages with randomized playful replies — unrelated to new-user greeting logic. Disabled via the same `configparser` pattern used throughout the weather bot work. Confirmed off via grep + service restart. CNJWeatherBot now responds only to its weather forecast/alert functions, no chit-chat.
 
 **Still open for a future session:** alert message formatting is garbled (e.g. "Severe Thunders Watch Kent til 9PM by NWS MOUN") — the alert-sending code path likely still uses the old single-message send with aggressive character-count truncation (`event[:15]`, `office[:10]` confirmed present in the alert-formatting code) instead of the same chunked-send fix already applied to the forecast. Needs its own patch in the alert-sending function specifically (separate from `_send_daily_forecast_async`, which is already fixed). Also: Charles is interested in a daily sunrise/sunset message (~3pm), reusing the existing `Sun_Command` plugin's calculation logic on a new scheduled job — not started, flagged as a good next pickup given the pattern is now well-understood.
+
+### Aug 12, 2026 — cnjmesh1 dead Docker volume cleanup
+
+Ran a broader "what's running that we don't want" sweep on cnjmesh1 (containers, images, volumes, non-default systemd services). Most findings were already-known/expected (meshcore-bot.service = the now-confirmed-working weather bot from Aug 9-12, not a surprise). Found 3 genuinely dead volumes plus 2 trivial anonymous ones:
+
+- `meshmonitor_meshmonitor-data` (285.5MB) — confirmed dead weeks ago (no owning container since at least early Aug), finally removed
+- `meshshadow_meshprop-data` (133.4MB) — same, finally removed
+- `grafana_grafana-storage` (52.7MB) — no Grafana container exists at all; Grafana appears in a very early infra inventory but was apparently never actually deployed, or removed without cleanup. Volume removed.
+- Two anonymous 143-byte volumes (`3eebd6d2...`, `6e2c923f...`) — unreferenced, trivial size, likely leftover from past container recreations. Removed.
+
+**Important catch before deleting anything:** a third anonymous volume in the same batch, `4a735b3a...`, was found to be actively backing the live `corescope` container — confirmed via `docker ps -a --filter volume=<id>` before touching anything. **Left untouched.** Good reminder that anonymous-looking volume names aren't automatically safe to assume are cruft.
+
+Total reclaimed: ~471MB. Done with a verified backup from the prior night as a safety net; not re-verified again specifically for this change since it was a low-risk, already-confirmed-dead removal.
