@@ -1,17 +1,22 @@
 # CNJ Mesh — Open To-Dos
 
-### [ACTION PLAN — execute within next few days] SJMesh bridge disabled after confirmed 93% duplicate-packet flood — DECIDED, ready to execute
-**Full detail:** session-log.md, Aug 12 entry ("MAJOR FINDING"). **DECISION MADE (Aug 12):** Charles wants to (1) re-enable the SJMesh bridge (not leave it permanently disabled — doesn't want to lose legitimate SJMesh traffic), and (2) block just the one problematic node via a Mosquitto ACL rule targeting its specific topic path, NOT the whole CentralNJ channel/topic. Reached out to SJMesh operator (DeadGuise) as a courtesy first — he checked his side, doesn't see the node or bad packets in his own list/logs, so the fix needs to happen on cnjmesh1's side regardless. No further research needed — Charles explicitly said stop researching, just execute this plan.
+### [ACTION NEEDED] Duplicate-packet flood — TWO SEPARATE unresolved problems, don't conflate them
+**Full detail:** session-log.md Aug 12 "MAJOR FINDING" entry, and `docs/sjmesh-duplicate-block-handoff-2026-08-14.md` (a failed-attempt handoff, read it before retrying the same approach).
 
-**Exact plan to execute:**
-1. Check current Mosquitto auth/listener setup first (`grep -E "^listener|^allow_anonymous|^acl_file|^password_file" /opt/stacks/mqtt/config/mosquitto.conf`) — need this to write ACL syntax that matches the existing config correctly, not assumed blind.
-2. Add an ACL rule denying the specific topic path for the bad node — NOT a blanket CentralNJ deny (would block all of Charles's own local traffic too). Target both topic variants the sjmesh bridge subscribes to:
-   - `msh/US/2/e/CentralNJ/!699a9390`
-   - `msh/US/NJ/2/e/CentralNJ/!699a9390`
-3. Re-enable the sjmesh bridge (uncomment the block in `/opt/stacks/mqtt/config/mosquitto.conf` — backup exists at `mosquitto.conf.bak-sjmesh-test`, or just remove the `#` prefixes added when it was disabled).
-4. Restart Mosquitto, verify via `mosquitto_sub` on the specific bad topic that nothing arrives (ACL working), and separately verify other CentralNJ/SJMesh traffic still flows normally (ACL isn't too broad).
-5. **Known, accepted tradeoff:** blocking this node's topic is permanent — Charles would never receive any FUTURE legitimate traffic from `!699a9390` either, not just this stuck packet. Charles is fine with this since it's not a locally-recognized node and the value of any future messages from it is low.
-6. Existing 6.05M duplicate rows in the DB — still just needs to age out naturally over the retention window, or a manual one-time cleanup if Charles wants it sooner (unchanged from original plan).
+**Problem A — stopping node `!699a9390`'s ongoing flood (currently ~11% of total DB, 723,476 of ~6.49M rows, single biggest offender):**
+- Confirmed via live testing that this node's traffic arrives via the SJMesh bridge (also duplicated across liamcottle/oceancounty, since all three subscribe to the same CentralNJ topic pattern).
+- **Attempted fix FAILED, tested twice:** gave each bridge its own `local_username` + a Mosquitto ACL deny rule for the specific topic, per official Mosquitto documentation. Confirmed the config loaded with no errors, confirmed via full container recreate — the deny rule still did not stop the bridge's own traffic. This appears to be a real gap between Mosquitto's documented behavior and its actual behavior for bridge-injected content, not a config mistake. **Do not just retry the same ACL approach — read the handoff doc first.**
+- **Most promising untried option:** replace the Mosquitto bridge for the affected connection(s) with a small custom relay script (Python/paho-mqtt) that explicitly filters out the bad topic in code before republishing locally. Not yet built.
+- **Current live state:** SJMesh bridge is disabled (safe, but loses that bridge's legitimate traffic — not the final desired state).
+
+**Problem B — the other ~89% of duplicate bloat, COMPLETELY SEPARATE from node !699a9390, NOT YET STARTED:**
+- The 93.3% total duplicate-bloat figure (6,055,298 of 6,487,440 rows, across 343,625 distinct duplicate groups) includes ~343,624 OTHER duplicate groups from OTHER nodes/packets, unrelated to `!699a9390`. **Fixing Problem A does nothing for these — they are already sitting in the database as of whenever this is read, from causes not yet individually investigated.**
+- Never executed: a one-time deduplication DELETE (keep one copy per `mesh_packet_id`+`from_node_id`, remove the rest) + `VACUUM` to actually reclaim disk space. Deliberately deferred back on Aug 12 as "a calmer-session task" given DB size and uncertain VACUUM runtime — still deferred, still not done.
+- Before running this: confirm a current backup exists (verified backups exist from early August; confirm one is recent enough before a large destructive-adjacent operation).
+
+**Bottom line for whoever picks this up:** even a fully successful Problem A fix would leave the database still mostly full of old duplicate bloat. Both need to happen for the database to actually shrink back down.
+
+
 
 ### [INVESTIGATE — root cause found, no code change made] CJG1/mesh_bot Meshtastic weather broadcast — user-reported fragmentation/missing delivery, Aug 8
 At least 3 people on the CentralNJ Meshtastic channel reported problems with the 7am weather broadcast today: one got the report split across multiple fragmented messages, another got nothing at all. Charles saw it fine on his own app. Notably, the channel allows MQTT messages (relevant since MQTT-relayed copies could behave differently than native RF delivery for different recipients).
