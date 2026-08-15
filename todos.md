@@ -1,20 +1,17 @@
 # CNJ Mesh — Open To-Dos
 
-### [ACTION NEEDED] Duplicate-packet flood — TWO SEPARATE unresolved problems, don't conflate them
-**Full detail:** session-log.md Aug 12 "MAJOR FINDING" entry, and `docs/sjmesh-duplicate-block-handoff-2026-08-14.md` (a failed-attempt handoff, read it before retrying the same approach).
+### ✅ Problem A RESOLVED (Aug 14) — node `!699a9390` blocked via custom relay, see session-log.md Aug 14 "Problem A RESOLVED" entry for full detail
+Native SJMesh Mosquitto bridge stays disabled; replaced by a custom Python relay (`/opt/sjmesh-relay/`, `sjmesh-relay.service`) that filters this specific node's traffic in code before republishing everything else locally. Verified working via live testing. The node's 723,464 already-accumulated rows were also deleted + VACUUMed (total DB: 6,490,554 → 5,767,096). Full technical config detail lives in the relay's own `.env`/service files on cnjmesh1, not duplicated here.
 
-**Problem A — stopping node `!699a9390`'s ongoing flood (currently ~11% of total DB, 723,476 of ~6.49M rows, single biggest offender):**
-- Confirmed via live testing that this node's traffic arrives via the SJMesh bridge (also duplicated across liamcottle/oceancounty, since all three subscribe to the same CentralNJ topic pattern).
-- **Attempted fix FAILED, tested twice:** gave each bridge its own `local_username` + a Mosquitto ACL deny rule for the specific topic, per official Mosquitto documentation. Confirmed the config loaded with no errors, confirmed via full container recreate — the deny rule still did not stop the bridge's own traffic. This appears to be a real gap between Mosquitto's documented behavior and its actual behavior for bridge-injected content, not a config mistake. **Do not just retry the same ACL approach — read the handoff doc first.**
-- **Most promising untried option:** replace the Mosquitto bridge for the affected connection(s) with a small custom relay script (Python/paho-mqtt) that explicitly filters out the bad topic in code before republishing locally. Not yet built.
-- **Current live state:** SJMesh bridge is disabled (safe, but loses that bridge's legitimate traffic — not the final desired state).
+**Still open — future maintenance note:** if this node's owner ever reflashes/fixes their device and the flood genuinely stops, the relay's hardcoded filter for `!699a9390` becomes unnecessary (harmless to leave in place, but worth knowing it's there if troubleshooting "why don't I see traffic from X" someday for an unrelated reason).
 
-**Problem B — the other ~89% of duplicate bloat, COMPLETELY SEPARATE from node !699a9390, NOT YET STARTED:**
-- The 93.3% total duplicate-bloat figure (6,055,298 of 6,487,440 rows, across 343,625 distinct duplicate groups) includes ~343,624 OTHER duplicate groups from OTHER nodes/packets, unrelated to `!699a9390`. **Fixing Problem A does nothing for these — they are already sitting in the database as of whenever this is read, from causes not yet individually investigated.**
-- Never executed: a one-time deduplication DELETE (keep one copy per `mesh_packet_id`+`from_node_id`, remove the rest) + `VACUUM` to actually reclaim disk space. Deliberately deferred back on Aug 12 as "a calmer-session task" given DB size and uncertain VACUUM runtime — still deferred, still not done.
-- Before running this: confirm a current backup exists (verified backups exist from early August; confirm one is recent enough before a large destructive-adjacent operation).
+### [ACTION NEEDED — Problem B, separate from Problem A above, NOT STARTED] Clean up the other ~89% of duplicate-row bloat
+Confirmed and reiterated as of the Aug 14 fix (see above): the original 93.3% figure (6,055,298 of 6,487,440 rows at the time) was total duplicate bloat across ~343,625 distinct `(mesh_packet_id, from_node_id)` groups. Only ONE of those groups (`!699a9390`, ~723K rows) has been addressed. **The other ~343,624 groups — different nodes/packets, causes not yet individually investigated — are still sitting in the database, untouched.**
 
-**Bottom line for whoever picks this up:** even a fully successful Problem A fix would leave the database still mostly full of old duplicate bloat. Both need to happen for the database to actually shrink back down.
+**Not yet done:**
+1. Investigate whether the remaining duplicate groups share a common cause (another misbehaving bridge/node, a different bug) or are a long tail of many small one-off incidents — unknown, not yet analyzed.
+2. Decide on a fix approach once causes are understood (may need node-specific relay filters again, or a different/broader fix depending on findings).
+3. A one-time bulk deduplication DELETE (keep one copy per `mesh_packet_id`+`from_node_id`, remove the rest) + `VACUUM` for whatever doesn't get fixed at the source — same caution as before: confirm a current backup exists first, expect meaningful VACUUM runtime given DB size.
 
 
 
