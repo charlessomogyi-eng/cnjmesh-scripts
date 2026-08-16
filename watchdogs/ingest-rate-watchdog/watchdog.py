@@ -17,9 +17,11 @@ import os
 import socket
 import sqlite3
 import sys
+import time
 import urllib.request
 
 STATE_FILE = "/opt/ingest-rate-watchdog/state.json"
+ALERT_COOLDOWN_SECONDS = 24 * 60 * 60  # never re-alert the same condition more than once/day
 DB_PATH = "/var/lib/docker/volumes/mqtt_malla_data/_data/meshtastic_history.db"
 
 DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "REPLACE_ME")
@@ -50,7 +52,10 @@ def classify(value, warn, urgent):
 
 
 def default_state():
-    return {"rate_state": "ok", "hot_node_state": "ok"}
+    return {
+        "rate_state": "ok", "hot_node_state": "ok",
+        "rate_last_alert": 0, "hot_node_last_alert": 0,
+    }
 
 
 def load_state():
@@ -70,6 +75,12 @@ def save_state(state):
     os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
     with open(STATE_FILE, "w") as f:
         json.dump(state, f)
+
+
+def cooldown_ok(state, key):
+    """True if enough time has passed since the last alert of this kind."""
+    last = state.get(key, 0)
+    return (time.time() - last) >= ALERT_COOLDOWN_SECONDS
 
 
 def send_discord(message):
@@ -129,22 +140,24 @@ def main():
         return
 
     rate_state = classify(total, WARN_PER_HOUR, URGENT_PER_HOUR)
-    if rate_state != state["rate_state"]:
+    if rate_state != state["rate_state"] and cooldown_ok(state, "rate_last_alert"):
         if rate_state == "ok":
             send_discord(f"CNJMESH {host}: Broker ingest rate back to normal ({total} pkts/hr)")
         else:
             icon = "\U0001F534" if rate_state == "urgent" else "\U0001F7E1"
             send_discord(f"{icon} CNJMESH {host}: Broker ingest rate {rate_state.upper()} ({total} pkts/hr, normal ~50-200/hr) -- check for a flooding/looping node")
+        state["rate_last_alert"] = time.time()
     state["rate_state"] = rate_state
 
     top_pct = round((top_count / total) * 100, 1) if total > 0 else 0
     hot_node_state = "warning" if top_pct >= SINGLE_NODE_WARN_PCT and total >= 20 else "ok"
-    if hot_node_state != state["hot_node_state"]:
+    if hot_node_state != state["hot_node_state"] and cooldown_ok(state, "hot_node_last_alert"):
         if hot_node_state == "ok":
             send_discord(f"CNJMESH {host}: No single node dominating ingest anymore")
         else:
             node_hex = hex(top_node) if top_node is not None else "unknown"
             send_discord(f"\U0001F7E1 CNJMESH {host}: Node {node_hex} accounts for {top_pct}% of last hour's traffic ({top_count}/{total}) -- possible loop/flood, same signature as prior loop-node incidents")
+        state["hot_node_last_alert"] = time.time()
     state["hot_node_state"] = hot_node_state
 
     save_state(state)
