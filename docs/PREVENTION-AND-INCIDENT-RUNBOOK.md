@@ -41,8 +41,8 @@ The single biggest lesson: **things failed silently for days/weeks because nothi
 - ✅ corescope-watchdog (alert-only, has a known multi-source blind spot)
 - ✅ graywolf-watchdog / graywolf-discord-watchdog (alert-only, deliberately no auto-restart)
 - ✅ mesh-discord-shim-watchdog (NEW — alerts on Discord post failures every 15 min)
-- ❌ **TODO: broker ingest-rate watchdog** (2A above) — would have caught the root cause
-- ❌ **TODO: disk-space watchdog** (2B above) — would have caught every disk emergency
+- ✅ **broker ingest-rate watchdog** (2A above) — DEPLOYED Aug 15-16, 2026 on cnjmesh1. `/opt/ingest-rate-watchdog/`, `ingest-rate-watchdog.timer` (every 15 min). Checks pkts/hr against Malla's DB directly (not via docker exec) plus whether any single node dominates ingest (the exact signature of every loop-node incident found so far). Alert thresholds: 1000/hr warn, 5000/hr urgent, single-node ≥50% share warn. Tested end-to-end including real Discord delivery to #cnjmesh — confirmed working. See session-log.md Aug 15-16 entry for full detail. Source: `watchdogs/ingest-rate-watchdog/` in this repo.
+- ✅ **disk-space watchdog** (2B above) — this was actually `disk-temp-watchdog` (also covers CPU temp + undervoltage), built earlier but never deployed. DEPLOYED Aug 15-16, 2026 on cnjmesh1 (`disk-temp-watchdog.timer`, every 5 min) — was sitting finished in `watchdogs/disk-temp-watchdog/` in this repo for weeks with nothing ever installing it. Tested working (disk=58.5%, temp=46.2°C, undervolt=ok at deploy time). **Still TODO: deploy the same script to cnjmesh2 and cnjmesh3** — it's already written to be host-agnostic (just needs `NODE_LABEL` set per host), just needs the same deploy steps repeated there.
 - ❌ **TODO: a per-Pi "heartbeat" / uptime self-report** — cnjmesh1 going offline overnight was only caught by external Fing/UptimeRobot. A lightweight self-heartbeat to a monitor would make outages obvious immediately.
 - ❌ **TODO: weather-broadcast success monitor** — the 7am mesh_bot weather silently missed; nothing noticed. Alert if the daily broadcast doesn't fire.
 

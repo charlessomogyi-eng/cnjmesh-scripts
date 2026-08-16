@@ -1,0 +1,9 @@
+[Unit]
+Description=CNJ Mesh broker ingest-rate watchdog
+After=network.target docker.service
+
+[Service]
+Type=oneshot
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+Environment=NODE_LABEL=REPLACE_ME_NODE_LABEL
+ExecStart=/usr/bin/python3 /opt/ingest-rate-watchdog/watchdog.py
