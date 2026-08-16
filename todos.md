@@ -67,8 +67,10 @@ The NWS weather-forecast + alerts bot (`/home/somog/nws_mesh_broadcast.py` on cn
 ### [DECIDED, not yet executed] Weather bot deployment plan
 Decided: run on cnjmesh1 using KPC1, watching resource impact as it goes live. Not yet actually deployed/scheduled — this is a placement/hosting decision, separate from the still-open script-vs-agessaman/meshcore-bot decision above and the Public-channel bug above. Do this only after both of those are resolved.
 
-### [DECIDED, not yet applied anywhere] Weather bot schedule time change: 7am → 7:05am
-New standard going forward, decided but not yet implemented on either the Meshtastic bot (mesh_bot.service / CJG1) or the MeshCore bot (nws_mesh_broadcast.py / KPC1). Apply to both when each is next touched.
+### [PARTIALLY DONE — correction Aug 15 evening] Weather bot schedule time change: 7am → 7:05am
+**MeshCore side (KPC1) — ✅ DONE, confirmed in production.** `weather_alarm=07:05` set in `/etc/meshcore-bot/config.ini` for agessaman/meshcore-bot (this superseded the earlier custom `nws_mesh_broadcast.py` script referenced in this todo's original wording — see the Aug 9-11 weather bot entry below). Real unattended 07:05 send confirmed Aug 11 landing correctly on both CentralNJ-MC RF and the Discord relay.
+
+**Meshtastic side (CJG1) — still NOT done.** `mesh_bot.service` on CJG1 is still on its original schedule; needs the same 7am → 7:05am change applied whenever that service is next touched.
 
 ### [Back-burner, now technically unblocked] `whorepeated.sh`
 Previously parked; now unblocked since KPC1 is confirmed working (was the blocker). Not scheduled, no urgency assigned yet — revisit when convenient.
