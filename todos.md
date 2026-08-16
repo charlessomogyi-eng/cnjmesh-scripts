@@ -1,14 +1,18 @@
 # CNJ Mesh — Open To-Dos
 
-### [ACTIVE — low-risk test running, decision pending] Meshview LongFast visibility test on liamcottle bridge
-Aug 15, 2026: added `msh/US/2/e/LongFast/#` + `msh/US/NJ/2/e/LongFast/#` to the `liamcottle` bridge only, to see if it closes the node-graph gap vs. MTX1's SBNJ instance. Malla isolation confirmed clean (zero LongFast rows reaching Malla's DB). Full detail in session-log.md, Aug 15 entry.
+### [DECIDED Aug 16 — keeping permanently] Meshview LongFast visibility test on liamcottle bridge
+Aug 15, 2026: added `msh/US/2/e/LongFast/#` + `msh/US/NJ/2/e/LongFast/#` to the `liamcottle` bridge only, to see if it closes the node-graph gap vs. MTX1's SBNJ instance. Malla isolation confirmed clean (zero LongFast rows reaching Malla's DB) — safe to leave running.
 
-**Still open:**
-1. Check `meshview.cnjmesh.me/nodegraph` after several hours/days for new nodes.
-2. Decide: keep the LongFast topics on liamcottle permanently, or revert (`cp mosquitto.conf.bak-longfasttest-20260815 mosquitto.conf && docker restart mosquitto`).
-3. If not worth it, fallback plan (isolated second broker + second Meshview instance) discussed but not started.
-4. Meshview is v3.0.5, current release is 3.0.7 — worth a version bump eventually, though it won't close the node-graph gap by itself (relevant upstream issues #150/#151 still open).
-5. Meshview runs as ad-hoc background Python processes, not a systemd service — won't auto-restart on crash/reboot. Worth converting at some point, not urgent.
+**Aug 16 investigation, findings:** compared CNJ Mesh's nodegraph directly against SBNJ's side by side. Real gap still exists (SBNJ ~26 nodes vs. CNJ ~18), but root-caused to NOT be about the LongFast bridge topic at all:
+- Checked whether nyme.sh (NYC-area mesh) offers any MQTT bridge to connect through — confirmed via their own published guide (`nyme.sh/mqtt`) that they've deliberately disabled cross-mesh relaying by design (community wants radio-only). Not a technical gap, a closed door on their end. Charles's counterpoint (fair, noted): nyme.sh can afford RF-only because they have thousands of operators giving organic mesh density over a much smaller area; a smaller group like CNJ spread over more geography doesn't have that density and genuinely needs MQTT as a substitute, so this isn't a like-for-like comparison — the reasoning doesn't transfer, it's just still a locked door regardless.
+- The isolated dots on both graphs (nodes with no connecting line, e.g. Rockefeller Center on SBNJ's own graph) are most likely a known Meshview rendering limitation (upstream issue #151 — neighbor-info packets not reflected on the mesh graph), not proof of no real connection either way.
+- **Real answer, confirmed by Charles directly:** SBNJ/FTRN are physically sited on high ground specifically for line-of-sight to NYC — Charles personally saw a real RF line from SBNJ to Madison Square Garden. This is a genuine engineered LOS/elevation advantage, not an MQTT scope or bridge-config difference. CJG1/CJG2's antenna siting is the actual lever for closing this gap, not anything in Mosquitto config.
+
+**Decision: keep the LongFast topics on liamcottle running indefinitely** — confirmed safe, zero cost, and may still surface other genuinely-new local-ish nodes over time even though it was never going to manufacture NYC-specific reach.
+
+**Still open, lower priority:**
+1. Meshview is v3.0.5, current release is 3.0.7 — worth a version bump eventually.
+2. Meshview runs as ad-hoc background Python processes, not a systemd service — won't auto-restart on crash/reboot. Worth converting at some point.
 
 ### [UPDATE — Aug 10, 2026] oceancounty MQTT bridge still failing to connect
 Persistent connect-then-immediately-close loop on `mqtt.oceancountyme.sh:8883`, since Aug 9, no successful connection. Details sent to the operator (Discord: takinglives3) on Aug 9 — awaiting his follow-up on his own broker/logs. No action needed on our side until he responds.
