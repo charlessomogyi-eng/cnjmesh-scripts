@@ -2007,3 +2007,21 @@ Added a cooldown mechanism to `/opt/ingest-rate-watchdog/watchdog.py` (both on c
 Deployed via a Python `str_replace`-style script edit (5 discrete find-and-replace operations: import/constant addition, `default_state()` update, new `cooldown_ok()` helper, and gating both existing alert blocks) rather than rewriting the whole file, to minimize risk of corrupting the already-working script. `py_compile` confirmed clean syntax before and after.
 
 **Real friction note:** the deploy command used `py_compile` without `sudo`, which failed with a `PermissionError` trying to write `__pycache__` under the root-owned `/opt/ingest-rate-watchdog/` directory — cosmetic, unrelated to whether the actual file edit succeeded (it had). Re-ran the same compile check with `sudo` to get a clean confirmation. Worth remembering: `py_compile` on a root-owned script always needs `sudo` too, not just the edit itself.
+
+## Aug 15, 2026 (evening) — disk-temp-watchdog deployed to cnjmesh2 and cnjmesh3
+
+Completed the last open piece of the Aug 15-16 watchdog rollout: `disk-temp-watchdog` was already live on cnjmesh1 and sitting finished-but-undeployed in git for cnjmesh2/cnjmesh3. Deployed to both tonight.
+
+**Deploy steps (same on both hosts):** `git pull`, copy `watchdog.py` to `/opt/disk-temp-watchdog/`, copy the `.service`/`.timer` units to `/etc/systemd/system/`, then `sed` in the real Discord webhook (`https://discord.com/api/webhooks/1527750520138367156/...`, pulled from `/opt/corescope-watchdog/watchdog.sh` on cnjmesh1) and each host's `NODE_LABEL`.
+
+**Bug hit and fixed:** the first `sed` pass on cnjmesh2 set `Environment=NODE_LABEL=Node 2` unquoted. Since the value contains a space, systemd parsed only `Node` as the value and logged `Invalid environment assignment, ignoring: 2` — the watchdog ran but posted as `Node:` with no number, silently mislabeling itself. Fixed by quoting the full assignment: `Environment="NODE_LABEL=Node 2"`. Applied the quoted form on cnjmesh3 from the start, avoiding the bug there entirely.
+
+**Confirmed working on both, via `journalctl -u disk-temp-watchdog.service`:**
+- cnjmesh2: `Node 2: disk=16.6%(ok) temp=47.2C(ok) undervolt=ok`
+- cnjmesh3: `Node 3: disk=17.1%(ok) temp=41.9C(ok) undervolt=ok`
+
+Both timers enabled and active. `disk-temp-watchdog` is now live on all three Pis. `ingest-rate-watchdog` remains cnjmesh1-only by design (Malla's DB only lives there).
+
+**Not yet done:** never confirmed the alert path actually posts to `#cnjmesh` Discord from cnjmesh2/cnjmesh3 specifically (cnjmesh1's was verified end-to-end during initial build; these two have only been observed in the healthy/`ok` state so far, no threshold crossed to trigger a real send). Worth a deliberate test (e.g. temporarily lower a threshold) if full confidence in the alert path on these two hosts matters before relying on it.
+
+**Also noted:** `install-map-cnjmesh2.md` and `install-map-cnjmesh3.md` already listed these units as installed (stale from July 26/31, before this session's fix) — left untouched rather than hand-edited, since they're meant to be regenerated via `scripts/collect-inventory.sh`, not manually patched. Re-run that script on both hosts next time either is touched, to pick up the corrected `NODE_LABEL` env var.
