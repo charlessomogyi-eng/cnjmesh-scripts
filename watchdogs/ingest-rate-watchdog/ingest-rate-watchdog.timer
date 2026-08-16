@@ -1,0 +1,10 @@
+[Unit]
+Description=Run CNJ Mesh broker ingest-rate watchdog every 15 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=15min
+Unit=ingest-rate-watchdog.service
+
+[Install]
+WantedBy=timers.target

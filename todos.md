@@ -1,5 +1,10 @@
 # CNJ Mesh — Open To-Dos
 
+### ✅ Prevention watchdogs DEPLOYED (Aug 15-16) — ingest-rate + disk/temp, cnjmesh1 only so far
+Both of the two highest-value watchdogs from `docs/PREVENTION-AND-INCIDENT-RUNBOOK.md` are now live on cnjmesh1: `ingest-rate-watchdog` (built fresh this session — catches the exact flooding/loop-node failure class that caused Problem A/B and the original Jul-Aug saga) and `disk-temp-watchdog` (already built weeks ago, sitting finished in git, but never actually deployed until now — also catches CPU temp and undervoltage, a plausible contributor to the original SD card corruption). Both tested end-to-end including real Discord delivery to #cnjmesh. Full detail in session-log.md Aug 15-16 entry.
+
+**Still open:** deploy `disk-temp-watchdog` to cnjmesh2 and cnjmesh3 too (it's already written host-agnostic, per its own docstring — just repeat the same deploy steps with each host's `NODE_LABEL`). `ingest-rate-watchdog` is cnjmesh1-only by design (Malla's DB only lives there).
+
 ### ✅ Problem A RESOLVED (Aug 14) — node `!699a9390` blocked via custom relay, see session-log.md Aug 14 "Problem A RESOLVED" entry for full detail
 Native SJMesh Mosquitto bridge stays disabled; replaced by a custom Python relay (`/opt/sjmesh-relay/`, `sjmesh-relay.service`) that filters this specific node's traffic in code before republishing everything else locally. Verified working via live testing. The node's 723,464 already-accumulated rows were also deleted + VACUUMed (total DB: 6,490,554 → 5,767,096). Full technical config detail lives in the relay's own `.env`/service files on cnjmesh1, not duplicated here.
 
