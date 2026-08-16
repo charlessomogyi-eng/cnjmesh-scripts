@@ -10,15 +10,6 @@ Aug 15, 2026: added `msh/US/2/e/LongFast/#` + `msh/US/NJ/2/e/LongFast/#` to the 
 4. Meshview is v3.0.5, current release is 3.0.7 — worth a version bump eventually, though it won't close the node-graph gap by itself (relevant upstream issues #150/#151 still open).
 5. Meshview runs as ad-hoc background Python processes, not a systemd service — won't auto-restart on crash/reboot. Worth converting at some point, not urgent.
 
-### [INVESTIGATE — root cause found, no code change made] CJG1/mesh_bot Meshtastic weather broadcast — fragmentation/missing delivery
-Aug 8 incident: 3 users reported issues with the 7am weather broadcast (one fragmented, one got nothing). Root cause found: message hit 341 chars vs. Meshtastic's 200-char limit, forcing a fragile 4-packet split. **Decision: not changing code based on one occurrence** — watching for recurrence before treating this as confirmed. If it recurs, fix is a hard length cap or shorter template.
-
-### [BUG — still open] Weather bot (agessaman/meshcore-bot) alert formatting garbled
-Forecast sending is fully fixed and confirmed working in production (07:05 daily, CentralNJ-MC + Discord relay). Alerts specifically still show garbled truncation (e.g. "Severe Thunders Watch Kent til 9PM by NWS MOUN") — the alert-send path likely still uses old single-message truncation instead of the chunked-send fix already applied to forecasts. Needs its own patch in the alert-sending function.
-
-### [PARTIALLY DONE] Weather bot schedule: 7am → 7:05am
-MeshCore side (KPC1) — ✅ done, confirmed in production since Aug 11. **Meshtastic side (CJG1) — still not done** — `mesh_bot.service` needs the same change whenever next touched.
-
 ### [UPDATE — Aug 10, 2026] oceancounty MQTT bridge still failing to connect
 Persistent connect-then-immediately-close loop on `mqtt.oceancountyme.sh:8883`, since Aug 9, no successful connection. Details sent to the operator (Discord: takinglives3) on Aug 9 — awaiting his follow-up on his own broker/logs. No action needed on our side until he responds.
 

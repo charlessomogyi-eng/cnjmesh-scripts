@@ -2279,3 +2279,6 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 - Remove dead MeshOmatic section from mosquitto.conf (verify first)
 - Remove dead meshshadow section from cloudflared config (verify first)
 
+
+### Aug 16, 2026 — Weather bot items closed out by Charles
+Charles confirmed: the 7am CentralNJ Meshtastic weather report is running fine as-is (closing the still-open CJG1 7am→7:05am schedule-change item — leaving it at 7am, not pursuing the 7:05 alignment with the MeshCore side). Also confirmed the weather bot alert formatting (previously garbled truncation, e.g. "Severe Thunders Watch Kent til 9PM by NWS MOUN") has been running fine — closing that item too. The underlying Aug 8 fragmentation investigation (341-char message exceeding Meshtastic's 200-char limit) never recurred. All three related weather-bot todo items removed from todos.md per standing housekeeping rule.
