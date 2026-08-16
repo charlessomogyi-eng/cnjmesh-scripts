@@ -1929,3 +1929,43 @@ The Mosquitto ACL approach documented as a dead end earlier the same day (`docs/
 6. **Database cleanup for this one node's accumulated rows (part of, but not all of, Problem B):** backed up `meshtastic_history.db` first, deleted the 723,464 rows matching `!699a9390` (`from_node_id = 1771738000`), ran `VACUUM`. Confirmed 0 remaining rows for that node. Total DB row count dropped **6,490,554 → 5,767,096**. Capture container restarted, confirmed ingesting normally afterward.
 
 **Correction/clarification carried over accurately from the source session:** the original 93.3%/6.05M-row figure was always total duplicate bloat across ~343,625 distinct duplicate groups — `!699a9390` alone was only ~723K of that (~11%). This session's fix and cleanup addresses that one node specifically. **The other ~89% of duplicate bloat, from ~343,624 other node/packet groups, remains completely unaddressed — this is Problem B, tracked separately in todos.md, not started.**
+
+### Aug 15-16, 2026 — Problem B RESOLVED: remaining duplicate-row bloat cleaned, 2 more loop nodes found and blocked, retention bumped to 90 days
+
+Follow-on session to the Aug 14 Problem A fix, picking up the previously-deferred Problem B (the other ~89% of the original 93.3% duplicate-bloat figure that blocking `!699a9390` alone never touched).
+
+**Root-cause diagnostic first, not a blind bulk delete.** Ran a grouped query (`GROUP BY mesh_packet_id, from_node_id HAVING cnt > 1`, then grouped again by `from_node_id`) against the then-5.77M-row `packet_history` table to see whether the remaining duplication was concentrated or spread thin. Took a couple minutes given the Pi's memory pressure at the time (58Mi free RAM, 1.5Gi/3.0Gi swap in use) but completed. Result: **343,408 duplicate groups, 5,331,594 excess rows** — and the **top 15 nodes alone accounted for 5,192,626 of those (97.4%)**. Not spread thin at all.
+
+**Two more loop nodes identified.** Converting the top offenders to hex revealed `0x698574b0` (630,406 excess rows from only 4 distinct packets — averaging ~157K duplicates per packet) and `0xdb51bb30` (546,831 excess rows from 1,396 packets) — both are the OTHER two node IDs from the original Aug 5 session-log entry documenting a confirmed republish loop (the third was `!699a9390`, already fixed in Problem A). They'd been cleaned from the DB once back on Aug 5 but never actually blocked at the source — so they'd been silently flooding and re-accumulating for the ~10 days since. A third high-duplication node, `0x0aca423c`, was identified as CJG1 — Charles's own local Meshtastic node — and correctly left alone, since its duplication is from legitimate multi-gateway relay of real traffic, not a loop bug.
+
+**Fixed at the source, reusing Problem A's infrastructure.** Rather than building a second relay or re-attempting the failed ACL approach, both new bad topics were simply added to the existing `/opt/sjmesh-relay/relay.py`'s `BLOCKED_TOPICS` set (a clean Python string-replace edit, verified with `py_compile` before running), and the systemd service was restarted. Verified silent via the same `mosquitto_sub`-for-30-seconds method used in Problem A — both topics confirmed blocked (`timeout 30 mosquitto_sub ...` exited via timeout with zero output on both).
+
+**Database cleanup — table-rebuild instead of plain DELETE, given memory constraints.** Backed up `meshtastic_history.db` first (`meshtastic_history.db.bak-preDedup-20260815`). Pulled the exact live schema (`CREATE TABLE packet_history`, all 10 indexes) via `sqlite_master` before writing the rebuild script, rather than assuming/guessing it. The rebuild: created `packet_history_new` with an identical schema, inserted only `MIN(id)` per `(mesh_packet_id, from_node_id)` duplicate group — with a `CASE` in the `GROUP BY` to correctly keep rows where either field is NULL as individually distinct rather than accidentally collapsing them all into one group — then dropped the old table, renamed the new one into place, rebuilt all 10 indexes, and ran a final `VACUUM`. Script was written to a file, copied into the `mqtt-malla-web-1` container via `docker cp`, and run there directly (not as an inline one-liner, given its length).
+
+**Result, fully verified:**
+- Copy step: 91.1s. Old table 5,768,887 rows → new table 437,292 rows (5,331,595 removed — matches the diagnostic's 5,331,594 almost exactly, off by one from natural growth in the minutes between the check and the run).
+- VACUUM: 56.7s.
+- File size: 2.0G → **151M**.
+- Capture container restarted cleanly afterward, confirmed decrypting/logging live packets again (`Database stats: 532 nodes, 437302 packets`).
+- Malla web container restarted, cold response time: **2.563s → 0.525s** — a real, measured 5x speedup, not a cache-hit artifact (both timed via full container restart + immediate `curl`).
+- Charles independently confirmed via Malla's own live dashboard — Total Messages card read 437,289, matching within a few packets of natural ingestion since the rebuild.
+- **Cross-check against the original Aug 12 diagnosis:** Problem A (723,464) + Problem B (5,331,595) = 6,055,059 total rows removed across both sessions — lines up almost exactly with the original 6,055,298-row/93.3% duplicate-bloat finding from Aug 12. Confirms the original root-cause diagnosis was accurate, and both fixes together have now fully addressed it.
+
+**Health check, before vs. after (requested by Charles specifically, good practice worth repeating going forward):**
+| | Before | After |
+|---|---|---|
+| Disk used | 36G | 35G |
+| Disk available | 20G | 22G |
+| Free RAM (raw) | 58Mi | 40Mi |
+| Buff/cache | 470Mi | 509Mi |
+| **Available RAM** (the metric that actually matters) | 394Mi | 436Mi |
+| Swap used | 1.5Gi/3.0Gi | 1.4Gi/3.0Gi |
+| Malla cold response | 2.563s | 0.525s |
+
+Modest disk change (backups intentionally kept on disk as insurance account for most of the gap — see below). Memory essentially flat to slightly improved once "available" (not raw "free") is used as the real metric — confirms the DB's size was never the actual memory/swap bottleneck on this box, consistent with something flagged earlier in the session when Charles asked whether shrinking the DB would free up more swap headroom (it doesn't directly — swap is a fixed zram allocation, independent of disk usage — but lighter queries do reduce memory pressure indirectly, which is the mechanism behind the RAM/swap numbers holding steady or improving slightly here).
+
+**Retention bumped 30 → 90 days, same session, Charles's request.** Found two settings claiming to control this: `MALLA_DATA_RETENTION_HOURS=720` (env var on `mqtt-malla-capture-1`, set in `/opt/stacks/mqtt/compose.override.yaml`) and `data_retention_hours: 2160` (in `/opt/stacks/malla/config.yaml`) — confirmed via `docker exec ... printenv` that the env var is the one actually live, config.yaml's value is dead/unused (though it already happened to say 2160, pure coincidence, not evidence it was ever active). Updated the env var 720 → 2160 via Python script edit (needed `sudo`, file is root-owned), recreated `mqtt-malla-capture-1` via `docker compose up -d --force-recreate malla-capture` to apply, confirmed live: container logs explicitly show `"Data cleanup started for retention hours: 2160"` and normal packet decryption resumed immediately after.
+
+**Not yet done, intentionally deferred:** the two pre-cleanup DB backups (`meshtastic_history.db.bak-preDedup-20260815`, 2.0G, and `meshtastic_history.db.bak-preclean-20260814`, 2.2G — ~4.2G combined) are still sitting on disk as insurance. Safe to delete once Charles is fully confident in the result; not done yet, no urgency given 22G still free.
+
+**Guardrails followed, consistent with the project's standing rules:** every command named cnjmesh1 explicitly; Python scripts used for all file edits (never sed); backup taken before any destructive DB operation; plan stated and explicit approval given before the production DB rebuild; before/after health check run at Charles's request and compared directly rather than presented in isolation.
