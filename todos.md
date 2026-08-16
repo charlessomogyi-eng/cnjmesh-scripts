@@ -1,5 +1,16 @@
 # CNJ Mesh — Open To-Dos
 
+### [ACTIVE — low-risk test running, decision pending] Meshview LongFast visibility test on liamcottle bridge
+Aug 15, 2026: Charles wanted to know why his `meshview.cnjmesh.me/nodegraph` shows far fewer nodes than MTX1's SBNJ instance (`sbnj.meshview.comfx.com/nodegraph`). Root cause: the three inbound Mosquitto bridges are scoped to the `CentralNJ` **channel name**, not geography — nodes on the default `LongFast` channel nearby are invisible regardless of proximity. Meshview itself (v3.0.5, healthy) and `[site]`/`[mqtt]` config were both confirmed clean, not the limiter.
+
+**Test performed:** added `msh/US/2/e/LongFast/#` and `msh/US/NJ/2/e/LongFast/#` topics to the existing `connection liamcottle` bridge block only (`/opt/stacks/mqtt/config/mosquitto.conf`, lines 49-50, inserted via `sed` after the existing CentralNJ topic lines). Backup at `mosquitto.conf.bak-longfasttest-20260815`. Mosquitto restarted, bridge reconnected cleanly (SUBACK on all 4 topics, no errors). ~3-minute log sample showed only 2 LongFast publishes, both from Charles's own CJG2 node — no incoming LongFast traffic from liamcottle's network in that window, so no firehose risk observed.
+
+**Still open:**
+1. Check `meshview.cnjmesh.me/nodegraph` after several hours to see if any new nodes appear beyond what CJG1/CJG2 already surface.
+2. Decide: keep the LongFast topics permanently on liamcottle, or revert (`cp mosquitto.conf.bak-longfasttest-20260815 mosquitto.conf && docker restart mosquitto`).
+3. If LongFast proves too heavy or not worth it, isolated second-broker plan (port 1884, one-way replica from primary broker + new region-scoped inbound bridges for LongFast/NYC/PA + a second dedicated Meshview instance) is the fallback — discussed in detail but not started.
+4. Also flagged this session: Meshview itself is on v3.0.5, current release is 3.0.7 (May 2026) — worth a version bump eventually for the new reliability page/gateway table, though it won't by itself close the node-graph gap (upstream issues #150 "no combined-channel graph view" and #151 "neighbor-info packets not reflected on mesh graph" are both still open even at head).
+
 ### ✅ Prevention watchdogs DEPLOYED (Aug 15-16) — ingest-rate + disk/temp, cnjmesh1 only so far
 Both of the two highest-value watchdogs from `docs/PREVENTION-AND-INCIDENT-RUNBOOK.md` are now live on cnjmesh1: `ingest-rate-watchdog` (built fresh this session — catches the exact flooding/loop-node failure class that caused Problem A/B and the original Jul-Aug saga) and `disk-temp-watchdog` (already built weeks ago, sitting finished in git, but never actually deployed until now — also catches CPU temp and undervoltage, a plausible contributor to the original SD card corruption). Both tested end-to-end including real Discord delivery to #cnjmesh. Full detail in session-log.md Aug 15-16 entry.
 
