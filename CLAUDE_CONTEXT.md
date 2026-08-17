@@ -41,6 +41,8 @@ Cloned on cnjmesh1 at `~/cnjmesh-scripts`
 
 Other files in this repo:
 - `README.md` — full rebuild-from-scratch guide (disaster recovery, not day-to-day reference)
-- `docs/` — supporting research notes referenced from the files above
+- `docs/` — supporting research notes referenced from the files above, including:
+  - `docs/aprs-2m-graywolf-reference.md` — 2m APRS/Graywolf station config, SSID map, known cpal/POLLERR audio bug, APRS OTA session notes
+  - `docs/lora-aprs-reference.md` — LoRa APRS (K2GIA-9/-10) reference
 
 *(This file replaces the old single-file CLAUDE_CONTEXT.md, split on 2026-07-24 for readability. The full pre-split history is preserved verbatim in `session-log.md` and in this file's git history — nothing was deleted, only reorganized. A backup of the pre-split file also exists at `CLAUDE_CONTEXT-backup-2026-07-24.md`.)*
