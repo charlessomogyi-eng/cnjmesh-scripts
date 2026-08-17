@@ -215,12 +215,14 @@ docker logs meshcore-packet-capture --tail 10
 ---
 
 ## APRS Reference
-- Callsign: K2GIA
-- Radio: UV-5R M, whip antenna at cnjmesh3's location (moved off the rooftop feed, which is dedicated to the Icom 2730 — reduced range accepted as a tradeoff)
+**Full detail (config, SSID map, known cpal/POLLERR issue, APRS OTA results): see `docs/aprs-2m-graywolf-reference.md`**
+- Callsign: **K2GIA-1** (changed Aug 17 2026 from bare K2GIA — digi+iGate combo SSID convention)
+- Runs on **cnjmesh1** (Graywolf web UI port 8082)
+- Radio: UV-5R M, **roof dual-band VHF/UHF antenna** (as of Aug 17 2026 — was whip)
 - Interface: Digirig — check current path with `udevadm`, don't assume `/dev/ttyUSB2` (paths shift after USB reconnects)
 - iGate server: `rotate.aprs2.net:14580`
-- Passcode: see Charles (generated from callsign K2GIA)
-- Digipeater: WIDE1-1
+- Passcode: 16025 (generated from base callsign K2GIA — SSID-independent, unaffected by K2GIA-1 change)
+- Digipeater: WIDE1-1, confirmed enabled
 - Beacon: every 30 minutes
 - **QRX (APRS Missed Message Mailbox)** — free, no-account APRS-IS service. Register by sending an APRS message to `QRX` with text `REG`. Once registered, holds missed messages (up to 7 days / 100 messages) and notifies on your next beacon. Works fine over LoRa APRS too (K2GIA-10), since it operates at the APRS-IS layer, not tied to a specific RF path.
 
