@@ -2282,3 +2282,29 @@ KPR1 (cnjmesh1) is being dedicated to Tilly's fork — that's why `meshcore-mqtt
 
 ### Aug 16, 2026 — Weather bot items closed out by Charles
 Charles confirmed: the 7am CentralNJ Meshtastic weather report is running fine as-is (closing the still-open CJG1 7am→7:05am schedule-change item — leaving it at 7am, not pursuing the 7:05 alignment with the MeshCore side). Also confirmed the weather bot alert formatting (previously garbled truncation, e.g. "Severe Thunders Watch Kent til 9PM by NWS MOUN") has been running fine — closing that item too. The underlying Aug 8 fragmentation investigation (341-char message exceeding Meshtastic's 200-char limit) never recurred. All three related weather-bot todo items removed from todos.md per standing housekeeping rule.
+
+---
+
+## 2026-08-17 — APRS 2m callsign change, roof antenna, cpal/POLLERR investigation, first APRS OTA session
+
+**Graywolf/K2GIA-1:**
+- Changed Graywolf Station Callsign from bare `K2GIA` to `K2GIA-1` (digi+iGate combo SSID convention). Confirmed no live code (graywolf-discord-bridge.py, aprs_monitor.py) has hardcoded `K2GIA` string matching — safe, config-only change, no script updates needed. iGate passcode unaffected (calculated from base callsign, SSID-independent).
+- Established full K2GIA SSID map: K2GIA (Charles personally), K2GIA-1 (Graywolf), K2GIA-5 (APRSdroid), K2GIA-7 (planned TidRadio TD-H9), K2GIA-9 (planned LoRa tracker), K2GIA-10 (existing LoRa fixed station).
+- UV-5R M physically reconnected to roof dual-band VHF/UHF antenna (previously whip). Confirmed working via aprs.fi raw packets — multi-hop digipeat paths (KB2EAR-1/-13, KC2MDN-2, KM2ARC-15) and later confirmed "heard on RF" directly by the APRS OTA bot.
+
+**cpal/ALSA POLLERR audio capture bug — investigated in depth, not resolved:**
+Long diagnostic session (SQLite messages table schema discovery, journalctl timeline correlation, ALSA hw_params inspection, ruling out PipeWire contention, testing hw vs plughw device paths, real-time scheduling research). Root-caused to a known open cpal GitHub bug (#730) combined with a very thin default ALSA buffer (482 frames / ~10ms at 48kHz) that cpal doesn't expose as configurable anywhere (checked audio_devices table schema directly — no buffer/period column exists). Switching `plughw`→`hw` had no effect. Confirmed NOT blocking actual function — TX, iGate, and a full APRS OTA session all worked fine despite continuous POLLERR errors during testing. Session-log entry from Jul 11-12 previously called this "cosmetic" — Aug 17 antenna change likely increased RX/demod load enough to make it far more frequent/severe, though not conclusively proven. Untried next step: systemd real-time scheduling override (`CPUSchedulingPolicy=rr`) for graywolf.service — standard Linux pro-audio XRUN mitigation. Charles explicitly chose not to reach out to the Graywolf developer yet, citing a pattern of past outreach turning out to be unnecessary once an issue is dug into further. Full writeup: `docs/aprs-2m-graywolf-reference.md`.
+
+**First APRS OTA session (aprsota.org):**
+- Full handbook read (all pages) and saved to memory for future step-by-step instruction requests.
+- PING confirmed working end-to-end; second PING got a PONG explicitly confirming "heard on RF" — validated the roof antenna + new callsign together.
+- Learned/corrected: 150km APRS-IS server filter only governs general/passive traffic pulled in — messages addressed directly to K2GIA-1 always deliver regardless of filter or distance, confirmed by receiving directed OTA-relayed messages from Germany, Manitoba, and Nevada.
+- Hosted first op (K2GIA-1 op 1, FN20rk): 8 QSOs, 13 pts, 2 unanswered. Learned/corrected mid-op: QSL confirmations must be sent `@chasercallsign QSL ...` addressed to OTA, never as a direct message to the chaser — several early contacts were incorrectly thanked via direct message and had to be re-confirmed properly through OTA once a chaser (Peter, DL7PJ-5) pointed out the correct handbook procedure.
+- Chased K0TFU-6 (Jared, the APRS OTA developer, live from a DBARA club meeting) and K9CMP-9 — both confirmed successfully.
+
+**Documentation:**
+- Two new reference docs added: `docs/aprs-2m-graywolf-reference.md` and `docs/lora-aprs-reference.md`, consolidating scattered APRS knowledge that previously only existed in chat/memory.
+- `cnjmesh1-operations.md` APRS section updated (stale bare-K2GIA references fixed, points to new doc).
+- `todos.md` cleaned: two items resolved (digipeat status confirmed, whip test superseded by roof antenna), one new item added (cpal fix, low priority).
+
+**Also touched (unrelated to APRS):** Filed reference notes on APRS-Agent (map.aprsagent.com, a Turkish self-hostable APRS-IS bridge/AI-gateway project) and a third-party Meshview instance hosted by community member "mtx" — both reference-only, not implemented, not touching cnjmesh1.
