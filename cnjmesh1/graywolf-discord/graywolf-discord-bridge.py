@@ -185,10 +185,10 @@ async def run_bridge():
         async def process_db():
             while True:
                 row = await db_queue.get()
-                from_call=row[4]; message=row[6] or ""
+                from_call=row[4]; to_call=row[5]; message=row[6] or ""
                 dedup_key=f"DB:{from_call}:{message}"
                 if dedupe.is_duplicate(dedup_key): continue
-                if from_call in BLOCKLIST: continue
+                if from_call in BLOCKLIST or to_call in BLOCKLIST: continue
                 payload,channel_type=format_db_message(row)
                 if payload is None: continue
                 if channel_type=="rf":
