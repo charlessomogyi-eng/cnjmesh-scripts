@@ -12,7 +12,7 @@ MAX_POSTS_PER_MINUTE = 20
 DEDUP_WINDOW         = 120
 DB_POLL_INTERVAL     = 10
 BLOCKLIST = {
-    "ANSRVR", "9W2KEY-12", "CT7AQH-5",
+    "ANSRVR", "9W2KEY-12", "CT7AQH-5", "OTA",
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
