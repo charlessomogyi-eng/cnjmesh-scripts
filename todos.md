@@ -74,8 +74,18 @@ Fix for boards with no physical config button confirmed against real firmware so
 
 ---
 
+**[NEW Aug 18 — resilience/security review]** A handful of ideas surfaced from an end-of-session environment review, worth working through over a few nights:
+- **Port `ingest-rate-watchdog` to cnjmesh2** — it runs Malla capture on the raw (unfiltered) firehose too, same flood/loop-node exposure that caused the original cnjmesh1 disk-fill saga, currently unwatched there.
+- **Confirm Docker log rotation is actually configured on cnjmesh3** — cnjmesh1 and cnjmesh2 both got the `daemon.json` fix after the 37GB/35GB log-fill incident; cnjmesh3 was never checked. Quick: `cat /etc/docker/daemon.json` on cnjmesh3.
+- **`peer-check` is disabled on cnjmesh2/cnjmesh3 and was never installed on cnjmesh1** — currently nobody is watching anybody. Revisit once the original false-alert root cause (never diagnosed) is understood, or reconsider the whole approach.
+- **Reuse the sjmesh-relay heartbeat-file pattern for other bridges that only report "service is active," not "is actually doing useful work"** — candidates: `mesh-discord-shim`, `graywolf-discord-bridge`, `aprs_monitor.py`. Tonight proved "systemd says active" isn't sufficient to know a bridge is actually relaying anything.
+- **Rotate `meshuser`/`[REDACTED - broker password, scrubbed Aug 30 2026]` on your own `mqtt.cnjmesh.me`** — distinct from SJMesh's own `meshuser` credential (not yours to rotate); this one is genuinely yours and still pending.
+- **Apply the Malla CVE-2026-43980 fix** — real upstream patch exists (commits >=4086e2b5f6161...), just needs the careful pull-and-verify process (note current image digest first, back up DB, pull, check for migration errors) given custom DB state from the Aug 15 dedup rebuild.
+- **Remove leftover `hello-world` container on cnjmesh2** (`zealous_joliot`, exited) — pure cruft from testing, harmless, quick `docker rm` whenever convenient.
+
 **For AI assistants:** This is the current, lean action list. Fetch this alongside `cnjmesh1-operations.md` at the start of a session — both are short. Only fetch `session-log.md` (long, narrative, full history) if you need the backstory on *why* something is the way it is.
 
 **Housekeeping rule:** when an item is finished, delete it from this file — don't mark it "done" and leave it. If the fact that it's finished matters for later reference, a one-line note goes in `session-log.md` instead, not here.
 
 *Last cleaned up 2026-08-16 (Sonnet session) — removed ~20 fully-resolved/superseded items and archived a 66K-character Tilly/KPR1 debugging narrative to session-log.md, trimming this file from 505 lines to a genuinely current list. Prior cleanup was 2026-07-24.*
+
