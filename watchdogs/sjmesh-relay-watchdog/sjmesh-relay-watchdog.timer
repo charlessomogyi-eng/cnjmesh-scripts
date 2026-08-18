@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SJMesh relay heartbeat watchdog every 5 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Unit=sjmesh-relay-watchdog.service
+
+[Install]
+WantedBy=timers.target
