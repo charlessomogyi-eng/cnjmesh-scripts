@@ -1,0 +1,8 @@
+[Unit]
+Description=SJMesh relay heartbeat watchdog
+After=network.target sjmesh-relay.service
+[Service]
+Type=oneshot
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+Environment=NODE_LABEL=cnjmesh1
+ExecStart=/usr/bin/python3 /opt/sjmesh-relay-watchdog/watchdog.py
