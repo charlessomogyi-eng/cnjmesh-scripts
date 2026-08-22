@@ -85,6 +85,8 @@ Fix for boards with no physical config button confirmed against real firmware so
 
 **For AI assistants:** This is the current, lean action list. Fetch this alongside `cnjmesh1-operations.md` at the start of a session — both are short. Only fetch `session-log.md` (long, narrative, full history) if you need the backstory on *why* something is the way it is.
 
+- **[NEW Aug 22]** TD-H9/K2GIA-7 APRS messaging via ODmaster app is confirmed broken (packet-level proof it sends malformed position-report-with-comment packets instead of real addressed messages). Reported to TidRadio support, awaiting their Android 2.6.4 beta fix. Radio's own native SMS-via-APRS keypad menu works correctly as a proven fallback (just clunky to type on). Currently evaluating Kelvin Hill's free "BLE-Bridge" tool as a possible way to use APRSdroid with the TD-H9 instead — open question is whether an Android-compatible version exists (only confirmed Windows so far). Full writeup: `docs/td-h9-odmaster-aprs-messaging-bug.md`.
+
 **Housekeeping rule:** when an item is finished, delete it from this file — don't mark it "done" and leave it. If the fact that it's finished matters for later reference, a one-line note goes in `session-log.md` instead, not here.
 
 *Last cleaned up 2026-08-16 (Sonnet session) — removed ~20 fully-resolved/superseded items and archived a 66K-character Tilly/KPR1 debugging narrative to session-log.md, trimming this file from 505 lines to a genuinely current list. Prior cleanup was 2026-07-24.*
