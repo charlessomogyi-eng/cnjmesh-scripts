@@ -60,6 +60,8 @@ Package: `com.bughunter.kisslink`. Full-featured, radio-agnostic (works with TD-
 | APRS-IS filter | optional, e.g. `m/100` for 100km radius, blank is fine |
 | Upload RF-heard packets to APRS-IS | leave unchecked normally — only enable if deliberately acting as a mobile IGate somewhere Graywolf can't reach |
 
+**Known open issue (Aug 23, 2026):** the IS Companion has been observed showing **Disconnected** even with all fields above filled in correctly, matching values that work fine on other K2GIA stations. Not yet root-caused. Practical effect: while disconnected, K2GIA-7 only receives over RF, not APRS-IS — messages from an internet-only sender (e.g. K2GIA-5/APRSdroid) won't reach it during this state. If testing cross-node messaging and it's not arriving, check this tab first before assuming an RF problem. Full detail in `aprs-bulletins-and-bridging-reference.md`.
+
 ### APRS tab
 Live decoded packet feed (position reports, weather, telemetry, messages, status, third-party) from whatever the TD-H9 hears over RF. Always active once BLE/KISS is READY, nothing to configure. Source/destination regex filters available if the list gets too busy.
 
