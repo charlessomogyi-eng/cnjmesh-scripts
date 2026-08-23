@@ -1,7 +1,7 @@
-# TD-H9 / ODmaster APRS Messaging Bug — Reference (Aug 20-22, 2026)
+# TD-H9 / ODmaster APRS Messaging Bug — Reference (Aug 20-23, 2026)
 
-## Bottom line
-K2GIA-7 (TD-H9) beaconing is fully working. APRS **messaging via the ODmaster app is confirmed broken** — reported to TidRadio, in progress. The radio's own native SMS-via-APRS keypad menu **works perfectly**, proving the bug is app-side, not radio-side. Currently evaluating Kelvin Hill's third-party "BLE-Bridge" tool as a possible free workaround to use APRSdroid instead of ODmaster.
+## Bottom line — RESOLVED Aug 23, 2026
+K2GIA-7 (TD-H9) beaconing and now **messaging are both fully working.** APRS messaging via the ODmaster app remains confirmed broken (reported to TidRadio, still open with them) — but the fix in practice is **Kelvin Hill's KISSLink BLE APRS Console** app, which connects directly to the TD-H9's onboard BLE KISS TNC and builds correct addressed APRS messages, bypassing ODmaster entirely. Full RF round-trip (TX → digipeat → ACK) confirmed working via diagnostic log, see "Resolution" section below.
 
 ---
 
@@ -75,11 +75,35 @@ Also visible correctly in Graywolf's own message dashboard (proper DM thread, un
   - Kelvin is the same person referenced in the CHIRP GitHub issue (#12216) working on unofficial TD-H9 channel/settings programming support — separate effort, APRS data area (0x3000) writes still broken as of that thread, channel writes work
   - **OPEN THREAD — not yet resolved:** need to find out if there's an Android-compatible version of the BLE-Bridge (not just Windows), get the manual (BLE-Bridge-W11_User_Manual.pdf was referenced in the FB group), and evaluate whether this is a viable free path to real APRS messaging via APRSdroid, bypassing ODmaster's bug entirely.
 
-## Next steps
-1. Investigate Kelvin Hill's BLE-Bridge tool(s) — Windows-only or Android-compatible? How would it integrate with the Pixel 7 Pro + TD-H9 setup?
-2. Check for reply from TidRadio support (Gideon) re: 2.6.4 Android beta
-3. Decide: free BLE-Bridge path vs. Mobilinkd/Digirig hardware purchase vs. just waiting on ODmaster fix
-4. If pursuing BLE-Bridge: locate the PDF manual and download link referenced in the "Bluetooth (Low Energy) KISS TNC Console & APRS Messenger" FB group
+## Resolution (Aug 23, 2026) — KISSLink BLE APRS Console
+
+**BLE-Bridge-W11 ruled out.** Confirmed via Kelvin's own PDF manual: Windows-11-only desktop utility, bridges a BLE KISS radio to a local loopback TCP port (127.0.0.1:8001) for Windows APRS clients like PinPoint. No Android build, not usable for a phone-only field setup. (Useful nugget from the manual: confirmed TD-H9's BLE KISS GATT profile is service `AF00`, characteristic `AF01` (write, TX) and `AF02` (notify, RX) — matches what KISSLink auto-detected in practice below.)
+
+**Kelvin's actual app portfolio** (all distributed via Google Play **closed/early-access testing** links posted in his FB group "Bluetooth (Low Energy) KISS TNC Console & APRS Messenger" — not publicly searchable on Play Store, no GitHub presence found):
+- Tidradio-specific: `TD-H9 BLE KISS Tester`, `TD-H9 APRS Messenger`
+- Radtel-specific: `RT-950 BLE KISS Tester`, `RT-950 APRS Messenger`
+- General/radio-agnostic (Kelvin's stated future development priority — "easier to manage three than seven"): `BLE KISS TCP Bridge`, `KISSLink BLE APRS Console`, `BLE APRS Messenger`
+
+Access: emailed Kelvin the Google Play Store account email, he added it to the tester list. Direct package-ID links (from Kelvin's May 20/June 3 FB post) work when opened in Chrome (tapping links directly in some apps didn't trigger the Play Store redirect — Chrome address bar worked reliably):
+- `https://play.google.com/store/apps/details?id=com.bughunter.kisslink` (KISSLink, installed and tested)
+- `https://play.google.com/store/apps/details?id=com.tdh9.aprsmessenger` (TD-H9 APRS Messenger, not yet tried)
+
+**KISSLink BLE APRS Console — installed and verified working, Aug 23, 2026.** Full user manual obtained (`KISSLink_BLE_APRS_Console_User_Manual-v0.5.0.pdf`, package `com.bughunter.kisslink`, min Android 8.0/API 26). Setup: Settings tab → source callsign `K2GIA`, SSID `7`, digipeater path `WIDE1-1,WIDE2-1` (destination tocall left at app default `APKJH2`, harmless). Control tab → scanned, found `TD-H9-7867(BLE)`, connected — auto-detected as "Known split BLE KISS profile (AF01 TX / AF02 RX)," matching the BLE-Bridge-W11 manual's documented TD-H9 profile.
+
+**Confirmed full RF message round-trip via diagnostic log share (Basic mode):**
+```
+11:53:42 — TX: sendAprsInfo: K2GIA-7>APKJH2,WIDE1-1,WIDE2-1  info=':K2GIA-1  :Test from KISSLink{001'
+11:53:42 — BLE write to af01: OK ✓ (66-byte KISS frame)
+11:53:45 — RX ACK from K2GIA-1 (via KB2EAR-13 digipeater), 3-second round trip
+```
+APRS-IS was disconnected in-app the entire time, confirming the message went out over RF through the TD-H9 exclusively — not via internet. (A message also appeared in the `aprs-internet-nj` Discord bridge labeled "Via: APRS-IS" — this is expected and not a contradiction: that channel is fed by IGates that heard the RF transmission and relayed it to APRS-IS, labeling it from *that* leg of the journey, not the original TX path.)
+
+**Net result:** proper `:ADDRESSEE:text{msgid` formatted APRS messages, correct ACK handling, all built and sent from a phone app with no ODmaster involvement. This closes the practical need — ODmaster's Send Message bug no longer blocks APRS messaging on K2GIA-7.
+
+**Still open / optional follow-ups:**
+1. TidRadio (Gideon) ODmaster bug report — no obligation to keep chasing this now that a working alternative exists, but the underlying report was solid and reproducible; a brief closing note to their support thread would be courteous (confirmed working alternative found, bug still valid for other users, keep it as a bug not a feature-request per its earlier discussion — the existing UI element genuinely malfunctions, doesn't just lack a feature).
+2. `TD-H9 APRS Messenger` (Kelvin's TD-H9-specific, presumably leaner messaging-only app) — not yet installed/tried; KISSLink already meets the need, so this is optional exploration only, not a blocker.
+3. ODmaster app itself is still useful for TD-H9 channel/radio programming (separate from APRS messaging) — no reason to uninstall it.
 
 ## Key identifiers
 - Callsign: K2GIA (General class)
