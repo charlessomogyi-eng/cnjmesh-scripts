@@ -100,6 +100,8 @@ APRS-IS was disconnected in-app the entire time, confirming the message went out
 
 **Net result:** proper `:ADDRESSEE:text{msgid` formatted APRS messages, correct ACK handling, all built and sent from a phone app with no ODmaster involvement. This closes the practical need — ODmaster's Send Message bug no longer blocks APRS messaging on K2GIA-7.
 
+**Field reference doc:** `docs/td-h9-app-field-reference.md` — a fast-lookup guide to every field in both apps' Setup/Settings/Control/Messages screens, meant for on-the-road use when there's no time to dig through the full manual. Includes the K2GIA-7 SSID-field gotcha found during setup (see below).
+
 **Still open / optional follow-ups:**
 1. TidRadio (Gideon) ODmaster bug report — no obligation to keep chasing this now that a working alternative exists, but the underlying report was solid and reproducible; a brief closing note to their support thread would be courteous (confirmed working alternative found, bug still valid for other users, keep it as a bug not a feature-request per its earlier discussion — the existing UI element genuinely malfunctions, doesn't just lack a feature).
 2. `TD-H9 APRS Messenger` (Kelvin's TD-H9-specific, presumably leaner messaging-only app) — not yet installed/tried; KISSLink already meets the need, so this is optional exploration only, not a blocker.
