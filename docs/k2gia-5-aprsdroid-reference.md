@@ -44,6 +44,21 @@ For K2GIA-5 specifically, `m/50` (radius around current position) is likely the 
 ### Location Source
 **SmartBeaconing™** — correct choice for a mobile/carried node (adjusts beacon rate based on speed/movement, unlike a fixed interval).
 
+## CRITICAL: messages don't send until Tracking is started
+**Found 2026-08-23, this cost a long troubleshooting session — read this first if messages seem to silently vanish.** APRSdroid does not send composed messages immediately, even with a correctly configured and apparently-connected APRS-IS setup. Messages sit queued locally — visible in your own sent-message list, giving the false impression they went out — until you tap **Start Tracking**. Only then does APRSdroid actually establish its APRS-IS connection and flush the queue. The UI gives no real warning about this beyond a small toast message ("The message will be sent as soon as you start tracking.") that's easy to miss if you're not watching for it right after hitting send.
+
+**Symptoms this causes if missed:**
+- Message appears in APRSdroid's own conversation thread as if sent
+- Exported connection log shows RX traffic (background APRS-IS chatter) but **no TX line at all** for the message
+- A "delivery counter" style field (seen as `0/7` next to the recipient) never advances
+- Nothing arrives at the recipient (confirmed via Graywolf's own database — zero record of the message despite Graywolf's APRS-IS being reliable throughout this whole project)
+
+**Fix:** tap **Start Tracking** (menu → Start Tracking, or the main toggle) after composing a message, or before, doesn't matter — as long as tracking is active when you want a send to actually go out. Once confirmed working (2026-08-23), two test messages ("Test aprsdroid to home station," "Test aprsdroid to mobile") both landed on Graywolf within a minute of starting tracking, tagged correctly as arriving via IS.
+
+**Also corrected same day:** APRS-IS server field had drifted to `euro.aprs2.net` (likely a stale default from initial setup/tutorial) instead of `rotate.aprs2.net` used everywhere else. Changed to match. Unclear whether this alone would have blocked delivery (APRS-IS is one global network, any entry point should work) — the Tracking toggle was the actual confirmed fix, but worth keeping server consistent regardless.
+
+**Practical implication:** if you're using K2GIA-5 to send a message and want it to actually go out, always confirm Tracking is on first — don't assume "message appears sent" means "message was sent."
+
 ### SmartBeaconing values (reviewed/changed 2026-08-23)
 | Setting | Value | Notes |
 |---|---|---|
@@ -59,6 +74,6 @@ For K2GIA-5 specifically, `m/50` (radius around current position) is likely the 
 **APRSdroid has no metric/imperial toggle** (confirmed via open GitHub issues #98 and #133) — all speed/distance fields are locked to km/h and km regardless of phone locale settings. The Fast Speed value above (25 km/h) was chosen with this in mind.
 
 ## Open items / not yet covered
-- Whether to revisit APRS-IS server (currently possibly still showing a default like `euro.aprs2.net` rather than `rotate.aprs2.net`) for consistency with other K2GIA stations.
+- Whether to revisit APRS-IS server for consistency — resolved 2026-08-23, now set to `rotate.aprs2.net`.
 - Whether to set a packet filter (currently likely blank/default) — `m/50` recommended per above.
-- **Cross-node messaging caveat identified 2026-08-23:** K2GIA-5 is Internet/APRS-IS-only — it cannot transmit or receive over RF at all. A message sent from K2GIA-5 to K2GIA-7 (TD-H9) will only arrive if K2GIA-7 is *also* connected to APRS-IS at the time (see `td-h9-app-field-reference.md` — KISSLink's IS Companion tab was found disconnected on K2GIA-7 despite correct settings, an open issue). If K2GIA-7 is RF-only at the time, a K2GIA-5-originated message won't reach it. For a reliable RF test, send from K2GIA-1 (Graywolf) instead, since it transmits over RF regardless of this issue.
+- **Cross-node messaging caveat identified 2026-08-23, partially resolved:** K2GIA-5 is Internet/APRS-IS-only — it cannot transmit or receive over RF at all, and (see above) requires Tracking to be active for sends to actually go out. K2GIA-5 → K2GIA-1 (Graywolf) confirmed working end-to-end same day. **K2GIA-5 → K2GIA-7 (TD-H9) not yet re-confirmed** with Tracking properly enabled — earlier attempts all predate discovering the Tracking requirement, so they don't count as valid tests. Worth a fresh attempt next APRS session: enable Tracking on K2GIA-5, send to K2GIA-7, then check on either KISSLink or TD-H9 APRS Messenger's Msgs tab (with that app's own APRS-IS connected) to confirm receipt.

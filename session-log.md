@@ -2379,3 +2379,25 @@ Note: this work happened across two separate chat sessions that should have cont
 **Cross-band bridging (2m APRS ↔ 433MHz LoRa APRS) briefly researched.** Reticulum was evaluated and ruled out — it has no native APRS packet awareness at all, would require building a custom encapsulation layer rather than using it as a drop-in bridge. Real options if ever pursued: APRX (most established, already referenced in earlier CA2RXU research), HAM-router, APRStac — none implemented, reference only, similar in spirit to the still-open APRStastic Meshtastic↔APRS decision already noted in `lora-aprs-reference.md`.
 
 **Files added/changed this entry:** `docs/k2gia-5-aprsdroid-reference.md` (new), `docs/aprs-bulletins-and-bridging-reference.md` (new), `docs/td-h9-app-field-reference.md` (added IS Companion disconnected note to the IS tab section).
+
+---
+
+## 2026-08-23 (evening) — APRSdroid (K2GIA-5) messaging root-caused: Tracking gate, not a delivery bug
+
+Spent a long stretch chasing what looked like a broken APRS-IS message delivery path between K2GIA-5 (APRSdroid) and both K2GIA-1 (Graywolf) and K2GIA-7 (TD-H9). Multiple test messages sent from APRSdroid appeared in its own sent list but never showed up anywhere on the receiving end — checked via KISSLink's Msgs tab, TD-H9 APRS Messenger's Msgs tab (both apps' own independent APRS-IS connections), and Graywolf's own SQLite messages table directly on cnjmesh1. All three came back empty for every test sent that afternoon.
+
+Ruled out along the way, in order: passcode (correct, `16025`), APRS-IS server (found and fixed a stale `euro.aprs2.net` setting, changed to `rotate.aprs2.net` to match every other K2GIA station), link type (TCP connection was already correct — HTTP POST/UDP are send-only alternates, not relevant). None of these were the actual cause.
+
+**Root cause found via APRSdroid's Export Log feature** (found in the app's overflow menu — no live in-app log view, only an export): the exported log showed background APRS-IS RX traffic but not a single TX line for any of the test messages, despite them appearing "sent" in the app's own UI. This led to checking the message compose screen more carefully, where a small, easy-to-miss toast read: **"The message will be sent as soon as you start tracking."**
+
+**APRSdroid queues composed messages locally and does not actually transmit them until "Start Tracking" is toggled on** — a genuinely non-obvious design choice (messaging gated behind the position-beaconing on/off state) that isn't clearly surfaced in the UI. This fully explains every symptom: messages appearing "sent" locally, no TX in the log, a `0/7` delivery counter that never advanced, and nothing arriving anywhere.
+
+Confirmed fix: tapped Start Tracking, queue flushed, two test messages ("Test aprsdroid to home station," "Test aprsdroid to mobile") landed on Graywolf's own web UI within about a minute, correctly tagged as arriving via IS. K2GIA-5 → K2GIA-1 delivery is now proven working end-to-end.
+
+**Not yet re-tested with this fix in place: K2GIA-5 → K2GIA-7.** All earlier attempts at that specific path happened before Tracking was understood to be required, so none of them are valid negative results — they simply never had a chance to send. Left as an open item for next APRS session.
+
+Also incidentally corrected a stray finding from earlier the same day: KISSLink's APRS-IS Companion on K2GIA-7 had been observed showing "Disconnected" and was initially written up in `known-issues.md` as an active bug. Later the same day, on a fresh connection attempt, it connected successfully without any changes — meaning it was never actually broken, just an untested/stale state that got misread as a persistent issue on first observation. Corrected the writeup in `known-issues.md` and `docs/td-h9-app-field-reference.md` accordingly, and generalized the lesson: don't treat a single disconnected-status screenshot as proof of a standing bug without a fresh retest.
+
+**Files updated:** `docs/k2gia-5-aprsdroid-reference.md` (Tracking-gate finding, server correction, updated open items), `known-issues.md` (corrected the KISSLink IS entry, added the APRSdroid Tracking entry), `docs/td-h9-app-field-reference.md` (corrected IS Companion status note), `todos.md` (updated open item to reflect the real remaining test: K2GIA-5 → K2GIA-7 with Tracking enabled).
+
+Good stopping point for APRS work today — RF messaging (KISSLink, TD-H9 APRS Messenger, Graywolf) and now internet/APRS-IS messaging (APRSdroid → Graywolf) are both proven working. Remaining loose thread is purely the K2GIA-5 → K2GIA-7 internet path, which is a quick retest whenever picked back up.
