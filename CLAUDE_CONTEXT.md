@@ -53,6 +53,6 @@ Other files in this repo:
   - `docs/td-h9-odmaster-aprs-messaging-bug.md` — K2GIA-7/TD-H9 ODmaster messaging bug, resolution via KISSLink
   - `docs/td-h9-app-field-reference.md` — fast-lookup field guide for KISSLink and TD-H9 APRS Messenger apps, for use in the field with no time to read a full manual
   - `docs/aprs-bulletins-and-bridging-reference.md` — APRS bulletin (BLN) vs CQ addressing, cross-band 2m/LoRa bridging options (not yet implemented)
-  - `docs/icom-2730-reference.md` — if present, Icom IC-2730A radio manual reference (planned, not yet added as of 2026-08-23 — see todos.md)
+  - `docs/icom-2730-reference.md` — Icom IC-2730A dual-band mobile transceiver reference (panel layout, menu navigation, repeater/duplex, tone squelch, scanning, Bluetooth headset, cloning) — condensed from the official manual, not day-to-day project work, just a quick-reference for when Charles forgets how to do something on this radio
 
 *(This file replaces the old single-file CLAUDE_CONTEXT.md, split on 2026-07-24 for readability. The full pre-split history is preserved verbatim in `session-log.md` and in this file's git history — nothing was deleted, only reorganized. A backup of the pre-split file also exists at `CLAUDE_CONTEXT-backup-2026-07-24.md`.)*
