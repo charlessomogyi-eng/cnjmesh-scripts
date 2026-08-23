@@ -52,6 +52,8 @@ Other files in this repo:
   - `docs/k2gia-5-aprsdroid-reference.md` — K2GIA-5 (APRSdroid, phone-based, Internet-only) setup and SmartBeaconing config
   - `docs/td-h9-odmaster-aprs-messaging-bug.md` — K2GIA-7/TD-H9 ODmaster messaging bug, resolution via KISSLink
   - `docs/td-h9-app-field-reference.md` — fast-lookup field guide for KISSLink and TD-H9 APRS Messenger apps, for use in the field with no time to read a full manual
+  - `docs/td-h9-radio-manual-condensed.md` — condensed reference for the physical TD-H9 radio itself (buttons, menu system, native APRS beaconing config) — separate from the phone apps
+  - `docs/kisslink-manual-condensed.md` — condensed conceptual reference for KISSLink app internals/behavior (BLE profile detection, IS Companion behavior, filter mechanics, etc.) — pairs with td-h9-app-field-reference.md's quick field values
   - `docs/aprs-bulletins-and-bridging-reference.md` — APRS bulletin (BLN) vs CQ addressing, cross-band 2m/LoRa bridging options (not yet implemented)
   - `docs/icom-2730-reference.md` — Icom IC-2730A dual-band mobile transceiver reference (panel layout, menu navigation, repeater/duplex, tone squelch, scanning, Bluetooth headset, cloning) — condensed from the official manual, not day-to-day project work, just a quick-reference for when Charles forgets how to do something on this radio
 
