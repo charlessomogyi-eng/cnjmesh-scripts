@@ -36,10 +36,10 @@ Filters combine short codes with slashes/spaces to limit what the server sends:
 - `o/OBJECTNAME` — only packets for a specific named object
 - `r/lat/lon/radius` — radius filter around a point, e.g. `r/40.4187/-74.5607/50` (K2GIA-1's coordinates, 50km radius)
 - `m/radius` — radius around your own login position (good for a mobile/carried node like K2GIA-5 since it moves)
-- `t/type` — filter by packet type (positions, messages, weather, etc.)
+- `t/type` — filter by packet type; type codes are single letters combined together, e.g. `t/moi` = messages + objects + items. Common codes: `m` messages (this includes bulletins BLN1-BLN9, since bulletins are just messages addressed to a BLN slot rather than a separate packet type), `p` positions, `o` objects, `i` items, `w` weather, `t` telemetry, `s` status
 - `p/prefix` — by callsign prefix, e.g. `p/K2`
 
-For K2GIA-5 specifically, `m/50` (radius around current position) is likely the most useful choice since the phone moves with Charles — a fixed `r/lat/lon/radius` filter would need manual updating as location changes.
+**Settled filter, set 2026-08-23:** `r/40.4187/-74.5607/150 t/moi` — 150km radius centered on Graywolf's fixed position (matches Graywolf's own APRS-IS filter, roughly covers NJ plus a buffer into neighboring states), restricted to messages/bulletins, objects, and items only. Deliberately excludes position reports, weather, and telemetry — those are by far the highest-volume packet types and were the main source of clutter when Tracking was first enabled with no filter at all. Tradeoff accepted knowingly: without positions in the filter, K2GIA-5 won't show "who's nearby" on a map — if that's ever needed in the moment, check aprs.fi directly or temporarily widen the filter to `t/mpoi` rather than leaving position noise on by default.
 
 ### Location Source
 **SmartBeaconing™** — correct choice for a mobile/carried node (adjusts beacon rate based on speed/movement, unlike a fixed interval).
@@ -73,7 +73,10 @@ For K2GIA-5 specifically, `m/50` (radius around current position) is likely the 
 ### Known app limitation
 **APRSdroid has no metric/imperial toggle** (confirmed via open GitHub issues #98 and #133) — all speed/distance fields are locked to km/h and km regardless of phone locale settings. The Fast Speed value above (25 km/h) was chosen with this in mind.
 
+### Comment field — not for one-off messages
+The **Comment field** (Preferences → Position Reports → Comment field) is a static blurb appended after your coordinates on every beacon/position report — was showing the app default (`https://aprsdroid.org/`), worth personalizing or blanking. This is conceptually related to the ODmaster/TD-H9 messaging bug documented in `td-h9-odmaster-aprs-messaging-bug.md`: ODmaster's broken "Send Message" feature appeared to be stuffing one-off message text into the same kind of comment/postscript field on a beacon packet, rather than building a proper addressed message packet. APRSdroid does this correctly — its Comment field only affects beacons, and actual messages go through the separate Messages compose flow — but it's a good illustration of the underlying distinction: a beacon's comment is a standing blurb about the station, while a message is a distinct addressed packet type entirely.
+
 ## Open items / not yet covered
 - Whether to revisit APRS-IS server for consistency — resolved 2026-08-23, now set to `rotate.aprs2.net`.
-- Whether to set a packet filter (currently likely blank/default) — `m/50` recommended per above.
+- Packet filter — resolved 2026-08-23, set to `r/40.4187/-74.5607/150 t/moi` (see above).
 - **Cross-node messaging caveat identified 2026-08-23, partially resolved:** K2GIA-5 is Internet/APRS-IS-only — it cannot transmit or receive over RF at all, and (see above) requires Tracking to be active for sends to actually go out. K2GIA-5 → K2GIA-1 (Graywolf) confirmed working end-to-end same day. **K2GIA-5 → K2GIA-7 (TD-H9) not yet re-confirmed** with Tracking properly enabled — earlier attempts all predate discovering the Tracking requirement, so they don't count as valid tests. Worth a fresh attempt next APRS session: enable Tracking on K2GIA-5, send to K2GIA-7, then check on either KISSLink or TD-H9 APRS Messenger's Msgs tab (with that app's own APRS-IS connected) to confirm receipt.
