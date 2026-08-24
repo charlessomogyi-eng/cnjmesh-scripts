@@ -54,12 +54,13 @@ Also visible correctly in Graywolf's own message dashboard (proper DM thread, un
 
 **Conclusion: radio firmware/TNC is fully capable of correct message encoding. The bug is isolated to ODmaster's app code specifically.**
 
-## TidRadio support interaction (ongoing)
+## TidRadio support interaction — RESOLVED, fix acknowledged for v2.6.5 (Aug 24, 2026)
 - Contacted odmaster@tid-china.com with full bug report, packet evidence, order info (Amazon order 111-1614976-3750661, Charles R Somogyi)
 - Support rep "Gideon" responded, asked for Android version + more logs; mentioned Android version 2.6.4 is in beta prep
 - Sent follow-up: Android version 16, device Pixel 7 Pro, ODmaster 2.6.3 confirmed current on Play Store (lagging behind iOS's 2.6.8)
 - Sent further follow-up with the native-SMS-menu proof (radio works, app doesn't) and the "Postscript" field finding — should let their dev team pinpoint the exact bug in code
-- **Status as of Aug 22: awaiting further reply / the 2.6.4 Android beta**
+- **Gideon's final reply (Aug 24, 2026):** confirmed the bug will be addressed in **version 2.6.5** (a step past the 2.6.4 beta previously mentioned — the bug apparently didn't make the 2.6.4 cut and got pushed to the next release instead). TidRadio thanked Charles for the detailed report and offered a sample of their next product as a token of appreciation.
+- **Status: closed on Charles's end.** No further action needed — the workaround (KISSLink / TD-H9 APRS Messenger, see resolution section above) already fully covers the practical need, so there's no urgency chasing 2.6.5's actual release. Worth a quick check of ODmaster's version next time it's opened, purely out of curiosity, but not a blocker for anything.
 
 ## Other findings / context
 - **APRSdroid (stock, Play Store version) CANNOT connect to the TD-H9 directly.** TD-H9 only exposes Bluetooth Low Energy (BLE); stock APRSdroid's Bluetooth TNC mode expects classic Bluetooth SPP. Confirmed by other TD-H9 owners hitting the same wall in forums ("the radio only sees the TV, not the phone").
