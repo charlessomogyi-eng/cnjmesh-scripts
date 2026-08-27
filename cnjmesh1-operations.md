@@ -45,6 +45,7 @@ ls -l /dev/ttyACM* /dev/ttyUSB*
 | Device | What it is | Identifying signature | Connection |
 |---|---|---|---|
 | /dev/ttyACM0 (or via `/dev/serial/by-id/usb-1a86_...`) | K2GIA-10 / LoRa APRS board (ESP32-S3) | CH340-family chip, vendor 1a86, unique serial `58EF089845` | Powered hub |
+| /dev/ttyACM2 (or via `/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EF088583-if00`) | K2GIA-9 / LoRa APRS Tracker board (plugged in Aug 27, 2026, temporary — for stable power, not mobile use while connected here) | CH340-family chip, vendor 1a86, unique serial `58EF088583` — same chip family as K2GIA-10 but a DISTINCT serial, no KPC1/KPR1-style ambiguity | Powered hub |
 | **KPC1 (MeshCore companion — as of Aug 8, dedicated to cnjmesh1's weather-bot integration, reflashed to `companion_radio_usb`; no longer Charles's personal device — see T-Deck/KPN2 below)** | Heltec V3 | CP2102, generic serial `0001` (shared with KPR1 — cannot be told apart by serial) | Powered hub, stable symlink `/dev/kpc1` |
 | **KPR1 (MeshCore repeater, dedicated to Tilly integration — NOT retired, this doc was wrong)** | Heltec V3 | CP2102, generic serial `0001` (shared with KPC1) | **Direct to Pi**, stable symlink `/dev/kpr1` |
 | Digirig — APRS PTT + audio | — | CP2102N, unique serial `beb31e2f...`; audio side is C-Media USB Audio (ALSA card name "Device") | Direct to Pi |

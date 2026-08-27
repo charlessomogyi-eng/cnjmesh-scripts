@@ -37,7 +37,36 @@ Serial console log evidence (via WebFlasher's Logs & Console over USB, K2GIA-9 s
 ```
 The `K2GIA-10*` in the return path (asterisk = "used") is direct proof K2GIA-10 heard K2GIA-9's beacon over real 433.775 MHz RF and digipeated it — not just gated it to APRS-IS. This also appeared in the `aprs-internet-nj` Discord bridge as an "Internet Message" — that's just the *second* leg (K2GIA-10's iGate function re-uploading the heard packet to APRS-IS); the first leg (K2GIA-9 → K2GIA-10) was genuine RF the whole way. Confirms **K2GIA-10 runs stationMode 2 (iGate+Digipeater combined)** per the firmware's own changelog ("Added iGate Mode to also repeat packets (like a iGate+Digipeater) in stationMode 2 and 5") — not iGate-only as had been unconfirmed before tonight.
 
-Note: the transmission above was an **automatic position beacon** (triggered by Start Tracking + phone GPS), not a manually composed message — that specific test (an addressed `::K2GIA-10  :` message, not a beacon) has not yet been done, though there's no reason to expect it wouldn't work given everything else confirmed clean.
+**Addressed message test also now CONFIRMED (overnight, Aug 26→27):** a real addressed message (not just a beacon) went K2GIA-9 → K2GIA-10 and back:
+```
+[22:20:45][INFO][LoRa Tx] ---> K2GIA-9>APDR16,WIDE1-1,WIDE2-1::K2GIA-10 :Test message from K2GIA-9 to K2GIA-10{2
+[22:21:02][INFO][LoRa Rx] ---> K2GIA-10>APLRG1,RFONLY,WIDE1-1::K2GIA-9  :ack2
+```
+Note K2GIA-10's ACK came back with `RFONLY` in its own path — its reply stayed RF-only, didn't get gated to APRS-IS, which is expected/correct behavior for a direct ACK.
+
+### CONFIRMED: real contacts reached K2GIA-9 overnight, unattended
+Two additional real stations messaged K2GIA-9 overnight with no one watching, both auto-ACKed cleanly:
+- **N2YDC-1** — sent a signal report (`UR 599 de N2YDC FN30ar`), a standard ham "you're readable" exchange
+- **N2YDC-5** — sent `73` (standard sign-off/goodbell)
+
+Both came in via `K2GIA-10>APLRG1,...:}<callsign>>...,TCPIP,K2GIA-10*::K2GIA-9  :...` — i.e., gated in from APRS-IS through K2GIA-10, same pattern as KC2BPP-1 the night before. Confirms K2GIA-9 is now a real, findable, working station attracting organic contact — not just a one-off test.
+
+### CORRECTION: "CQ" as a literal message address is not universally ignored — some clients see it and explicitly reject it
+Previously documented as simply having "no special meaning" and going nowhere. Overnight log shows this needs a caveat: two real stations, **WA1PLE-4** and **N1DWM**, DID receive Charles's message addressed to `CQ` and sent back explicit `rej` (reject) responses:
+```
+[23:29:46][INFO][LoRa Rx] ---> K2GIA-10>APLRG1,WIDE1-1:}WA1PLE-4>APK102,TCPIP,K2GIA-10*::K2GIA-9  :rej3
+[23:30:00][INFO][LoRa Rx] ---> K2GIA-10>APLRG1,WIDE1-1:}N1DWM>APK102,TCPIP,K2GIA-10*::K2GIA-9  :rej3
+```
+So "CQ" isn't silently dropped everywhere — some client software actively parses it as an invalid/malformed addressee and replies with a reject, rather than ignoring it outright. Net effect (goes nowhere useful) is the same, but the mechanism is different than originally documented. Use `ANSRVR`/`CQSRVR` (see below) for genuine broadcast-style CQ, not a literal "CQ" address.
+
+### CONFIRMED: Bluetooth Classic connection does NOT auto-reconnect after dropping — this is the real explanation for "had to walk close to the tracker" the next morning
+```
+[09:05:29][INFO][Bluetooth] Client disconnected!
+```
+No further Bluetooth activity in the log for the next 10+ hours (through 19:38 when the log was pulled) — meaning the connection stayed dead the entire time, with no automatic retry from either the tracker firmware or APRSdroid. This is the actual root cause of the "I had to walk close to the node for a message to go green" observation from the next morning — **not a range/antenna issue at all.** Once dropped, the link stays dropped until something (walking closer and re-opening the app, likely re-triggering a fresh connection attempt) manually re-establishes it. Worth remembering: if messages aren't going through, check whether Bluetooth actually shows as connected before assuming it's a range problem.
+
+### K2GIA-9 plugged into cnjmesh1 (Aug 27, 2026) — temporary, for stable power/testing
+Physically connected via USB to cnjmesh1's powered hub, same pattern as K2GIA-10. Landed on `/dev/ttyACM2`, stable path `/dev/serial/by-id/usb-1a86_USB_Single_Serial_58EF088583-if00`. Confirmed via `udevadm` to have its own distinct unique serial (`58EF088583`) — same CH340/QinHeng chip family as K2GIA-10 (`58EF089845`) but NOT the same ambiguous-serial situation as KPC1/KPR1; no risk of confusing the two. No existing service on cnjmesh1 reads this serial connection (same as K2GIA-10) — this is purely for stable power while parked, not tied into any logging pipeline yet. K2GIA-9 was originally intended as a *mobile* tracker — this is a temporary/testing placement, not its permanent home.
 
 ### APRSdroid Bluetooth config (K2GIA-9 pairing)
 APRSdroid has no multi-profile support — this REUSES/OVERWRITES the same config previously used for K2GIA-5 (Internet/APRS-IS mode). Switching back to Internet mode is required to restore K2GIA-5 functionality.
