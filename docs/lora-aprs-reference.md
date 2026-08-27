@@ -12,12 +12,64 @@
 - Do NOT use `screen` against this device's serial port for monitoring — the web UI's "Received Packets" page is the correct/supported monitoring method.
 - Confirmed solid RF reach: e.g. WB2EHG-7 packet relayed through KD2CIF-1 and KB2EAR-13 observed cleanly.
 
-## K2GIA-9 — Mobile Tracker (board delivered Aug 26, 2026)
-- Hardware: LilyGo T3 V1.6.1. Delivered Aug 26, 2026 — not yet flashed/configured as of this writing.
-- SSID `-9` reserved per K2GIA SSID convention map (mobile/tracker use)
-- Will need its own distinct callsign+SSID identity separate from K2GIA-10 (fixed station) once online
-- Firmware: `richonguzman/LoRa_APRS_Tracker`. Flash via the Tracker WebFlasher (richonguzman.github.io/lora-tracker-web-flasher — NOT the iGate WebFlasher, easy to mix up) using Chrome (needs WebSerial). Select board, latest firmware, "Install as factory reset," connect board, Flash Firmware, select COM port. After flashing, board broadcasts WiFi AP `LoRaTracker-AP` (password `1234567890`) — connect and browse to `192.168.4.1` in Chrome for the WebUI config page.
-- USB cable note: many micro USB cables are charge-only (2-wire). Confirm data capability by plugging in and checking that a COM port actually appears (Windows: Device Manager → Ports) before assuming a cable will work for flashing.
+## K2GIA-9 — Mobile Tracker (flashed + configured Aug 26, 2026, digipeat CONFIRMED WORKING)
+- Hardware: LilyGo T3 V1.6.1 (LoRa32 V2.1/1.6.1 family). **No onboard GPS module** — this board is bare, not the GPS-equipped variant.
+- Firmware: `richonguzman/LoRa_APRS_Tracker`, flashed via Tracker WebFlasher as **"LoRa32 V2.1/1.6.1 TNC (433MHz)"** — the non-GPS build (NOT the "+ GPS (DIY)" build, which expects GPS hardware and will misbehave without it). Version 2026-04-22, V2.4.3.2, "First flash or Factory reset."
+- USB: confirmed data-capable cable enumerates as `USB-Enhanced-SERIAL CH9102`. Many micro USB cables are charge-only — verify a COM port actually appears before trusting a cable for flashing.
+- Power switch on this board only controls the LiPo battery path, not USB — switch position is irrelevant whenever USB is connected.
+
+### Confirmed working config (as saved, Aug 26 2026)
+- Callsign: `K2GIA-9` (all 3 beacon profile slots set to this, not left at default `NOCALL-9`, to prevent accidental beaconing under a placeholder callsign if the button/profile-switch is ever used)
+- Path: `WIDE1-1,WIDE2-1` (no space after comma)
+- LoRa: 433775000 Hz / SF12 / CR4:5 / BW125000 — matches K2GIA-10 exactly (confirmed correct via lora-aprs.org: this is the standard US/global LoRa APRS config)
+- **Disable GPS: ON** — required since this board has no GPS hardware; position instead comes from the paired phone's GPS via Bluetooth (APRSdroid). This is a documented, first-class use case in the firmware, not a workaround.
+- **Smart Beacon Active: OFF** — SmartBeaconing depends on GPS speed data that doesn't exist with GPS disabled; falls back to Fixed Beacon Rate (15 min) instead.
+- **Enable Bluetooth: ON**, BT Classic (not BLE) — correct for Android/APRSdroid. Bluetooth Device Name set to `LoRaAPRSTracker`.
+- Battery/Telemetry sections: left off/default (no BME sensor attached).
+- Email (GPS position) field: intentionally left blank — meaningless with GPS disabled, nothing to send.
+
+### CONFIRMED: K2GIA-9 → K2GIA-10 digipeat working end-to-end (Aug 26, 2026)
+Serial console log evidence (via WebFlasher's Logs & Console over USB, K2GIA-9 side):
+```
+[22:14:36][INFO][Bluetooth] Client connected!
+[22:14:41][INFO][LoRa Tx] ---> K2GIA-9>APDR16,WIDE1-1,WIDE2-1:=4025.45N/07433.45W$/A=000080 https://aprsdroid.org/
+[22:14:52][INFO][LoRa Rx] ---> K2GIA-9>APDR16,K2GIA-10*,WIDE2-1:=4025.45N/07433.45W$/A=000080 https://aprsdroid.org/
+```
+The `K2GIA-10*` in the return path (asterisk = "used") is direct proof K2GIA-10 heard K2GIA-9's beacon over real 433.775 MHz RF and digipeated it — not just gated it to APRS-IS. This also appeared in the `aprs-internet-nj` Discord bridge as an "Internet Message" — that's just the *second* leg (K2GIA-10's iGate function re-uploading the heard packet to APRS-IS); the first leg (K2GIA-9 → K2GIA-10) was genuine RF the whole way. Confirms **K2GIA-10 runs stationMode 2 (iGate+Digipeater combined)** per the firmware's own changelog ("Added iGate Mode to also repeat packets (like a iGate+Digipeater) in stationMode 2 and 5") — not iGate-only as had been unconfirmed before tonight.
+
+Note: the transmission above was an **automatic position beacon** (triggered by Start Tracking + phone GPS), not a manually composed message — that specific test (an addressed `::K2GIA-10  :` message, not a beacon) has not yet been done, though there's no reason to expect it wouldn't work given everything else confirmed clean.
+
+### APRSdroid Bluetooth config (K2GIA-9 pairing)
+APRSdroid has no multi-profile support — this REUSES/OVERWRITES the same config previously used for K2GIA-5 (Internet/APRS-IS mode). Switching back to Internet mode is required to restore K2GIA-5 functionality.
+- Connection Protocol: TNC (KISS)
+- Connection Type: Bluetooth SPP
+- Client Mode: checked (APRSdroid establishes the connection — keep this on)
+- TNC Bluetooth Device: `LoRaAPRSTracker`
+- Callsign: `K2GIA`, SSID: `9` (must change SSID from whatever K2GIA-5 was using, or packets transmit under the wrong identity)
+
+### KNOWN ISSUE: Bluetooth Classic pairing via Android Settings does not work reliably on modern Android
+Attempted OS-level pairing (Settings → Bluetooth → scan → select `LoRaAPRSTracker`) repeatedly failed silently on a Pixel 7 — device visible/selectable, but tapping it produced no pairing prompt, no notification, nothing in the board's serial log. Confirmed NOT a board-health issue (clean boot logs every time, Bluetooth Classic init confirmed in firmware logs).
+
+This matches a **known, unresolved upstream issue**: `richonguzman/LoRa_APRS_Tracker` GitHub Issue #275 ("switched the BT on, but I am not able to see it on my phone, so I cannot pair. No luck whatever I do") — open, no fix, different board (T-Beam) but same firmware family and symptom. Also matches a documented pattern elsewhere of ESP32 Bluetooth Classic SPP devices failing to pair specifically on newer Android versions (works fine on old Android 6.0 hardware, fails on Android 12+) — likely an Android-side Bluetooth Classic stack compatibility gap with lightweight ESP32 BT implementations, not something fixable from the tracker's config.
+
+**Workaround that DID work:** skip OS-level pairing entirely. Go directly into APRSdroid → Connection Preferences → TNC Bluetooth Device — the device picker there showed `LoRaAPRSTracker` as selectable even though it was never OS-paired. Selecting it there and toggling Start Tracking eventually produced a real connection (`[INFO][Bluetooth] Client connected!`), though this took several minutes with zero indication on the phone side that anything had happened — no toast, no status change visible in APRSdroid's UI. **If this connection method is used again, expect a long, silent delay before it actually connects — do not assume failure just because nothing visibly happens for several minutes.**
+
+### CAUTION: IO15-to-GND pad-touch (button workaround) triggered unexpected "going into deep sleep" instead of reopening config AP
+This directly contradicts the expected behavior (documented in this file above) of triple-touching IO15-to-GND reopening `LoRaTracker-AP`. Actual result: board printed a deep-sleep message and stopped responding normally; recovered fine after a full USB unplug/replug power cycle, no lasting harm. Root cause NOT confirmed — possible that IO15 has a different function on this specific board/firmware build than assumed, or pin-count-miscounting during the physical touch. **Do not trust the IO15 pad-touch method as confirmed-safe until this is re-verified.** The documented fallback (full re-flash, which also re-triggers the AP on next boot) remains the safer option if config access is needed again.
+
+## K2GIA SSID Map (full, cross-reference)
+- `K2GIA` — Charles personally (portable/voice/OTA)
+- `K2GIA-1` — Graywolf/UV-5R M fixed 2m digi+iGate (see separate 2m APRS reference doc)
+- `K2GIA-5` — APRSdroid (phone-based)
+- `K2GIA-7` — planned TidRadio TD-H9 handheld (mobile 2m APRS)
+- `K2GIA-9` — LoRa APRS mobile tracker (this doc) — flashed, configured, confirmed working Aug 26, 2026
+- `K2GIA-10` — existing LoRa APRS fixed station (this doc)
+
+## Community outreach (Aug 26, 2026)
+Sent a CQ-style "Looking for a copy, k2gia-9" message via K2GIA-9 into the NJ LoRa APRS Discord (#general). Innismir/N1WBV responded and pointed to `lora.ham-radio-op.net/?center=40.4957,-73.8259&zoom=8` for other NJ LoRa stations. Charles shared current config (433.775MHz/SF12/CR4:5/BW125kHz) and confirmed location (South Brunswick NJ) — this matches the US/global standard config, not a regional variant. Live conversation in progress as of this writing; a real cross-station RF contact may follow.
+
+## Open item: lora-aprs.live syslog feed not yet configured
+K2GIA-10's syslog currently points only to `10.0.0.181` (cnjmesh1, local). The public `lora-aprs.live` aggregator (a separate, syslog-fed — NOT APRS-IS-fed — tracker/iGate map and analysis tool) requires its own syslog destination to be added. Without this, K2GIA-9 will show up fine on aprs.fi (APRS-IS-driven) but will NOT appear on lora-aprs.live regardless of RF activity. Worth adding as a fan-out destination alongside the existing cnjmesh1 syslog target if wider visibility/RF analytics (SNR, real digipeat path data) are wanted.
 
 ### Physical button — REQUIRED, install before or immediately after first flash
 **Why it's needed (not just for on-screen menu/display — Charles doesn't use the screen on any of his 10 LoRa nodes, controls via app/Bluetooth instead):** the tracker's WiFi config AP (`LoRaTracker-AP`) only auto-creates itself on the very first boot after flashing. Once settings are saved and it reboots, there is no automatic way back into that setup screen. Normally a triple-press of the physical user button reopens the CONFIG menu → "Config WiFi AP." **This T3 V1.6.1 board does not have that button populated** (only a reset button) — without wiring one, the only way to change any setting later (callsign, SmartBeaconing values, frequency, etc.) is a full re-flash from scratch.
@@ -34,14 +86,6 @@
 7. Test before mounting: power up, triple-press, confirm the display shows CONFIG mode and "Config WiFi AP" is reachable. Fix any bad joints now while still accessible.
 8. Wrap the switch body and legs in tape or heat-shrink so nothing can bridge to an exposed pad or a metal case.
 9. Once tested, mount the button to the underside of the board with hot glue or double-sided foam tape, positioned to clear the case (check actuator height vs. standoff clearance).
-
-## K2GIA SSID Map (full, cross-reference)
-- `K2GIA` — Charles personally (portable/voice/OTA)
-- `K2GIA-1` — Graywolf/UV-5R M fixed 2m digi+iGate (see separate 2m APRS reference doc)
-- `K2GIA-5` — APRSdroid (phone-based)
-- `K2GIA-7` — planned TidRadio TD-H9 handheld (mobile 2m APRS)
-- `K2GIA-9` — planned LoRa APRS tracker (this doc, on order)
-- `K2GIA-10` — existing LoRa APRS fixed station (this doc)
 
 ## Related / Not Yet Built
 **APRStastic** (afourney/aprstastic on GitHub) — bidirectional Meshtastic↔APRS gateway, TODO/experiment item, not yet built. Would run on a dedicated spare Pi + dedicated Meshtastic node (NOT CJG1/CJG2). Two open decisions before building:
