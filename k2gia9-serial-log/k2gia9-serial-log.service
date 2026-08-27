@@ -1,0 +1,13 @@
+[Unit]
+Description=K2GIA-9 LoRa APRS Tracker serial log
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/cat /dev/serial/by-id/usb-1a86_USB_Single_Serial_58EF088583-if00
+StandardOutput=append:/var/log/k2gia9-serial.log
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

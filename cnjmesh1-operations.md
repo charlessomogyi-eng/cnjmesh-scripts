@@ -102,7 +102,9 @@ systemctl status cloudflared
 systemctl status weather-bot-conditions.timer
 systemctl status weather-bot-alerts.timer
 systemctl status nj-regional-weather-conditions.timer
+systemctl status k2gia9-serial-log
 ```
+K2GIA-9's serial output logs continuously to `/var/log/k2gia9-serial.log` (rotated daily, 7 days kept). Setup/deploy: `k2gia9-serial-log/README.md`.
 
 ---
 
