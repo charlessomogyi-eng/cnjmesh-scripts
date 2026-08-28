@@ -46,6 +46,7 @@ tail -f /var/log/k2gia9-serial.log
 
 ## Notes
 
+- **Baud rate fix (Aug 27, 2026):** the original version of this service used bare `cat` with no `stty` call first, which produced garbled binary output (confirmed by Charles — log was full of unreadable bytes, not real tracker data). `cat` doesn't configure the serial line itself; it just reads whatever's there at whatever rate the port happens to be left at. Fixed by adding `ExecStartPre` to explicitly set `115200 raw -echo` before the read starts, matching the rate used everywhere else (WebFlasher console, `screen`) for this board.
 - Uses `copytruncate` in logrotate (not the default rename-and-signal
   approach) because `cat` holds the file open continuously and has no way
   to be told to reopen it on rotation — `copytruncate` handles this without

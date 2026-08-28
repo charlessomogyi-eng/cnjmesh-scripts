@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+ExecStartPre=/bin/stty -F /dev/serial/by-id/usb-1a86_USB_Single_Serial_58EF088583-if00 115200 raw -echo
 ExecStart=/bin/cat /dev/serial/by-id/usb-1a86_USB_Single_Serial_58EF088583-if00
 StandardOutput=append:/var/log/k2gia9-serial.log
 Restart=always
