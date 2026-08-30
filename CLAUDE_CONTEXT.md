@@ -59,8 +59,7 @@ Other files in this repo:
 
 *(This file replaces the old single-file CLAUDE_CONTEXT.md, split on 2026-07-24 for readability. The full pre-split history is preserved verbatim in `session-log.md` and in this file's git history — nothing was deleted, only reorganized. A backup of the pre-split file also exists at `CLAUDE_CONTEXT-backup-2026-07-24.md`.)*
 
-### LoRa APRS 70cm relay — Discord webhooks (added Aug 30)
-K2GIA-10's LoRa APRS traffic (433.775 MHz) relays to `lora-aprs-70cm-relay` channel in two Discord servers via `/opt/lora-aprs-discord/lora-aprs-discord-bridge-v2.py`:
+### LoRa APRS 70cm relay — Discord webhooks (added Aug 30, REVOKED same day after live abuse)
+K2GIA-10's LoRa APRS traffic (433.775 MHz) relays to `lora-aprs-70cm-relay` channel in two Discord servers via `/opt/lora-aprs-discord/lora-aprs-discord-bridge-v2.py`.
 
-- **MeshCore-NJ server:** `[REDACTED - leaked webhook, deleted Aug 30 2026]`
-- **Meshtastic-NJ server:** `[REDACTED - leaked webhook, deleted Aug 30 2026]`
+**Incident, Aug 30, 2026:** the two webhook URLs previously committed here were found and actively abused within hours — an automated attacker posted `@everyone` spam and inappropriate images through both channels, citing this exact file/commit as the leak source. Both Discord channels were deleted immediately (which also destroys their webhooks), stopping the abuse. **Do not commit real webhook URLs to this file again** — store them only in `/opt/lora-aprs-discord/.env` on cnjmesh1 (excluded from git per the secrets policy), not in any tracked file. When new channels/webhooks are created to replace these, update `.env` directly on the Pi and note here only that they exist, not their values.
