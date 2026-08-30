@@ -13,12 +13,29 @@ produces RF.
 
 ## What it captures
 
-Only `TX / MESSAGE` events from K2GIA-10's syslog: messages K2GIA-10 itself
-composes/sends (e.g. via aprs-tnc-web) and messages it digipeats on behalf of
-others. It does **not** capture messages K2GIA-10 merely hears but doesn't
-retransmit (out of digipeat scope, hop limit exhausted, etc.) — deliberate
-scope, not a bug. ack/rej packets and non-printable garbage are filtered out
-automatically.
+Both `TX / MESSAGE` and `RX / MESSAGE` events from K2GIA-10's syslog —
+i.e. anything K2GIA-10 **sends, receives, or digipeats**, per Charles's
+explicit scope (Aug 30, 2026). Text messages only — **beacons and telemetry
+are never matched at all**, since those don't appear as `MESSAGE`-type
+syslog lines in the first place. ack/rej packets and non-printable garbage
+are filtered out automatically. Each Discord post is labeled "Sent/Relayed"
+or "Received" so the direction is clear.
+
+**Important caveat:** the `RX / MESSAGE` line format is NOT yet confirmed
+against a real captured example — only the `TX` format has been directly
+seen. The RX pattern was added by analogy (same firmware, same "TYPE /
+CATEGORY / FROM ---> TO :text{msgid" convention). If received messages
+never show up in Discord despite K2GIA-10 obviously hearing local traffic
+(W2MMD-10, K2ZA-10, AC2F-10 etc.), capture a real line with `nc -ul 1514`
+during an actual receive and fix `RX_MESSAGE_RE` in the script to match
+what's actually there.
+
+## Flood protection already built in
+
+- Rate limit: 20 posts/minute per webhook
+- Dedup: 120-second window, keyed on direction+sender+text+message-ID — so
+  a station retrying the same message several times (common — APRS clients
+  often retry 3-7x waiting for an ACK) only posts once, not once per retry
 
 ## The bug this fixes
 

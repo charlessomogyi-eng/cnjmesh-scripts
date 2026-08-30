@@ -13,6 +13,13 @@ message-type TX event:
 
     <165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - TX / MESSAGE / <FROM> ---> <TO> :<text>{<msgid>
 
+RX (received) events are ALSO relayed, on the assumption they follow the
+same convention with RX in place of TX. This has NOT been confirmed against
+a real captured line as of Aug 30, 2026 — if RX messages never appear in
+Discord despite K2GIA-10 clearly receiving traffic, capture raw syslog
+(`nc -ul 1514`) during a real receive and check the actual line format,
+then fix RX_MESSAGE_RE below to match.
+
 K2GIA-10 must have its Syslog Server/Port setting pointed at this host's IP
 and SYSLOG_PORT (Configuration page on http://10.0.0.74 -> Syslog section).
 """
@@ -43,12 +50,20 @@ logging.basicConfig(
 )
 log = logging.getLogger("lora-aprs-discord")
 
-# Matches confirmed real format:
+# Matches confirmed real TX format:
 # ... TX / MESSAGE / K2GIA-10 ---> K2GIA-10 :test 10{89
-MESSAGE_RE = re.compile(r"TX / MESSAGE / (\S+) ---> (\S+) :(.*?)\{(\S+)")
+TX_MESSAGE_RE = re.compile(r"TX / MESSAGE / (\S+) ---> (\S+) :(.*?)\{(\S+)")
+
+# RX format not yet directly confirmed from a live capture — inferred by
+# analogy with the confirmed TX format above (same firmware, same "TYPE /
+# CATEGORY / FROM ---> TO :text{msgid" convention, just RX instead of TX).
+# Verify against a real captured line before fully trusting this in
+# production; if it never matches anything, the format differs and this
+# needs revisiting with an actual example.
+RX_MESSAGE_RE = re.compile(r"RX / MESSAGE / (\S+) ---> (\S+) :(.*?)\{(\S+)")
 
 
-def format_message(from_call, to_call, text):
+def format_message(from_call, to_call, text, direction):
     text = text.strip()
     if not text or len(text) < 2:
         return None
@@ -59,9 +74,10 @@ def format_message(from_call, to_call, text):
         return None
 
     icon = "\U0001f4e1"
+    label = "Sent/Relayed" if direction == "TX" else "Received"
     ts = datetime.now(timezone.utc).strftime("%B %-d, %Y %-I:%M %p UTC")
     content = (
-        f"{icon} **LoRa APRS Message** - {ts}\n"
+        f"{icon} **LoRa APRS Message ({label})** - {ts}\n"
         f"**From:** {from_call}\n"
         f"**To:** {to_call}\n"
         f"**Message:** {text[:200]}"
@@ -155,7 +171,12 @@ async def run_bridge():
     async with aiohttp.ClientSession() as http_session:
         while True:
             line = await queue.get()
-            m = MESSAGE_RE.search(line)
+
+            m = TX_MESSAGE_RE.search(line)
+            direction = "TX"
+            if not m:
+                m = RX_MESSAGE_RE.search(line)
+                direction = "RX"
             if not m:
                 continue
 
@@ -163,16 +184,16 @@ async def run_bridge():
             if from_call in BLOCKLIST:
                 continue
 
-            dedup_key = f"{from_call}:{text}:{msgid}"
+            dedup_key = f"{direction}:{from_call}:{text}:{msgid}"
             if dedupe.is_duplicate(dedup_key):
                 continue
 
-            payload = format_message(from_call, text=text, to_call=to_call)
+            payload = format_message(from_call, text=text, to_call=to_call, direction=direction)
             if payload is None:
                 continue
 
             if await poster_main.post(http_session, payload):
-                log.info("LoRa APRS -> Discord: %s -> %s: %s", from_call, to_call, text)
+                log.info("LoRa APRS -> Discord [%s]: %s -> %s: %s", direction, from_call, to_call, text)
             if DISCORD_WEBHOOK_LORA_MESHCORE:
                 await poster_mc.post(http_session, payload)
 
