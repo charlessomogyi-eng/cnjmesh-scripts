@@ -1,0 +1,8 @@
+[Unit]
+Description=meshcore-bot health watchdog
+After=network.target
+
+[Service]
+Type=oneshot
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+ExecStart=/usr/bin/python3 /opt/meshcore-bot-watchdog/watchdog.py

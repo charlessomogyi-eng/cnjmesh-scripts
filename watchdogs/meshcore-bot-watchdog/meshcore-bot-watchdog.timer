@@ -1,0 +1,10 @@
+[Unit]
+Description=Run meshcore-bot health watchdog every 15 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=15min
+Unit=meshcore-bot-watchdog.service
+
+[Install]
+WantedBy=timers.target
