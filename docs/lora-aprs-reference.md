@@ -1,16 +1,43 @@
 # LoRa APRS Reference — CNJ Mesh
 
-**Last updated:** 2026-08-26
+**Last updated:** 2026-08-28
 
-## K2GIA-10 — Existing Fixed Station
+## K2GIA-10 — Existing Fixed Station (APRS-IS DISABLED Aug 28, 2026 — now pure RF digipeater + local MQTT)
 - Hardware: LilyGo LoRa APRS board
-- Web UI: `http://10.0.0.74`
-- Firmware: CA2RXU
-- iGate: 433.775 MHz, SF12, BW125
-- Confirmed receiving traffic (e.g. AC2F-10 beacons)
-- Known limitation: **KISS TNC confirmed TX-injection only** — station has a documented self-gating limitation (cannot reliably hear/gate its own outgoing transmissions). A second RX-only board has been ordered to address this.
+- Web UI: `http://10.0.0.74` (admin login required)
+- Firmware: CA2RXU LoRa_APRS_iGate
+- LoRa: 433.775 MHz, SF12, BW125
 - Do NOT use `screen` against this device's serial port for monitoring — the web UI's "Received Packets" page is the correct/supported monitoring method.
-- Confirmed solid RF reach: e.g. WB2EHG-7 packet relayed through KD2CIF-1 and KB2EAR-13 observed cleanly.
+- Known limitation: **KISS TNC confirmed TX-injection only** — station has a documented self-gating limitation (cannot reliably hear/gate its own outgoing transmissions). A second RX-only board has been ordered to address this.
+
+### DECISION (Aug 28, 2026): APRS-IS connection disabled entirely, by Charles's choice
+Reasoning: K2GIA-1 (2m) already provides APRS-IS access for Charles's own traffic. Since APRS-IS makes every packet equivalent regardless of origin once gated, a second device also gating to IS added nothing for his own traffic — but he still wants K2GIA-10 digipeating for the benefit of the local LoRa mesh as it grows. Net effect: **pure RF digipeater now, zero path to the internet.**
+
+Changed via WebUI:
+- **"Enable APRS-IS connection"** → OFF (master switch, was ON)
+- **"Send beacon via APRS-IS"** → OFF (was ON)
+- **"Send beacon via RF"** → stays ON (unchanged)
+- **Beacon Path** (under Station section, not Beaconing) → set to **`WIDE1-1,WIDE2-1,RFONLY,NOGATE`** — belt-and-suspenders; protects K2GIA-10's own beacon from being gated by ANY iGate that ever hears it (not just itself) as the local mesh grows and other operators' iGates might be nearby someday. Both `RFONLY` and `NOGATE` are legitimate, functionally similar APRS conventions per aprs.fi's own docs — using both is deliberate redundancy, not a mistake.
+- **Digipeating → Repeater Mode**: confirmed already set to **"WIDE2 (+WIDE1) Digi"** — this settles a previously-unconfirmed question; K2GIA-10's digipeat function (separate from the now-disabled iGate function) was genuinely active the whole time.
+
+**Same protection needed on K2GIA-9's own path if it's ever reconfigured** — its path (`WIDE1-1,WIDE2-1`) doesn't currently have RFONLY/NOGATE added, meaning any *other* iGate that hears K2GIA-9 directly could still gate it to IS even though K2GIA-10 won't. Not yet done (blocked on K2GIA-9's WiFi config AP being closed — needs re-flash or the still-unconfirmed-safe IO15/GND pad trick to get back in).
+
+### MQTT enabled (local broker only — does NOT reopen the IS connection)
+Separate from APRS-IS — this talks to cnjmesh1's own local Mosquitto broker, not the internet.
+- Server: `10.0.0.181`, Port `1883`
+- Username: `somog` (password: existing broker credential)
+- Topic: `aprs-k2gia-10`
+- "Send (also) iGate Beacon" left OFF, consistent with the RFONLY/NOGATE decision
+
+Live-test the feed on cnjmesh1: `mosquitto_sub -h localhost -u somog -P <password> -t "aprs-k2gia-10/#" -v`
+
+### CONFIRMED: real local LoRa APRS neighbors exist — overturns the "nearest station is 30+ miles" assumption
+Watching the MQTT feed above (with APRS-IS off, so everything seen is confirmed genuine RF, not internet-sourced) turned up real local traffic:
+- **W2MMD-10** — repeatedly beaconing "GCARC Clubhouse," relaying Winlink gateway bulletins (145.030, 220.000 VARA FM, 223.580 MHz) and a net announcement (147.180, Sun 8pm)
+- **K2ZA-10** — its packets show `W2MMD-10*` as a digipeat hop, i.e. a real multi-hop local LoRa relay already happening nearby
+- **AC2F-10** — another real LoRa APRS station, beaconing "LoRa APRS 433.775"
+
+Worth revisiting the earlier "nearest known station is KD2ZHO-2, ~30 miles" assumption — there's clearly a closer, active local cluster. lora.ham-radio-op.net (shared by Innismir/N1WBV) and this MQTT feed are the two best ways to keep discovering who's actually nearby.
 
 ## K2GIA-9 — Mobile Tracker (flashed + configured Aug 26, 2026, digipeat CONFIRMED WORKING)
 - Hardware: LilyGo T3 V1.6.1 (LoRa32 V2.1/1.6.1 family). **No onboard GPS module** — this board is bare, not the GPS-equipped variant.
@@ -97,8 +124,8 @@ This directly contradicts the expected behavior (documented in this file above) 
 ## Community outreach (Aug 26, 2026)
 Sent a CQ-style "Looking for a copy, k2gia-9" message via K2GIA-9 into the NJ LoRa APRS Discord (#general). Innismir/N1WBV responded and pointed to `lora.ham-radio-op.net/?center=40.4957,-73.8259&zoom=8` for other NJ LoRa stations. Charles shared current config (433.775MHz/SF12/CR4:5/BW125kHz) and confirmed location (South Brunswick NJ) — this matches the US/global standard config, not a regional variant. Live conversation in progress as of this writing; a real cross-station RF contact may follow.
 
-## Open item: lora-aprs.live syslog feed not yet configured
-K2GIA-10's syslog currently points only to `10.0.0.181` (cnjmesh1, local). The public `lora-aprs.live` aggregator (a separate, syslog-fed — NOT APRS-IS-fed — tracker/iGate map and analysis tool) requires its own syslog destination to be added. Without this, K2GIA-9 will show up fine on aprs.fi (APRS-IS-driven) but will NOT appear on lora-aprs.live regardless of RF activity. Worth adding as a fan-out destination alongside the existing cnjmesh1 syslog target if wider visibility/RF analytics (SNR, real digipeat path data) are wanted.
+## Open item: lora-aprs.live syslog feed not yet configured (now lower priority)
+K2GIA-10's syslog currently points only to `10.0.0.181` (cnjmesh1, local). The public `lora-aprs.live` aggregator (a separate, syslog-fed — NOT APRS-IS-fed — tracker/iGate map and analysis tool) requires its own syslog destination to be added. **Important consequence of the Aug 28 APRS-IS disable above: K2GIA-9 will no longer show up on aprs.fi at all either now**, since that required K2GIA-10 actively gating to APRS-IS — which is now off by decision. The community-contact pattern from Aug 26/27 (KC2BPP-1, N2YDC-1, N2YDC-5 — all reached via `TCPIP` gating) is not currently reproducible under the new pure-RF-only setup, unless K2GIA-10's APRS-IS is deliberately re-enabled for a specific occasion. lora-aprs.live would still be worth adding as a syslog fan-out destination if wider RF-only visibility (SNR, real digipeat path data, no internet requirement) is wanted — arguably now MORE relevant given the pure-RF philosophy, not less.
 
 ### Physical button — REQUIRED, install before or immediately after first flash
 **Why it's needed (not just for on-screen menu/display — Charles doesn't use the screen on any of his 10 LoRa nodes, controls via app/Bluetooth instead):** the tracker's WiFi config AP (`LoRaTracker-AP`) only auto-creates itself on the very first boot after flashing. Once settings are saved and it reboots, there is no automatic way back into that setup screen. Normally a triple-press of the physical user button reopens the CONFIG menu → "Config WiFi AP." **This T3 V1.6.1 board does not have that button populated** (only a reset button) — without wiring one, the only way to change any setting later (callsign, SmartBeaconing values, frequency, etc.) is a full re-flash from scratch.
