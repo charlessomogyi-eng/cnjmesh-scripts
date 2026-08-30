@@ -1,0 +1,14 @@
+[Unit]
+Description=CNJ Mesh LoRa APRS -> Discord bridge (K2GIA-10 syslog, RF-only since Aug 28 2026)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/lora-aprs-discord
+EnvironmentFile=/opt/lora-aprs-discord/.env
+ExecStart=/usr/bin/python3 /opt/lora-aprs-discord/lora-aprs-discord-bridge-v2.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
