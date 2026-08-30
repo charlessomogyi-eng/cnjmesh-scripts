@@ -58,3 +58,9 @@ Other files in this repo:
   - `docs/icom-2730-reference.md` — Icom IC-2730A dual-band mobile transceiver reference (panel layout, menu navigation, repeater/duplex, tone squelch, scanning, Bluetooth headset, cloning) — condensed from the official manual, not day-to-day project work, just a quick-reference for when Charles forgets how to do something on this radio
 
 *(This file replaces the old single-file CLAUDE_CONTEXT.md, split on 2026-07-24 for readability. The full pre-split history is preserved verbatim in `session-log.md` and in this file's git history — nothing was deleted, only reorganized. A backup of the pre-split file also exists at `CLAUDE_CONTEXT-backup-2026-07-24.md`.)*
+
+### LoRa APRS 70cm relay — Discord webhooks (added Aug 30)
+K2GIA-10's LoRa APRS traffic (433.775 MHz) relays to `lora-aprs-70cm-relay` channel in two Discord servers via `/opt/lora-aprs-discord/lora-aprs-discord-bridge-v2.py`:
+
+- **MeshCore-NJ server:** `[REDACTED - leaked webhook, deleted Aug 30 2026]`
+- **Meshtastic-NJ server:** `[REDACTED - leaked webhook, deleted Aug 30 2026]`
