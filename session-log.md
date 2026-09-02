@@ -2517,3 +2517,12 @@ Switched to `Home`: all three Pis confirmed present and online. cnjmesh3 and cnj
 **Not yet done:** the actual toggling — `Notify on State Change` still needs to be turned on for cnjmesh1, cnjmesh2, and cnjmesh3 individually, and the Network Events email checkbox needs confirming. Session ended before doing this.
 
 **Files updated:** `todos.md` (Fing entry rewritten with the resolved mechanism and narrowed remaining steps), `session-log.md` (this entry).
+
+## 2026-09-02 (cont'd) — Fing per-device email alerts, fully resolved and configured
+
+Follow-up to the earlier same-day investigation. Completed the actual configuration:
+- Root cause of the missing-device confusion: `C4Somogyi`/`C4Somogyi-24`/`Net 10.0.0.0/24` in Fing are stale one-off manual scans (7-11mo old), not live-monitored. `Home` is the actual continuously-monitored network, and all three Pis (cnjmesh1, cnjmesh2, cnjmesh3) are present and online there. cnjmesh1 was showing as generic "Fing Agent" (it's the box running the agent) — renamed to `cnjmesh1` in the UI.
+- Enabled `Notify on State Change` individually on cnjmesh1, cnjmesh2, and cnjmesh3's device pages (was off — default "Do not notify").
+- Confirmed account-level `Manage Account → Notifications → Network alerts`: email address correct (`charles.somogyi@gmail.com`), and changed `Email format` from "Summary email, grouped by event type" to **"Single email for each event"** so an offline Pi triggers an immediate individual email rather than waiting for a digest.
+
+**Status: DONE.** Fing will now send an immediate email (plus mobile push) if cnjmesh1, cnjmesh2, or cnjmesh3 goes offline. Removed from `todos.md`.
