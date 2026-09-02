@@ -2526,3 +2526,9 @@ Follow-up to the earlier same-day investigation. Completed the actual configurat
 - Confirmed account-level `Manage Account → Notifications → Network alerts`: email address correct (`charles.somogyi@gmail.com`), and changed `Email format` from "Summary email, grouped by event type" to **"Single email for each event"** so an offline Pi triggers an immediate individual email rather than waiting for a digest.
 
 **Status: DONE.** Fing will now send an immediate email (plus mobile push) if cnjmesh1, cnjmesh2, or cnjmesh3 goes offline. Removed from `todos.md`.
+
+## 2026-09-02 (cont'd) — peer-check formally retired
+
+Decision made: peer-check (Pi-to-Pi LAN ping monitoring, disabled since July 28) is retired for good, not just disabled. Root cause of its original false-alert problem (router reboots make every Pi look "down" simultaneously — indistinguishable from a real outage) makes plain ping-based peer monitoring structurally unreliable. Host-offline detection is now handled by Fing (per-device alerts confirmed working, see earlier entry today). Service/timer files left in place on cnjmesh2/cnjmesh3 (harmless, not cleaned up), but the approach itself won't be revisited.
+
+Service-level heartbeat idea (catching a service silently dying while the host stays reachable — Fing/peer-check both blind to this) kept open as its own separate, low-priority todo, distinct from host-offline monitoring.
