@@ -2503,3 +2503,17 @@ Pulled the live file directly off cnjmesh1 (`~/meshcore-bot/modules/service_plug
 **Also touched on, not acted on:** briefly discussed Meshtastic firmware 2.8.0 (alpha, major breaking changes — node-ID scheme, opt-in telemetry/position, new default modem preset) vs. 2.7.25 (safe patch within KPN6's current stable branch) for KPN6 — decided 2.8.0 wasn't worth the risk for what it offered, KPN6 stayed on 2.7.25 (upgraded from 2.7.23 two nights prior).
 
 **Files updated:** `todos.md` (removed 2 completed items, updated Fing Agent entry with Sep 1 findings, added peer-check-replacement idea and Fing per-device-email as open items), `session-log.md` (this entry). **Not updated:** the actual `weather_service.py` fix lives only on cnjmesh1, not in this git repo — worth remembering that `meshcore-bot` as a whole is an external project, not tracked here, if a similar fix is ever needed again.
+
+## 2026-09-02 — Fing per-device email alert investigation resolved
+
+Continuation session focused solely on the Fing per-device email alert gap left open from Sep 1.
+
+**Root cause of the confusion found:** Fing splits devices across multiple separate "networks" in its own model. `Home` is the one continuously monitored (badge: "Monitoring active") — this is what actually drives alerting/offline detection. `C4Somogyi`, `C4Somogyi-24`, and `Net 10.0.0.0/24` turned out to be stale one-off **manual scans** (7-11 months old, per their timestamps) with no live monitoring or alerting behind them at all. Charles had been looking at `C4Somogyi-24`'s manual-scan device list, which only showed cnjmesh2 clearly and made cnjmesh1/cnjmesh3 look plausibly absent — a red herring.
+
+Switched to `Home`: all three Pis confirmed present and online. cnjmesh3 and cnjmesh2 were already correctly named; cnjmesh1 was present but auto-labeled "Fing Agent" (Raspberry Pi 4B Rev 1.5 — the box running Fing's agent software gets that generic label by default). Charles renamed it to `cnjmesh1` in the Fing UI during the session.
+
+**Mechanism clarified (this was the actual unresolved question from Sep 1):** there is no per-device email-vs-push channel picker in Fing Web. It's two independent settings: each device's own `Notify on State Change` toggle (binary on/off, page: device detail → Notifications), plus one account-level `Manage Account → Notifications → Network Events → Email` checkbox that governs delivery channel for every device with alerts enabled. Confirmed via Fing's own help docs (`help.fing.com`, "Configure Device Alerts" article).
+
+**Not yet done:** the actual toggling — `Notify on State Change` still needs to be turned on for cnjmesh1, cnjmesh2, and cnjmesh3 individually, and the Network Events email checkbox needs confirming. Session ended before doing this.
+
+**Files updated:** `todos.md` (Fing entry rewritten with the resolved mechanism and narrowed remaining steps), `session-log.md` (this entry).
