@@ -1,0 +1,5 @@
+[Unit]
+Description=Watchdog - restart graywolf-discord if dead, alert Discord
+[Service]
+Type=oneshot
+ExecStart=/opt/graywolf-discord/watchdog.sh

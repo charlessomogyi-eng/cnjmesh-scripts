@@ -2538,3 +2538,12 @@ Service-level heartbeat idea (catching a service silently dying while the host s
 Added a "Monitoring — Current State" section to `cnjmesh1-operations.md` summarizing the three-layer setup discussed and finalized today: Fing (host-level), watchdogs→Discord (service-level, 4 active), and peer-check (retired). Charles confirmed satisfaction with current coverage.
 
 Flagged (not new information, just resurfaced as still-open) two real non-monitoring gaps worth prioritizing: the still-unrotated leaked credentials from the Aug 30 incident (corescope-watchdog webhook, meshuser/broker MQTT password — both confirmed live in git history, top priority per `todos.md`), and the unpatched Malla XSS (CVE-2026-43980). Neither addressed this session, no action taken — just re-flagged during the monitoring review.
+
+## 2026-09-02 (cont'd) — Watchdog audit: graywolf-watchdog and graywolf-discord-watchdog pulled into git, aprs_monitor scoped out
+
+Investigated the three services flagged as "no watchdog" in the monitoring summary written earlier today — turned out to be a stale claim, not accurate:
+- **`graywolf-discord-watchdog.timer`** and **`graywolf-watchdog.timer`** were both already live on cnjmesh1 (enabled+active), predating this session (present in the July 24 CLAUDE_CONTEXT backup). Neither was ever committed to git. Pulled both scripts + service units + timer units off cnjmesh1 and committed under `watchdogs/graywolf-watchdog/` and `watchdogs/graywolf-discord-watchdog/`. `graywolf-watchdog` is alert-only (no auto-restart, PTT risk); `graywolf-discord-watchdog` auto-restarts on failure.
+- **`aprs-monitor.service`** (the separate 48hr dead-air/crash checker for Graywolf) confirmed disabled+inactive, with no documented reason found anywhere in this repo's history for why. Charles clarified he doesn't want/need dead-air monitoring — he only needs to know if Graywolf itself is down, which `graywolf-watchdog` already provides. Decision: leave `aprs-monitor.service` disabled, not pursuing further.
+- **`mesh-discord-shim`** confirmed as the one genuine remaining gap — Docker container, no watchdog ever existed for it. Not yet built.
+
+**Files updated:** `todos.md`, `cnjmesh1-operations.md` (both corrected to reflect actual state), `watchdogs/graywolf-watchdog/*`, `watchdogs/graywolf-discord-watchdog/*` (new).

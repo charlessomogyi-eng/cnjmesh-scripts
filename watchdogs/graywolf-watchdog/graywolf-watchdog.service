@@ -1,0 +1,5 @@
+[Unit]
+Description=Watchdog - alert only if graywolf.service is down (no auto-restart)
+[Service]
+Type=oneshot
+ExecStart=/opt/graywolf-discord/graywolf-watchdog.sh
