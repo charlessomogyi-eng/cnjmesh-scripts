@@ -2532,3 +2532,9 @@ Follow-up to the earlier same-day investigation. Completed the actual configurat
 Decision made: peer-check (Pi-to-Pi LAN ping monitoring, disabled since July 28) is retired for good, not just disabled. Root cause of its original false-alert problem (router reboots make every Pi look "down" simultaneously — indistinguishable from a real outage) makes plain ping-based peer monitoring structurally unreliable. Host-offline detection is now handled by Fing (per-device alerts confirmed working, see earlier entry today). Service/timer files left in place on cnjmesh2/cnjmesh3 (harmless, not cleaned up), but the approach itself won't be revisited.
 
 Service-level heartbeat idea (catching a service silently dying while the host stays reachable — Fing/peer-check both blind to this) kept open as its own separate, low-priority todo, distinct from host-offline monitoring.
+
+## 2026-09-02 (cont'd) — Monitoring picture consolidated, reviewed with Charles
+
+Added a "Monitoring — Current State" section to `cnjmesh1-operations.md` summarizing the three-layer setup discussed and finalized today: Fing (host-level), watchdogs→Discord (service-level, 4 active), and peer-check (retired). Charles confirmed satisfaction with current coverage.
+
+Flagged (not new information, just resurfaced as still-open) two real non-monitoring gaps worth prioritizing: the still-unrotated leaked credentials from the Aug 30 incident (corescope-watchdog webhook, meshuser/broker MQTT password — both confirmed live in git history, top priority per `todos.md`), and the unpatched Malla XSS (CVE-2026-43980). Neither addressed this session, no action taken — just re-flagged during the monitoring review.

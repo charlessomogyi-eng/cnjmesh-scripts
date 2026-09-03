@@ -118,6 +118,19 @@ K2GIA-9's serial output logs continuously to `/var/log/k2gia9-serial.log` (rotat
 
 ---
 
+## Monitoring — Current State (as of Sep 2, 2026)
+
+Three layers, no known gaps as of this writing:
+
+1. **Fing (host-level)** — is a Pi reachable on the network at all. Configured for cnjmesh1, cnjmesh2, and cnjmesh3 under Fing's `Home` network (not the stale manual-scan networks like `C4Somogyi-24`, which don't alert). `Notify on State Change` enabled per-device; account-level email format set to "Single email for each event" (`Manage Account → Notifications → Network alerts`), so an offline Pi sends an immediate individual email, not a bundled digest.
+2. **Watchdogs → Discord (service-level)** — is a specific critical service actually alive, independent of host reachability. Alert-on-state-change only (no repeat spam). Four active: `disk-temp-watchdog` (disk/CPU-temp/undervoltage, all 3 Pis), `ingest-rate-watchdog` (packet-flood/loop-node detection, cnjmesh1), `meshcore-bot-watchdog` (cnjmesh1), `sjmesh-relay-watchdog` (heartbeat-file based, cnjmesh1). See `watchdogs/` in this repo.
+3. **peer-check** — retired Sep 2, 2026. Pi-to-Pi LAN ping was structurally unreliable (a router reboot makes every Pi look down at once, indistinguishable from a real outage). Fully superseded by Fing for host-level detection.
+
+**Known gaps, not yet covered by any layer:** `mesh-discord-shim`, `graywolf-discord-bridge`, and `aprs_monitor.py` don't have their own service-level watchdog yet (candidates, same pattern as `meshcore-bot-watchdog`). CoreScope's `local` source instability is unmonitored. See `todos.md` for current priority.
+
+---
+
+
 ## Public URLs (via Cloudflare tunnel)
 | URL | What it is |
 |---|---|
