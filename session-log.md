@@ -2575,3 +2575,11 @@ Charles deployed the new watchdog to cnjmesh1 and confirmed it working (`contain
 Charles confirmed clean output after the NODE_LABEL fix: `Node 1: container=ok log=ok`, no errors. Watchdog is deployed and running on its 5-minute timer.
 
 This closes out the full "watchdog on everything" pass from today: `graywolf-watchdog` and `graywolf-discord-watchdog` (already existed, now in git) plus `mesh-discord-shim-watchdog` (built new today) means all three services originally flagged as gaps now have working, git-committed watchdogs. `cnjmesh1-operations.md`'s monitoring summary updated to list all 7 active watchdogs and reflect zero known gaps as of today (CoreScope local-source and the still-unrotated corescope-watchdog webhook remain separately tracked, non-monitoring items).
+
+## 2026-09-02 (cont'd) — cnjmesh1 backup taken, pulled off-Pi, verified
+
+Ran `cnjmesh1-backup.sh` — clean run, all 10 components confirmed present and passing minimum-size checks (`/opt/stacks/`, meshing-around, graywolf-discord, cloudflared config, Graywolf DB, mesh-discord-shim DB, Postgres dump, Malla DB, CoreScope DB, MySQL dump). Archive: `cnjmesh1-backup-2026-09-02_2036.tar.gz`, 162MB.
+
+Pulled via `pull-cnjmesh1-backup.ps1` on Charles's laptop — confirmed success, 162MB in 57.5s, landed in `C:\Users\charl\OneDrive\Documents\cnjmesh-backups\`. Script also checked cnjmesh3 in the same run: already up to date locally, but that backup itself is dated `2026-07-26` — over a month old, worth a fresh cnjmesh3 backup at some point (not done today, cnjmesh1-only session).
+
+`docs/backup-runbook.md` was stale (dated July 12, didn't mention the Aug 6 Malla/CoreScope/MySQL additions or the Aug 11 verification step) — corrected to reflect the script's actual current coverage.

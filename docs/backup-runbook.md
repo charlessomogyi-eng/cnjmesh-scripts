@@ -1,6 +1,6 @@
 # CNJ Mesh — cnjmesh1 Backup Runbook
 
-**Last updated:** 2026-07-12
+**Last updated:** 2026-09-02
 
 ## Purpose
 Ad hoc backup of cnjmesh1 configs, compose files, and databases so a bad
@@ -17,6 +17,18 @@ rebuilding the hub from scratch.
 - Postgres dump via `pg_dumpall` (mesh-mqtt-pg-collector's DB), if a Postgres
   container is running
 - `/opt/stacks/grafana/` if present (dashboards/config)
+- **Malla database** (`meshtastic_history.db`, Docker named volume, live
+  WAL-mode SQLite) — consistency-safe snapshot via Python's `sqlite3.backup()`
+  API, added Aug 6, 2026
+- **CoreScope database** (`meshcore.db`, same named-volume/WAL situation as
+  Malla) — added Aug 6, 2026
+- **aprs-tnc-web MySQL database** via `mysqldump --single-transaction` —
+  added Aug 6, 2026
+- **Archive verification pass** (step 10) — confirms all expected components
+  are actually present in the final archive and pass a minimum-size sanity
+  check, added Aug 11, 2026 (several steps above only warn-and-continue on
+  failure, e.g. a Postgres/MySQL auth issue, so this catches a silently
+  incomplete backup rather than just a script exiting 0)
 
 ## What's NOT Covered (by design)
 - Full SD card image — do this separately with `dd` or `rpi-clone` before
