@@ -2551,3 +2551,9 @@ Investigated the three services flagged as "no watchdog" in the monitoring summa
 ## 2026-09-02 (cont'd) — aprs_monitor.py dead-air check: rejected, closed permanently
 
 Charles's explicit decision: APRS message traffic (or silence) is not a reliable indicator of Graywolf's health — a quiet channel doesn't mean anything is broken. The 48hr dead-air check in `aprs_monitor.py` is therefore the wrong monitoring approach, not just deprioritized. `graywolf.service` being up (already confirmed via the now-git-committed `graywolf-watchdog.timer`) is sufficient for what Charles needs. `aprs_monitor.py` stays disabled permanently — closed, not revisit-later.
+
+## 2026-09-02 (cont'd) — mesh-discord-shim protocol scope was undocumented; confirmed MeshCore
+
+Charles correctly flagged that neither the existing docs nor this session's earlier explanation actually stated which mesh protocol `mesh-discord-shim` covers — a real documentation gap, not a nitpick. Confirmed via live logs (`docker logs mesh-discord-shim`): it subscribes to pubkey `a8c40bf3`, which is the MeshCore Observer (WisMesh Pocket Mini). Logs show `advertisement` and `channel_msg_recv` events. **Confirmed: MeshCore-only, unrelated to Meshtastic or APRS.** `cnjmesh1-operations.md` updated in both places this service is mentioned to state the protocol explicitly going forward, not just "what it does."
+
+Container name in docs was also stale — `docker logs mesh-discord-shim-mesh-discord-shim` failed; actual container name is just `mesh-discord-shim`.
