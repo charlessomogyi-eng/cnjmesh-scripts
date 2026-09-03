@@ -2547,3 +2547,7 @@ Investigated the three services flagged as "no watchdog" in the monitoring summa
 - **`mesh-discord-shim`** confirmed as the one genuine remaining gap — Docker container, no watchdog ever existed for it. Not yet built.
 
 **Files updated:** `todos.md`, `cnjmesh1-operations.md` (both corrected to reflect actual state), `watchdogs/graywolf-watchdog/*`, `watchdogs/graywolf-discord-watchdog/*` (new).
+
+## 2026-09-02 (cont'd) — aprs_monitor.py dead-air check: rejected, closed permanently
+
+Charles's explicit decision: APRS message traffic (or silence) is not a reliable indicator of Graywolf's health — a quiet channel doesn't mean anything is broken. The 48hr dead-air check in `aprs_monitor.py` is therefore the wrong monitoring approach, not just deprioritized. `graywolf.service` being up (already confirmed via the now-git-committed `graywolf-watchdog.timer`) is sufficient for what Charles needs. `aprs_monitor.py` stays disabled permanently — closed, not revisit-later.
