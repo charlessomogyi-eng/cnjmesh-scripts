@@ -2569,3 +2569,9 @@ Charles wants a watchdog on everything, no exceptions. Built `mesh-discord-shim-
 Charles deployed the new watchdog to cnjmesh1 and confirmed it working (`container=ok log=ok`). Hit the exact same `Environment=NODE_LABEL=Node 1` unquoted-space bug previously documented for cnjmesh2/cnjmesh3 in July (`systemd` silently truncates at the space, dropping everything after it — confirmed in output as `Invalid environment assignment, ignoring: 1`, label showed as bare "Node" instead of "Node 1"). Fixed in git by quoting: `Environment="NODE_LABEL=Node 1"`. Deployed webhook uses the still-unrotated corescope-watchdog webhook (see HIGH PRIORITY item in todos.md) — Charles's explicit choice, flagged before proceeding, not committed to git (`.env`, gitignored).
 
 **Still needs on cnjmesh1:** re-copy the corrected `.service` file and restart the timer (see next chat turn for commands).
+
+## 2026-09-02 (cont'd) — mesh-discord-shim-watchdog confirmed working; all identified monitoring gaps closed
+
+Charles confirmed clean output after the NODE_LABEL fix: `Node 1: container=ok log=ok`, no errors. Watchdog is deployed and running on its 5-minute timer.
+
+This closes out the full "watchdog on everything" pass from today: `graywolf-watchdog` and `graywolf-discord-watchdog` (already existed, now in git) plus `mesh-discord-shim-watchdog` (built new today) means all three services originally flagged as gaps now have working, git-committed watchdogs. `cnjmesh1-operations.md`'s monitoring summary updated to list all 7 active watchdogs and reflect zero known gaps as of today (CoreScope local-source and the still-unrotated corescope-watchdog webhook remain separately tracked, non-monitoring items).
