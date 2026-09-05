@@ -1,6 +1,16 @@
 # CNJ Mesh — Open To-Dos
 
-### [DECIDED Aug 16 — keeping permanently] Meshview LongFast visibility test on liamcottle bridge
+### [NEW — Sep 2/3, 2026] CoreScope "No packets from meshomatic" banner — months-recurring nuisance, decision needed
+Charles reports this banner has been popping up for months (latest instance: 22,127 min / ~15.4 days silent, seen on the live map view at `corescope.cnjmesh.me`). Important nuance from a much earlier session: this exact banner was once explicitly flagged as a **red herring** — MeshOmatic is not a CNJ Mesh dependency (CoreScope also pulls from `local`, `letsmesh-us`, `letsmesh-eu` independently), so a quiet/broken MeshOmatic feed doesn't mean CNJ's own data pipeline is unhealthy. However, that same historical outage (the real `local`-source-misconfigured-to-localhost bug, root-caused and fixed once already — see the "MAJOR FIND" entry in session-log.md) also happened to show this same banner with a similar large minute-count at the time, so the two have been genuinely hard to tell apart at a glance in the past.
+
+**Decision not yet made — two options on the table, Charles's choice:**
+1. **Remove the `meshomatic` mqttSource entirely** from `/home/somog/meshcore-data/config.json` (CoreScope, on cnjmesh1) — permanently kills the banner, no functional loss since CNJ doesn't depend on it. Simple, clean.
+2. **Contact the MeshOmatic owner** to find out why the feed itself has been quiet for 15+ days — might surface a genuine upstream issue worth knowing about (or might just confirm it's abandoned/not worth keeping).
+
+**Also raised, not decided:** whether a dedicated watchdog for this specific banner/condition is worth building — probably moot if option 1 (removal) is chosen.
+
+**Next step:** get `docker exec corescope cat /app/data/config.json | python3 -m json.tool` output to see the actual current source list before editing anything.
+
 Aug 15, 2026: added `msh/US/2/e/LongFast/#` + `msh/US/NJ/2/e/LongFast/#` to the `liamcottle` bridge only, to see if it closes the node-graph gap vs. MTX1's SBNJ instance. Malla isolation confirmed clean (zero LongFast rows reaching Malla's DB) — safe to leave running.
 
 **Aug 16 investigation, findings:** compared CNJ Mesh's nodegraph directly against SBNJ's side by side. Real gap still exists (SBNJ ~26 nodes vs. CNJ ~18), but root-caused to NOT be about the LongFast bridge topic at all:
