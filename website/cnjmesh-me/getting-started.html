@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting Started — CNJ Mesh</title>
+<meta name="description" content="How to get on the CNJ Mesh network in Central and South New Jersey — quick start for Meshtastic and MeshCore, plus an advanced node configuration reference.">
+<meta property="og:title" content="Getting Started — CNJ Mesh">
+<meta property="og:description" content="Get your first node on the Central and South New Jersey mesh. Meshtastic and MeshCore.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cnjmesh.me/getting-started">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CNJ Mesh — shared styles
+   Design: light editorial. Paper white, near-black ink,
+   "signal red" accent (ON AIR reference). Barlow Condensed
+   (display), Public Sans (body), JetBrains Mono (data).
+   ============================================================ */
+
+:root {
+  --paper: #f6f6f2;
+  --panel: #ffffff;
+  --ink: #1e2328;
+  --muted: #5e6b77;
+  --line: #d9dad2;
+  --red: #c42b3d;
+  --red-dark: #9e2233;
+  --term: #21262c;
+  --term-text: #e8eaed;
+  --maxw: 1100px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Public Sans', system-ui, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--red); color: #fff; }
+a { color: var(--red); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+/* ---------- header ---------- */
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(246,246,242,.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.nav { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+.brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 1.5rem; letter-spacing: .06em;
+  color: var(--ink); display: flex; align-items: center; gap: 10px;
+  text-transform: uppercase;
+}
+.brand:hover { text-decoration: none; }
+.brand .onair {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 0 rgba(196,43,61,.45);
+  animation: beacon 2.8s infinite;
+}
+@keyframes beacon {
+  0% { box-shadow: 0 0 0 0 rgba(196,43,61,.45); }
+  70% { box-shadow: 0 0 0 10px rgba(196,43,61,0); }
+  100% { box-shadow: 0 0 0 0 rgba(196,43,61,0); }
+}
+nav.links { display: flex; gap: 26px; align-items: center; }
+nav.links a {
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.02rem; letter-spacing: .05em; text-transform: uppercase;
+  font-weight: 500;
+}
+nav.links a:hover { color: var(--ink); text-decoration: none; }
+nav.links a.current { color: var(--ink); border-bottom: 2px solid var(--red); padding-bottom: 2px; }
+@media (max-width: 760px) { nav.links { gap: 16px; font-size: .9rem; } }
+@media (max-width: 520px) { nav.links a.hide-sm { display: none; } }
+.brand-short { display: none; }
+@media (max-width: 640px) {
+  .nav { height: auto; min-height: 56px; padding: 10px 0; flex-wrap: wrap; row-gap: 6px; }
+  .brand-full { display: none; }
+  .brand-short { display: inline; }
+  .brand { font-size: 1.1rem; }
+  nav.links { gap: 10px; flex-wrap: wrap; }
+  nav.links a { font-size: .78rem; letter-spacing: .03em; }
+}
+
+/* ---------- generic hero / page head ---------- */
+.hero { border-bottom: 1px solid var(--line); background: var(--panel); }
+.hero .wrap {
+  display: grid; grid-template-columns: 1.1fr .9fr;
+  gap: 48px; align-items: center;
+  padding-top: 64px; padding-bottom: 64px;
+}
+@media (max-width: 880px) {
+  .hero .wrap { grid-template-columns: 1fr; padding-top: 44px; padding-bottom: 40px; }
+}
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .74rem; letter-spacing: .1em;
+  color: var(--red); text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 9px;
+  margin-bottom: 18px; font-weight: 500;
+}
+.eyebrow::before { content: ""; width: 24px; height: 2px; background: var(--red); }
+h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: clamp(2.7rem, 6vw, 4.4rem);
+  line-height: .98; letter-spacing: .005em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+h1 .red { color: var(--red); }
+.hero p.lede { color: var(--muted); font-size: 1.06rem; max-width: 33rem; }
+.hero .cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+
+/* page head (interior pages, single column) */
+.pagehead { border-bottom: 1px solid var(--line); background: var(--panel); }
+.pagehead .wrap { padding-top: 60px; padding-bottom: 46px; }
+.pagehead h1 { margin-bottom: 18px; }
+.pagehead p.lede { color: var(--muted); font-size: 1.08rem; max-width: 44rem; }
+
+/* ---------- buttons ---------- */
+.btn {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase;
+  padding: 12px 24px; border: 1.5px solid var(--ink);
+  cursor: pointer; display: inline-flex; align-items: center;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+  color: var(--ink); background: transparent;
+}
+.btn:hover { text-decoration: none; }
+.btn-primary { background: var(--red); border-color: var(--red); color: #fff; }
+.btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
+.btn-ghost:hover { background: var(--ink); color: var(--paper); }
+
+.hero-stats {
+  display: flex; gap: 34px; margin-top: 38px; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--muted);
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.hero-stats b {
+  display: block; color: var(--ink); font-size: 1.5rem;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 0;
+}
+
+/* ---------- NJ coverage plot ---------- */
+.njmap { width: 100%; max-width: 330px; margin: 0 auto; display: block; }
+.njmap .outline { fill: var(--paper); stroke: var(--ink); stroke-width: 1.6; }
+.njmap .ring {
+  fill: none; stroke: var(--red); stroke-width: .8;
+  stroke-dasharray: 2 3; opacity: .5;
+}
+.njmap .link-line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; opacity: .55; }
+.njmap .node { fill: var(--ink); }
+.njmap .core { fill: var(--red); }
+.njmap .pulse {
+  fill: none; stroke: var(--red); stroke-width: 1.4;
+  transform-origin: center; transform-box: fill-box;
+  animation: ripple 3.2s ease-out infinite;
+}
+.njmap .pulse.p2 { animation-delay: 1.6s; }
+@keyframes ripple {
+  0% { transform: scale(.15); opacity: .9; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.njmap text {
+  font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+  fill: var(--muted); letter-spacing: .05em;
+}
+.njmap text.coretext { fill: var(--red); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) {
+  .njmap .pulse { animation: none; opacity: .25; }
+  .brand .onair { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- sections ---------- */
+section { padding: 72px 0; border-bottom: 1px solid var(--line); }
+section:last-of-type { border-bottom: none; }
+h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  text-transform: uppercase; letter-spacing: .01em;
+  margin-bottom: 14px;
+}
+h3 { font-family: 'Barlow Condensed', sans-serif; }
+.section-intro { color: var(--muted); max-width: 44rem; margin-bottom: 36px; }
+
+/* dark band (central jersey / callout) */
+.central-jersey { background: var(--ink); color: var(--paper); }
+.central-jersey blockquote {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(1.7rem, 3.6vw, 2.6rem); font-weight: 700;
+  line-height: 1.1; max-width: 46rem; text-transform: uppercase;
+  border-left: 4px solid var(--red); padding-left: 24px;
+  margin-bottom: 18px;
+}
+.central-jersey p { color: #b6c0c9; max-width: 46rem; }
+.central-jersey p + p { margin-top: 16px; }
+
+/* ---------- join / protocol cards ---------- */
+.join-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 880px) { .join-grid { grid-template-columns: 1fr; } }
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-top: 3px solid var(--red);
+  padding: 30px;
+}
+.card h3 {
+  font-size: 1.6rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;
+}
+.card .sub {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 16px; display: block; font-weight: 500;
+}
+.card p { color: var(--muted); font-size: .96rem; margin-bottom: 14px; }
+.card ol { padding-left: 20px; font-size: .96rem; }
+.card ol li { margin-bottom: 9px; }
+.card ol li span.k { color: var(--muted); }
+code {
+  font-family: 'JetBrains Mono', monospace; font-size: .85em;
+  background: #ecece6; border: 1px solid var(--line);
+  padding: 2px 6px; word-break: break-all;
+}
+.config-block {
+  background: var(--term); color: var(--term-text);
+  padding: 18px 20px; margin: 18px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+  line-height: 1.9; position: relative; overflow-x: auto;
+}
+.config-block .key { color: #8b98a8; }
+.config-block .val { color: var(--term-text); word-break: break-all; }
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  background: transparent; color: #8b98a8;
+  border: 1px solid #454d57; padding: 4px 12px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.copy-btn:hover { color: var(--term-text); border-color: #8b98a8; }
+
+/* ---------- live maps: protocol groups + buttons ---------- */
+.proto-group { margin-bottom: 40px; }
+.proto-group:last-child { margin-bottom: 0; }
+.proto-head {
+  display: flex; align-items: baseline; gap: 12px;
+  border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 20px;
+}
+.proto-head h3 {
+  font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: .01em;
+}
+.proto-head .count {
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+}
+.btn-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.link-btn {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 1.02rem; letter-spacing: .04em; text-transform: uppercase;
+  padding: 13px 20px; border: 1.5px solid var(--ink);
+  color: var(--ink); background: var(--panel);
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.link-btn::after {
+  content: "\2197"; font-size: .95em; color: var(--muted);
+  transition: color .15s ease;
+}
+.link-btn:hover { background: var(--ink); color: var(--paper); text-decoration: none; border-color: var(--ink); }
+.link-btn:hover::after { color: var(--paper); }
+
+/* ---------- tool / community cards ---------- */
+.tools-grid, .community-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+.tool {
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 24px; display: block; color: var(--ink);
+  transition: border-color .15s ease;
+  position: relative;
+}
+.tool::after {
+  content: "\2197"; position: absolute; top: 20px; right: 22px;
+  color: var(--line); font-size: 1.1rem; transition: color .15s ease;
+}
+.tool:hover { border-color: var(--ink); text-decoration: none; }
+.tool:hover::after { color: var(--red); }
+.tool .tag {
+  font-family: 'JetBrains Mono', monospace; font-size: .66rem;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--red);
+  display: block; margin-bottom: 12px; font-weight: 500;
+}
+.tool h3 {
+  font-size: 1.3rem; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;
+}
+.tool p { color: var(--muted); font-size: .88rem; }
+.tool .url {
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem;
+  color: var(--ink); margin-top: 14px; display: block;
+  border-top: 1px solid var(--line); padding-top: 10px; word-break: break-all;
+}
+
+/* ---------- friends line ---------- */
+.friends { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+@media (max-width: 760px) { .friends { grid-template-columns: 1fr; gap: 20px; } }
+.friends .label {
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 8px; font-weight: 500;
+}
+.friends .line { color: var(--ink); }
+.friends .line a { color: var(--ink); border-bottom: 1px solid var(--line); }
+.friends .line a:hover { border-color: var(--red); text-decoration: none; color: var(--red); }
+
+/* ---------- coverage ---------- */
+.coverage ul {
+  list-style: none; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0; border: 1px solid var(--line); background: var(--panel);
+}
+.coverage li { padding: 20px 22px; font-size: .94rem; border-right: 1px solid var(--line); }
+.coverage li:last-child { border-right: none; }
+@media (max-width: 880px) {
+  .coverage li { border-right: none; border-bottom: 1px solid var(--line); }
+  .coverage li:last-child { border-bottom: none; }
+}
+.coverage li b {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  color: var(--red); display: block; letter-spacing: .09em;
+  text-transform: uppercase; margin-bottom: 6px; font-weight: 500;
+}
+
+/* ---------- prose (about / getting started body) ---------- */
+.prose { max-width: 46rem; }
+.prose.wide { max-width: 52rem; }
+.prose h2 { margin-top: 6px; }
+.prose h3 {
+  font-size: 1.45rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .01em; margin: 40px 0 12px;
+}
+.prose h4 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .02em; margin: 26px 0 8px;
+}
+.prose p { margin-bottom: 16px; }
+.prose ul, .prose ol { margin: 0 0 18px 22px; }
+.prose li { margin-bottom: 8px; }
+.prose .note {
+  color: var(--muted); font-size: .96rem;
+}
+.callout {
+  background: var(--panel); border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  padding: 18px 22px; margin: 22px 0;
+  font-size: .96rem;
+}
+.callout .tag {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  display: block; margin-bottom: 6px; font-weight: 500;
+}
+.review-flag {
+  background: #fff7e6; border: 1px solid #e8d9a8; border-left: 3px solid #c9922b;
+  padding: 14px 18px; margin: 18px 0; font-size: .9rem; color: #6b5518;
+}
+.review-flag b { color: #543f0e; }
+
+/* settings table used in getting started advanced section */
+.settings {
+  width: 100%; border-collapse: collapse; margin: 14px 0 8px;
+  font-size: .92rem; background: var(--panel); border: 1px solid var(--line);
+}
+.settings th, .settings td {
+  text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.settings th {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500;
+}
+.settings td:first-child { font-family: 'JetBrains Mono', monospace; font-size: .84rem; white-space: nowrap; }
+.settings tr:last-child td { border-bottom: none; }
+
+/* quick anchor nav on getting started */
+.jump {
+  display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 6px;
+}
+.jump a {
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem;
+  letter-spacing: .04em; text-transform: uppercase;
+  border: 1px solid var(--line); padding: 7px 13px; color: var(--muted);
+}
+.jump a:hover { border-color: var(--ink); color: var(--ink); text-decoration: none; }
+
+/* ---------- footer ---------- */
+footer { padding: 40px 0 56px; color: var(--muted); font-size: .86rem; border-top: 1px solid var(--line); }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+footer .mono {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+footer a { color: var(--muted); }
+footer a:hover { color: var(--ink); }
+
+/* ---------- "watch the mesh live" highlight band ---------- */
+.livewatch { background: var(--panel); }
+.livewatch .live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); margin-right: 2px;
+  box-shadow: 0 0 0 0 rgba(196,43,61,.5); animation: beacon 2.8s infinite;
+}
+.watch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0 20px; }
+.btn-lg { font-size: 1.22rem; padding: 16px 30px; }
+.watch-more {
+  font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.watch-more a { color: var(--muted); }
+.watch-more a:hover { color: var(--red); text-decoration: none; }
+@media (prefers-reduced-motion: reduce) { .livewatch .live-dot { animation: none; } }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><span class="onair"></span><span class="brand-full">CNJ &amp; South Jersey Mesh</span><span class="brand-short">CNJ Mesh</span></a>
+    <nav class="links">
+      <a href="about.html">About</a>
+      <a href="getting-started.html" class="current">Getting started</a>
+      <a href="index.html#maps" class="hide-sm">Live maps</a>
+      <a href="index.html#discords" class="hide-sm">Discords</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<div class="pagehead">
+  <div class="wrap">
+    <span class="eyebrow">On the mesh in about 10 minutes</span>
+    <h1>Get on the mesh</h1>
+    <p class="lede">You need one inexpensive LoRa radio and the free app for your phone or computer. No license, no subscription. Start with the quick start for whichever protocol you're running; the advanced reference below is there when you want to be a good mesh citizen and tune your node properly.</p>
+    <div class="jump">
+      <a href="#hardware">Hardware</a>
+      <a href="#meshtastic">Meshtastic quick start</a>
+      <a href="#meshcore">MeshCore quick start</a>
+      <a href="#advanced">Advanced config</a>
+    </div>
+  </div>
+</div>
+
+<section id="hardware">
+  <div class="wrap prose wide">
+    <h2>What you need</h2>
+    <p>At minimum, one handheld node — a small LoRa radio that's your personal connection to the mesh. Popular starting boards come from Heltec, RAK, and LilyGo, and generally run from around $30. Many people later add a second "roof" node up high to make a reliable first hop into the wider network.</p>
+    <p>If you want to run <em>both</em> protocols at once, you'll need a separate device for each — a single radio runs one firmware at a time. That's a common setup here, and it's the best way to reach everyone.</p>
+    <div class="callout">
+      <span class="tag">Not sure what to buy?</span>
+      Hop into one of <a href="index.html#discords">our Discords</a> and ask before you spend anything. People will point you at a board that's known to work well on our network and save you a false start.
+    </div>
+  </div>
+</section>
+
+<section id="meshtastic">
+  <div class="wrap prose wide">
+    <h2>Meshtastic quick start</h2>
+    <p>Meshtastic is open-source mesh messaging over LoRa — encrypted group channels and direct messages, with your phone connected to the node over Bluetooth. Our regional channel is <code>CentralNJ</code>, and it's the home of the Central and South New Jersey Meshtastic community.</p>
+    <ol>
+      <li>Flash your device with the latest firmware at <a href="https://flasher.meshtastic.org">flasher.meshtastic.org</a>.</li>
+      <li>Install the Meshtastic app and pair with your node over Bluetooth.</li>
+      <li>Add a new channel named <code>CentralNJ</code> using the settings below.</li>
+      <li><em>Optional, to appear on the maps:</em> point MQTT at the server below and enable Uplink + Downlink on the CentralNJ channel, with "OK to MQTT" turned on in your LoRa settings.</li>
+    </ol>
+
+    <div class="config-block" id="mt-config">
+      <button class="copy-btn" aria-label="Copy Meshtastic channel settings">Copy</button>
+      <span class="key">channel :</span> <span class="val">CentralNJ</span><br>
+      <span class="key">psk     :</span> <span class="val">f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=</span><br>
+      <span class="key">mqtt    :</span> <span class="val">mqtt.meshtastic.org</span><br>
+      <span class="key">login   :</span> <span class="val">meshdev / large4cats</span>
+    </div>
+
+    <div class="callout">
+      <span class="tag">On the map</span>
+      MQTT is entirely optional — the mesh works over RF whether or not you connect it. It only controls whether your node shows up on <a href="https://meshview.cnjmesh.me/nodegraph">Meshview</a> and <a href="https://malla2.cnjmesh.me">Malla</a>. "OK to MQTT" has to be enabled on your node for that to happen.
+    </div>
+
+    <p style="margin-top:24px"><a class="btn btn-ghost" href="https://discord.gg/AXmDzZuZ2m">Get help in the Meshtastic Discord</a></p>
+  </div>
+</section>
+
+<section id="meshcore">
+  <div class="wrap prose wide">
+    <h2>MeshCore quick start</h2>
+    <p>MeshCore uses smart routing rather than flooding: every user runs a <strong>companion node</strong>, and repeaters and room servers carry traffic across the area. Messages are encrypted end to end, and apps are available for Android, iOS, and desktop.</p>
+    <ol>
+      <li>Flash your device with the latest firmware at <a href="https://flasher.meshcore.io">flasher.meshcore.io</a>.</li>
+      <li>Install the MeshCore app on your phone or desktop and pair it with your device as a <strong>companion</strong>.</li>
+      <li>Set your radio to the US region defaults so you're on the same air as the rest of us (see the table below).</li>
+      <li>Add the local channels and send a hello — then check <a href="https://corescope.cnjmesh.me/#/map">CoreScope</a> to see yourself appear.</li>
+    </ol>
+
+    <h4>MeshCore radio settings</h4>
+    <table class="settings">
+      <tr><th>Setting</th><th>Value</th></tr>
+      <tr><td>Preset</td><td>US / Canada</td></tr>
+      <tr><td>Frequency</td><td>910.525 MHz</td></tr>
+      <tr><td>Bandwidth</td><td>62.5 kHz</td></tr>
+      <tr><td>Spreading factor</td><td>7</td></tr>
+      <tr><td>Coding rate</td><td>5</td></tr>
+    </table>
+    <p class="note">These are the standard US MeshCore parameters, shared with our neighboring networks so traffic can cross between meshes. If your messages aren't getting through, nudging the coding rate up can help — it stays cross-compatible.</p>
+
+    <p style="margin-top:24px"><a class="btn btn-ghost" href="https://discord.gg/3erAvWHdNs">Get help in the MeshCore NJ Discord</a></p>
+  </div>
+</section>
+
+<section id="advanced">
+  <div class="wrap prose wide">
+    <h2>Advanced: be a good mesh citizen</h2>
+    <p>A wide-area mesh has different needs than the small personal mesh Meshtastic ships for by default. A few settings, applied by everyone, keep the whole network fast and usable. None of this is required to send your first message — but tuning your node this way is the single biggest favor you can do the rest of us. The short version: <strong>send less background traffic, and let the right nodes do the relaying.</strong></p>
+
+    <h3>Meshtastic node roles</h3>
+    <p>Pick the profile that matches how the node is used. The goal is that mobile and personal nodes don't accidentally stomp on better-placed infrastructure when relaying.</p>
+
+    <h4>Handheld / mobile node</h4>
+    <p class="note">A node you carry — pocket, bag, car.</p>
+    <table class="settings">
+      <tr><th>Setting</th><th>Suggested</th></tr>
+      <tr><td>Role</td><td>CLIENT_MUTE</td></tr>
+      <tr><td>Position</td><td>Smart position, 30&nbsp;min+ interval, 100&nbsp;m+ distance, altitude off</td></tr>
+      <tr><td>Telemetry</td><td>Off</td></tr>
+      <tr><td>Device info</td><td>Long interval (e.g. 19&nbsp;hr)</td></tr>
+      <tr><td>Hop limit</td><td>Set to match network guidance</td></tr>
+    </table>
+    <p><code>CLIENT_MUTE</code> keeps a mobile node from relaying at the wrong moment — handhelds often hear the network at a worse signal than fixed nodes, so if they relay first they can crowd out a better-placed node. It also avoids the "false ack" trap when two of your own nodes sit close together.</p>
+
+    <h4>Stationary personal node (desk / roof you send from)</h4>
+    <table class="settings">
+      <tr><th>Setting</th><th>Suggested</th></tr>
+      <tr><td>Role</td><td>CLIENT</td></tr>
+      <tr><td>Position</td><td>Fixed position, altitude on, smart position off</td></tr>
+      <tr><td>Telemetry</td><td>Off</td></tr>
+      <tr><td>Device info</td><td>Long interval (e.g. 19&nbsp;hr)</td></tr>
+    </table>
+    <p>A fixed node you also message from is a good conditional relay. A set fixed position is better than GPS here, since a stationary node can otherwise wander on the map from GPS drift. Altitude is worth keeping — it helps everyone understand real coverage.</p>
+
+    <h4>Infrastructure node (relay only, you don't message from it)</h4>
+    <table class="settings">
+      <tr><th>Setting</th><th>Suggested</th></tr>
+      <tr><td>Role</td><td>ROUTER / CLIENT_BASE (per network guidance)</td></tr>
+      <tr><td>Rebroadcast</td><td>Core portnums only</td></tr>
+      <tr><td>Position</td><td>Fixed, altitude on</td></tr>
+      <tr><td>Telemetry</td><td>6&nbsp;hr+ interval</td></tr>
+      <tr><td>Remote admin</td><td>Strongly recommended</td></tr>
+    </table>
+    <p>"Core portnums only" keeps noisy or custom app traffic off the backbone so airtime stays available for text. Position really matters on infrastructure — it's how users understand which nodes are covering them.</p>
+
+    <div class="callout">
+      <span class="tag">One rule above all</span>
+      Please don't run high-traffic apps like TAK or Reticulum over the shared mesh — they saturate the limited airtime and make it unusable for everyone. If you want to experiment with those, do it on your own private channel.
+    </div>
+
+    <h3>MeshCore repeaters</h3>
+    <p>Running a repeater is one of the most useful things you can do for MeshCore coverage. The key idea is the same as above: keep advert traffic low so the mesh stays efficient. For the full repeater configuration — advert intervals, hop limits, and region setup — reach out in the Discord and we'll get you set up with settings tailored to CNJ.</p>
+    <p style="margin-top:20px"><a class="btn btn-ghost" href="https://docs.meshcore.io/">MeshCore documentation</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>CNJ Mesh — a community mesh network for Central &amp; South New Jersey. · <a href="index.html">Home</a> · <a href="contact.html">Contact</a></div>
+    <div class="mono">73 · See you on the mesh</div>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var text = "Channel: CentralNJ\nPSK: f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=\nMQTT: mqtt.meshtastic.org\nLogin: meshdev / large4cats";
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent = "Copied";
+        setTimeout(function(){ btn.textContent = "Copy"; }, 1600);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

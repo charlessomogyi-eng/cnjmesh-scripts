@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNJ Mesh — Central &amp; South New Jersey LoRa Mesh Network</title>
+<meta name="description" content="CNJ Mesh is a community LoRa mesh network for Central and South New Jersey running Meshtastic and MeshCore. Join the mesh, watch it live, and find our Discords.">
+<meta property="og:title" content="CNJ Mesh — Central &amp; South New Jersey Mesh Network">
+<meta property="og:description" content="Off-grid LoRa mesh radio for Central and South Jersey. Meshtastic and MeshCore, side by side. Join the mesh.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cnjmesh.me">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CNJ Mesh — shared styles
+   Design: light editorial. Paper white, near-black ink,
+   "signal red" accent (ON AIR reference). Barlow Condensed
+   (display), Public Sans (body), JetBrains Mono (data).
+   ============================================================ */
+
+:root {
+  --paper: #f6f6f2;
+  --panel: #ffffff;
+  --ink: #1e2328;
+  --muted: #5e6b77;
+  --line: #d9dad2;
+  --red: #c42b3d;
+  --red-dark: #9e2233;
+  --term: #21262c;
+  --term-text: #e8eaed;
+  --maxw: 1100px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Public Sans', system-ui, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--red); color: #fff; }
+a { color: var(--red); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+/* ---------- header ---------- */
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(246,246,242,.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.nav { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+.brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 1.5rem; letter-spacing: .06em;
+  color: var(--ink); display: flex; align-items: center; gap: 10px;
+  text-transform: uppercase;
+}
+.brand:hover { text-decoration: none; }
+.brand .onair {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 0 rgba(196,43,61,.45);
+  animation: beacon 2.8s infinite;
+}
+@keyframes beacon {
+  0% { box-shadow: 0 0 0 0 rgba(196,43,61,.45); }
+  70% { box-shadow: 0 0 0 10px rgba(196,43,61,0); }
+  100% { box-shadow: 0 0 0 0 rgba(196,43,61,0); }
+}
+nav.links { display: flex; gap: 26px; align-items: center; }
+nav.links a {
+  color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.02rem; letter-spacing: .05em; text-transform: uppercase;
+  font-weight: 500;
+}
+nav.links a:hover { color: var(--ink); text-decoration: none; }
+nav.links a.current { color: var(--ink); border-bottom: 2px solid var(--red); padding-bottom: 2px; }
+@media (max-width: 760px) { nav.links { gap: 16px; font-size: .9rem; } }
+@media (max-width: 520px) { nav.links a.hide-sm { display: none; } }
+.brand-short { display: none; }
+@media (max-width: 640px) {
+  .nav { height: auto; min-height: 56px; padding: 10px 0; flex-wrap: wrap; row-gap: 6px; }
+  .brand-full { display: none; }
+  .brand-short { display: inline; }
+  .brand { font-size: 1.1rem; }
+  nav.links { gap: 10px; flex-wrap: wrap; }
+  nav.links a { font-size: .78rem; letter-spacing: .03em; }
+}
+
+/* ---------- generic hero / page head ---------- */
+.hero { border-bottom: 1px solid var(--line); background: var(--panel); }
+.hero .wrap {
+  display: grid; grid-template-columns: 1.1fr .9fr;
+  gap: 48px; align-items: center;
+  padding-top: 64px; padding-bottom: 64px;
+}
+@media (max-width: 880px) {
+  .hero .wrap { grid-template-columns: 1fr; padding-top: 44px; padding-bottom: 40px; }
+}
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .74rem; letter-spacing: .1em;
+  color: var(--red); text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 9px;
+  margin-bottom: 18px; font-weight: 500;
+}
+.eyebrow::before { content: ""; width: 24px; height: 2px; background: var(--red); }
+h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: clamp(2.7rem, 6vw, 4.4rem);
+  line-height: .98; letter-spacing: .005em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+h1 .red { color: var(--red); }
+.hero p.lede { color: var(--muted); font-size: 1.06rem; max-width: 33rem; }
+.hero .cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+
+/* page head (interior pages, single column) */
+.pagehead { border-bottom: 1px solid var(--line); background: var(--panel); }
+.pagehead .wrap { padding-top: 60px; padding-bottom: 46px; }
+.pagehead h1 { margin-bottom: 18px; }
+.pagehead p.lede { color: var(--muted); font-size: 1.08rem; max-width: 44rem; }
+
+/* ---------- buttons ---------- */
+.btn {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase;
+  padding: 12px 24px; border: 1.5px solid var(--ink);
+  cursor: pointer; display: inline-flex; align-items: center;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+  color: var(--ink); background: transparent;
+}
+.btn:hover { text-decoration: none; }
+.btn-primary { background: var(--red); border-color: var(--red); color: #fff; }
+.btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
+.btn-ghost:hover { background: var(--ink); color: var(--paper); }
+
+.hero-stats {
+  display: flex; gap: 34px; margin-top: 38px; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--muted);
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.hero-stats b {
+  display: block; color: var(--ink); font-size: 1.5rem;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 0;
+}
+
+/* ---------- NJ coverage plot ---------- */
+.njmap { width: 100%; max-width: 330px; margin: 0 auto; display: block; }
+.njmap .outline { fill: var(--paper); stroke: var(--ink); stroke-width: 1.6; }
+.njmap .ring {
+  fill: none; stroke: var(--red); stroke-width: .8;
+  stroke-dasharray: 2 3; opacity: .5;
+}
+.njmap .link-line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; opacity: .55; }
+.njmap .node { fill: var(--ink); }
+.njmap .core { fill: var(--red); }
+.njmap .pulse {
+  fill: none; stroke: var(--red); stroke-width: 1.4;
+  transform-origin: center; transform-box: fill-box;
+  animation: ripple 3.2s ease-out infinite;
+}
+.njmap .pulse.p2 { animation-delay: 1.6s; }
+@keyframes ripple {
+  0% { transform: scale(.15); opacity: .9; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.njmap text {
+  font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+  fill: var(--muted); letter-spacing: .05em;
+}
+.njmap text.coretext { fill: var(--red); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) {
+  .njmap .pulse { animation: none; opacity: .25; }
+  .brand .onair { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- sections ---------- */
+section { padding: 72px 0; border-bottom: 1px solid var(--line); }
+section:last-of-type { border-bottom: none; }
+h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  text-transform: uppercase; letter-spacing: .01em;
+  margin-bottom: 14px;
+}
+h3 { font-family: 'Barlow Condensed', sans-serif; }
+.section-intro { color: var(--muted); max-width: 44rem; margin-bottom: 36px; }
+
+/* dark band (central jersey / callout) */
+.central-jersey { background: var(--ink); color: var(--paper); }
+.central-jersey blockquote {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(1.7rem, 3.6vw, 2.6rem); font-weight: 700;
+  line-height: 1.1; max-width: 46rem; text-transform: uppercase;
+  border-left: 4px solid var(--red); padding-left: 24px;
+  margin-bottom: 18px;
+}
+.central-jersey p { color: #b6c0c9; max-width: 46rem; }
+.central-jersey p + p { margin-top: 16px; }
+
+/* ---------- join / protocol cards ---------- */
+.join-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 880px) { .join-grid { grid-template-columns: 1fr; } }
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-top: 3px solid var(--red);
+  padding: 30px;
+}
+.card h3 {
+  font-size: 1.6rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;
+}
+.card .sub {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 16px; display: block; font-weight: 500;
+}
+.card p { color: var(--muted); font-size: .96rem; margin-bottom: 14px; }
+.card ol { padding-left: 20px; font-size: .96rem; }
+.card ol li { margin-bottom: 9px; }
+.card ol li span.k { color: var(--muted); }
+code {
+  font-family: 'JetBrains Mono', monospace; font-size: .85em;
+  background: #ecece6; border: 1px solid var(--line);
+  padding: 2px 6px; word-break: break-all;
+}
+.config-block {
+  background: var(--term); color: var(--term-text);
+  padding: 18px 20px; margin: 18px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+  line-height: 1.9; position: relative; overflow-x: auto;
+}
+.config-block .key { color: #8b98a8; }
+.config-block .val { color: var(--term-text); word-break: break-all; }
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  background: transparent; color: #8b98a8;
+  border: 1px solid #454d57; padding: 4px 12px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.copy-btn:hover { color: var(--term-text); border-color: #8b98a8; }
+
+/* ---------- live maps: protocol groups + buttons ---------- */
+.proto-group { margin-bottom: 40px; }
+.proto-group:last-child { margin-bottom: 0; }
+.proto-head {
+  display: flex; align-items: baseline; gap: 12px;
+  border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 20px;
+}
+.proto-head h3 {
+  font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: .01em;
+}
+.proto-head .count {
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+}
+.btn-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.link-btn {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 1.02rem; letter-spacing: .04em; text-transform: uppercase;
+  padding: 13px 20px; border: 1.5px solid var(--ink);
+  color: var(--ink); background: var(--panel);
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.link-btn::after {
+  content: "\2197"; font-size: .95em; color: var(--muted);
+  transition: color .15s ease;
+}
+.link-btn:hover { background: var(--ink); color: var(--paper); text-decoration: none; border-color: var(--ink); }
+.link-btn:hover::after { color: var(--paper); }
+
+/* ---------- tool / community cards ---------- */
+.tools-grid, .community-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+.tool {
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 24px; display: block; color: var(--ink);
+  transition: border-color .15s ease;
+  position: relative;
+}
+.tool::after {
+  content: "\2197"; position: absolute; top: 20px; right: 22px;
+  color: var(--line); font-size: 1.1rem; transition: color .15s ease;
+}
+.tool:hover { border-color: var(--ink); text-decoration: none; }
+.tool:hover::after { color: var(--red); }
+.tool .tag {
+  font-family: 'JetBrains Mono', monospace; font-size: .66rem;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--red);
+  display: block; margin-bottom: 12px; font-weight: 500;
+}
+.tool h3 {
+  font-size: 1.3rem; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;
+}
+.tool p { color: var(--muted); font-size: .88rem; }
+.tool .url {
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem;
+  color: var(--ink); margin-top: 14px; display: block;
+  border-top: 1px solid var(--line); padding-top: 10px; word-break: break-all;
+}
+
+/* ---------- friends line ---------- */
+.friends { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+@media (max-width: 760px) { .friends { grid-template-columns: 1fr; gap: 20px; } }
+.friends .label {
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 8px; font-weight: 500;
+}
+.friends .line { color: var(--ink); }
+.friends .line a { color: var(--ink); border-bottom: 1px solid var(--line); }
+.friends .line a:hover { border-color: var(--red); text-decoration: none; color: var(--red); }
+
+/* ---------- coverage ---------- */
+.coverage ul {
+  list-style: none; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0; border: 1px solid var(--line); background: var(--panel);
+}
+.coverage li { padding: 20px 22px; font-size: .94rem; border-right: 1px solid var(--line); }
+.coverage li:last-child { border-right: none; }
+@media (max-width: 880px) {
+  .coverage li { border-right: none; border-bottom: 1px solid var(--line); }
+  .coverage li:last-child { border-bottom: none; }
+}
+.coverage li b {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  color: var(--red); display: block; letter-spacing: .09em;
+  text-transform: uppercase; margin-bottom: 6px; font-weight: 500;
+}
+
+/* ---------- prose (about / getting started body) ---------- */
+.prose { max-width: 46rem; }
+.prose.wide { max-width: 52rem; }
+.prose h2 { margin-top: 6px; }
+.prose h3 {
+  font-size: 1.45rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .01em; margin: 40px 0 12px;
+}
+.prose h4 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .02em; margin: 26px 0 8px;
+}
+.prose p { margin-bottom: 16px; }
+.prose ul, .prose ol { margin: 0 0 18px 22px; }
+.prose li { margin-bottom: 8px; }
+.prose .note {
+  color: var(--muted); font-size: .96rem;
+}
+.callout {
+  background: var(--panel); border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  padding: 18px 22px; margin: 22px 0;
+  font-size: .96rem;
+}
+.callout .tag {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  color: var(--red); letter-spacing: .08em; text-transform: uppercase;
+  display: block; margin-bottom: 6px; font-weight: 500;
+}
+.review-flag {
+  background: #fff7e6; border: 1px solid #e8d9a8; border-left: 3px solid #c9922b;
+  padding: 14px 18px; margin: 18px 0; font-size: .9rem; color: #6b5518;
+}
+.review-flag b { color: #543f0e; }
+
+/* settings table used in getting started advanced section */
+.settings {
+  width: 100%; border-collapse: collapse; margin: 14px 0 8px;
+  font-size: .92rem; background: var(--panel); border: 1px solid var(--line);
+}
+.settings th, .settings td {
+  text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.settings th {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500;
+}
+.settings td:first-child { font-family: 'JetBrains Mono', monospace; font-size: .84rem; white-space: nowrap; }
+.settings tr:last-child td { border-bottom: none; }
+
+/* quick anchor nav on getting started */
+.jump {
+  display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 6px;
+}
+.jump a {
+  font-family: 'JetBrains Mono', monospace; font-size: .74rem;
+  letter-spacing: .04em; text-transform: uppercase;
+  border: 1px solid var(--line); padding: 7px 13px; color: var(--muted);
+}
+.jump a:hover { border-color: var(--ink); color: var(--ink); text-decoration: none; }
+
+/* ---------- footer ---------- */
+footer { padding: 40px 0 56px; color: var(--muted); font-size: .86rem; border-top: 1px solid var(--line); }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+footer .mono {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+footer a { color: var(--muted); }
+footer a:hover { color: var(--ink); }
+
+/* ---------- "watch the mesh live" highlight band ---------- */
+.livewatch { background: var(--panel); }
+.livewatch .live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); margin-right: 2px;
+  box-shadow: 0 0 0 0 rgba(196,43,61,.5); animation: beacon 2.8s infinite;
+}
+.watch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0 20px; }
+.btn-lg { font-size: 1.22rem; padding: 16px 30px; }
+.watch-more {
+  font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.watch-more a { color: var(--muted); }
+.watch-more a:hover { color: var(--red); text-decoration: none; }
+@media (prefers-reduced-motion: reduce) { .livewatch .live-dot { animation: none; } }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><span class="onair"></span><span class="brand-full">CNJ &amp; South Jersey Mesh</span><span class="brand-short">CNJ Mesh</span></a>
+    <nav class="links">
+      <a href="about.html">About</a>
+      <a href="getting-started.html">Getting started</a>
+      <a href="index.html#maps" class="hide-sm">Live maps</a>
+      <a href="index.html#discords" class="hide-sm">Discords</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">LoRa mesh radio · Central &amp; South New Jersey</span>
+      <h1>When the grid<br>goes quiet,<br><span class="red">the mesh stays up.</span></h1>
+      <p class="lede">CNJ Mesh is a community-built LoRa network for Central and South New Jersey — rooted in the South Brunswick–New Brunswick corridor and reaching south, running Meshtastic and MeshCore side by side. Inexpensive radios, encrypted messages, no cell towers, no internet required, no monthly bill.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="getting-started.html">Get on the mesh</a>
+        <a class="btn btn-ghost" href="#discords">Find our Discords</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>2</b>protocols on air</div>
+        <div><b>7</b>live maps &amp; tools</div>
+        <div><b>$0</b>monthly cost</div>
+      </div>
+    </div>
+    <svg class="njmap" viewBox="0 0 300 547" role="img" aria-label="Coverage plot of New Jersey showing the CNJ Mesh core in Central Jersey with links reaching Jersey City, Morristown, Trenton, Toms River, and the Lehigh Valley">
+      <path class="outline" d="M121.7,287.5 L147.7,275.1 L150.7,269.7 L128.2,243.2 L95.8,214.7 L94.2,188.2 L89.0,182.7 L74.3,178.1 L73.3,143.4 L77.3,137.8 L87.6,135.0 L97.0,119.1 L83.2,96.0 L84.0,92.3 L110.5,71.6 L109.6,68.2 L124.6,51.7 L128.0,38.8 L138.7,22.2 L155.2,14.0 L286.0,91.0 L264.7,152.4 L253.3,165.2 L237.8,166.5 L233.6,184.2 L228.1,186.6 L228.5,192.7 L224.1,199.7 L234.8,211.0 L246.5,206.8 L267.6,216.2 L270.0,209.4 L265.8,202.7 L269.4,203.9 L273.4,229.7 L263.6,282.5 L252.9,354.6 L229.4,399.1 L223.4,407.8 L217.9,409.4 L219.0,416.9 L201.3,440.6 L183.5,450.6 L168.3,465.4 L139.2,519.4 L127.5,530.4 L116.2,532.9 L109.9,530.4 L123.8,483.7 L111.5,477.0 L100.6,476.1 L99.5,471.6 L87.8,472.5 L82.6,479.2 L76.4,465.8 L65.9,459.1 L64.2,453.6 L58.2,455.8 L50.9,443.9 L45.8,444.7 L34.8,434.0 L29.4,423.9 L17.8,419.3 L16.7,411.6 L19.3,410.8 L21.6,394.2 L14.6,388.2 L14.0,383.1 L37.6,346.4 L55.3,336.1 L71.0,332.7 L109.5,293.6 Z"/>
+      <circle class="ring" cx="177" cy="214" r="38"/>
+      <circle class="ring" cx="177" cy="214" r="72"/>
+      <line class="link-line" x1="177" y1="214" x2="262" y2="151"/>
+      <line class="link-line" x1="177" y1="214" x2="190" y2="134"/>
+      <line class="link-line" x1="177" y1="214" x2="145" y2="257"/>
+      <line class="link-line" x1="177" y1="214" x2="236" y2="314"/>
+      <line class="link-line" x1="177" y1="214" x2="69" y2="157"/>
+      <line class="link-line" x1="177" y1="214" x2="195" y2="200"/>
+      <circle class="pulse" cx="177" cy="214" r="30"/>
+      <circle class="pulse p2" cx="177" cy="214" r="30"/>
+      <circle class="core" cx="177" cy="214" r="5.5"/>
+      <circle class="node" cx="262" cy="151" r="3.5"/>
+      <circle class="node" cx="190" cy="134" r="3.5"/>
+      <circle class="node" cx="145" cy="257" r="3.5"/>
+      <circle class="node" cx="236" cy="314" r="3.5"/>
+      <circle class="node" cx="195" cy="200" r="3.5"/>
+      <circle class="node" cx="69" cy="157" r="3.5"/>
+      <text class="coretext" x="106" y="219">CNJ CORE</text>
+      <text x="212" y="146">JERSEY CITY</text>
+      <text x="122" y="127">MORRISTOWN</text>
+      <text x="87" y="262">TRENTON</text>
+      <text x="184" y="322">TOMS RIVER</text>
+      <text x="30" y="146">LEHIGH VLY</text>
+    </svg>
+  </div>
+</div>
+
+<section class="central-jersey">
+  <div class="wrap">
+    <span class="eyebrow">First things first</span>
+    <blockquote>Yes, there is a Central Jersey.</blockquote>
+    <p>Almost as hotly debated as pork roll vs. Taylor ham — but it exists, and it has its own mesh. We don't actually care what part of Jersey you're from. Central, South, shore, or the PA border: if you can hear us, you're one of us. South Jersey especially — you're family here. The more nodes, the better the mesh.</p>
+  </div>
+</section>
+
+<section class="livewatch" id="watch">
+  <div class="wrap">
+    <span class="eyebrow"><span class="live-dot"></span> The network, right now</span>
+    <h2>Watch the mesh live</h2>
+    <p class="section-intro">Don't take our word for it. These maps update in real time — every node on the air and every packet routing across Central and South Jersey. Take a look before you even own a radio.</p>
+    <div class="watch-btns">
+      <a class="btn btn-primary btn-lg" href="https://meshview.cnjmesh.me/nodegraph">Meshtastic — live node map</a>
+      <a class="btn btn-ghost btn-lg" href="https://corescope.cnjmesh.me/#/map">MeshCore — live map</a>
+    </div>
+    <p class="watch-more"><a href="#maps">See all 7 maps &amp; tools ↓</a></p>
+  </div>
+</section>
+
+<section id="join">
+  <div class="wrap">
+    <span class="eyebrow">Two protocols, one community</span>
+    <h2>Get on the mesh</h2>
+    <p class="section-intro">All you need is an inexpensive LoRa radio (Heltec, RAK, LilyGo, and others, starting around $30) and the free app for your phone or computer. No license required. We run both major mesh platforms side by side — pick one, or run both.</p>
+    <div class="join-grid">
+      <div class="card">
+        <h3>Meshtastic</h3>
+        <span class="sub">Central &amp; South New Jersey</span>
+        <p>Open-source mesh messaging over LoRa — encrypted group channels and direct messages, with your phone connected to the node over Bluetooth. This is home for the Central and South New Jersey Meshtastic community, on our regional <code>CentralNJ</code> channel.</p>
+        <div class="config-block" id="mt-config">
+          <button class="copy-btn" data-copy="mt-config-text" aria-label="Copy Meshtastic channel settings">Copy</button>
+          <span class="key">channel :</span> <span class="val">CentralNJ</span><br>
+          <span class="key">psk     :</span> <span class="val">f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=</span><br>
+          <span class="key">mqtt    :</span> <span class="val">mqtt.meshtastic.org</span><br>
+          <span class="key">login   :</span> <span class="val">meshdev / large4cats</span>
+        </div>
+        <p style="margin-top:6px">
+          <a class="btn btn-ghost" href="getting-started.html#meshtastic">Meshtastic setup guide</a>
+        </p>
+      </div>
+      <div class="card">
+        <h3>MeshCore</h3>
+        <span class="sub">Growing across Central NJ</span>
+        <p>A mesh platform built around smart routing instead of flooding — every user runs a companion node, and dedicated repeaters and room servers carry traffic across the network. Encrypted end to end, with apps on Android, iOS, and desktop.</p>
+        <p>We're building out MeshCore repeater coverage in Central Jersey, with infrastructure in the Kendall Park area and a live map on CoreScope.</p>
+        <p style="margin-top:22px">
+          <a class="btn btn-ghost" href="getting-started.html#meshcore">MeshCore setup guide</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="maps">
+  <div class="wrap">
+    <span class="eyebrow">Self-hosted · Updated in real time</span>
+    <h2>Live network maps</h2>
+    <p class="section-intro">We run our own monitoring stack. See who's on the air, how packets are routing, and where coverage reaches — right now.</p>
+
+    <div class="proto-group">
+      <div class="proto-head">
+        <h3>Meshtastic</h3>
+        <span class="count">3 tools</span>
+      </div>
+      <div class="btn-grid">
+        <a class="link-btn" href="https://meshview.cnjmesh.me/nodegraph">CNJ Meshview by way of KPN6</a>
+        <a class="link-btn" href="https://sbnj.meshview.comfx.com/nodegraph">CNJ Meshview by way of MTX1</a>
+        <a class="link-btn" href="https://malla2.cnjmesh.me">CNJ Malla Reporting</a>
+      </div>
+    </div>
+
+    <div class="proto-group">
+      <div class="proto-head">
+        <h3>MeshCore</h3>
+        <span class="count">4 tools</span>
+      </div>
+      <div class="btn-grid">
+        <a class="link-btn" href="https://corescope.cnjmesh.me/#/map">CNJ MeshCore CoreScope</a>
+        <a class="link-btn" href="https://meshcorehub.cnjmesh.me">CNJ MeshCore Hub</a>
+        <a class="link-btn" href="https://analyzer.letsmesh.net/packets">MeshCore Analyzer</a>
+        <a class="link-btn" href="https://map.meshomatic.net/">Meshomatic</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="coverage" class="coverage">
+  <div class="wrap">
+    <span class="eyebrow">Where the RF reaches</span>
+    <h2>Coverage</h2>
+    <p class="section-intro">The core of the mesh sits in the South Brunswick–North Brunswick–New Brunswick–Milltown–Edison corridor, with solid propagation well beyond it.</p>
+    <ul>
+      <li><b>Northeast</b>Reliable paths up toward Jersey City and NYC.</li>
+      <li><b>Northwest</b>Nodes visible out toward Morristown.</li>
+      <li><b>West</b>Visibility into the Lehigh Valley mesh in PA.</li>
+      <li><b>South</b>Reaching toward the shore and South Jersey — SJ nodes are very welcome here.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="discords">
+  <div class="wrap">
+    <span class="eyebrow">Where the community lives</span>
+    <h2>Our Discords</h2>
+    <p class="section-intro">The mesh is the fun part, but the coordination happens here. Two servers, one community — pick by protocol, or join both.</p>
+    <div class="community-grid">
+      <a class="tool" href="https://discord.gg/AXmDzZuZ2m">
+        <span class="tag">Meshtastic</span>
+        <h3>Central &amp; South New Jersey Meshtastic</h3>
+        <p>Day-to-day chat, network alerts, node placement, and setup help for the Meshtastic side of Central and South Jersey.</p>
+        <span class="url">discord.gg/AXmDzZuZ2m</span>
+      </a>
+      <a class="tool" href="https://discord.gg/3erAvWHdNs">
+        <span class="tag">MeshCore</span>
+        <h3>MeshCore — New Jersey</h3>
+        <p>The home for MeshCore in New Jersey — repeater builds, network status, and getting new companions configured.</p>
+        <span class="url">discord.gg/3erAvWHdNs</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="friends">
+  <div class="wrap">
+    <span class="eyebrow">The wider mesh</span>
+    <h2>Friends &amp; resources</h2>
+    <div class="friends">
+      <div>
+        <div class="label">Get started with the tech</div>
+        <div class="line">
+          <a href="https://meshtastic.org">Meshtastic.org</a> ·
+          <a href="https://meshcore.io">MeshCore.io</a>
+        </div>
+      </div>
+      <div>
+        <div class="label">Our friends</div>
+        <div class="line">
+          <a href="https://nyme.sh">New York Mesh</a> ·
+          <a href="https://sjmesh.net/">South Jersey Mesh</a> ·
+          <a href="https://lvmesh.com/">Lehigh Valley Mesh</a> ·
+          <a href="https://forest-edge.info/">Forest Edge</a> ·
+          <a href="https://phillymesh.net/">Philly Mesh</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>CNJ Mesh — a community mesh network for Central &amp; South New Jersey. · <a href="about.html">About</a> · <a href="contact.html">Contact</a></div>
+    <div class="mono">73 · See you on the mesh</div>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var text = "Channel: CentralNJ\nPSK: f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=\nMQTT: mqtt.meshtastic.org\nLogin: meshdev / large4cats";
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent = "Copied";
+        setTimeout(function(){ btn.textContent = "Copy"; }, 1600);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
