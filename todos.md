@@ -1,5 +1,19 @@
 # CNJ Mesh — Open To-Dos
 
+### [NEXT UP — Sep 3, 2026] SJMesh nodes missing from Meshview node graph — root cause found, fix not yet applied
+**Root cause identified Sep 2/3:** when `sjmesh-relay.service` (standalone Python relay) permanently replaced the native Mosquitto `sjmesh` bridge on Aug 14, the SJMesh **channel** topic did not get carried over. The native bridge had `topic msh/US/2/e/SJMesh/# both 0` — added deliberately on Aug 9 after tracking down why KPN6 test messages weren't reaching SJMesh's community. The relay's `SUBSCRIBE_TOPICS` only has the two CentralNJ patterns (`msh/US/2/e/CentralNJ/#`, `msh/US/NJ/2/e/CentralNJ/#`). **This was an omission during the swap, NOT a deliberate anti-flood decision** — important distinction, since the flood/dedup work (Aug 4-15) was about three specific loop nodes on CentralNJ topics, unrelated to the SJMesh channel.
+
+**Why re-adding it is low-risk:** `BLOCKED_TOPICS` in `relay.py` is surgical — exactly three node IDs (`!699a9390`, `!698574b0`, `!db51bb30`), each on their two CentralNJ topic paths only. Those are the loop/flood nodes. Re-adding the SJMesh channel topic doesn't touch those blocks or widen anything toward `msh/US/#` (the original over-broad scope that caused problems).
+
+**Planned fix (two small edits to `/opt/sjmesh-relay/relay.py`, also in git at `cnjmesh1/sjmesh-relay/relay.py`):**
+1. Add `("msh/US/2/e/SJMesh/#", 0)` to `SUBSCRIBE_TOPICS`
+2. Defensively add SJMesh-path variants of the three blocked node IDs to `BLOCKED_TOPICS`, in case they ever publish on that channel
+
+**Must also verify:** Meshview maintains its OWN independent MQTT topic subscription list in `~/meshview/config.ini` (`[mqtt]` section, `topics = [...]`). Getting SJMesh traffic into the local broker only helps if Meshview is also subscribed to it. Check with `grep -A 10 "\[mqtt\]" ~/meshview/config.ini` before assuming the relay fix alone is sufficient.
+
+**Also noted from upstream README while investigating:** Meshview 3.0.4+ has a native configurable skip-node list + secondary decryption keys in its MQTT reader — a Meshview-level way to drop specific bad nodes at ingestion (protects Meshview's DB only, not Mosquitto/Malla). Not needed for this fix, but worth knowing it exists. Also: running 3.0.5, current upstream is 3.0.7.
+
+
 ### [NEW — Sep 2/3, 2026] CoreScope "No packets from meshomatic" banner — months-recurring nuisance, decision needed
 Charles reports this banner has been popping up for months (latest instance: 22,127 min / ~15.4 days silent, seen on the live map view at `corescope.cnjmesh.me`). Important nuance from a much earlier session: this exact banner was once explicitly flagged as a **red herring** — MeshOmatic is not a CNJ Mesh dependency (CoreScope also pulls from `local`, `letsmesh-us`, `letsmesh-eu` independently), so a quiet/broken MeshOmatic feed doesn't mean CNJ's own data pipeline is unhealthy. However, that same historical outage (the real `local`-source-misconfigured-to-localhost bug, root-caused and fixed once already — see the "MAJOR FIND" entry in session-log.md) also happened to show this same banner with a similar large minute-count at the time, so the two have been genuinely hard to tell apart at a glance in the past.
 
