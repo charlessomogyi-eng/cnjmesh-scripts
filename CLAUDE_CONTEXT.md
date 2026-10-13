@@ -35,7 +35,6 @@ Do not ask Charles to re-explain anything documented in those files. Treat him a
 2. If facts about current infrastructure changed (IPs, ports, USB paths, credentials, what's running where), update `cnjmesh1-operations.md`. **If anything was installed, moved, or reconfigured on a Pi, re-run `scripts/collect-inventory.sh` on that Pi and commit the refreshed `install-map-<host>.md` — same discipline as updating todos.**
 3. Append a dated entry to `session-log.md` for what happened this session — narrative is fine there, it's never re-read in full.
 4. Push all changed files to GitHub using the token Charles provides.
-5. Remind Charles to provide his GitHub token if not already given, and to revoke it after use if it was pasted in chat.
 
 ---
 
@@ -67,5 +66,5 @@ K2GIA-10's LoRa APRS traffic (433.775 MHz) relays to `lora-aprs-70cm-relay` chan
 
 ### Update 2026-10-13 — push workflow note (from the ops/APRS/GitHub, aprs-github and range-test handoffs; old text above left unchanged)
 - In cloud sessions that report **"not in this session's authorized repository set"** or **"No linked GitHub account"** (HTTP 403 from the git proxy), pushing is blocked at the session level and a pasted token will **not** fix it. Do not ask for more tokens. Reconnect the GitHub connector at claude.ai or attach the repo to the session (e.g. start from claude.ai/code and pick the repo), or use a chat that can push. Meanwhile deliver changes as `git format-patch` files or a handoff file; a chat that can push should apply them, not Charles (he never runs `git add/commit/push`).
-- Several handoffs record that Charles has asked not to be reminded or warned about pasting/revoking GitHub tokens (he rotates them himself). Step 5 of "How to End Each Session" above is therefore **disputed** — the original line is left in place pending his confirmation.
+- Several handoffs record that Charles has asked not to be reminded or warned about pasting/revoking GitHub tokens (he rotates them himself). The former step 5 of "How to End Each Session" (the token reminder) was **removed 2026-10-13** at his direction; do not remind him about tokens.
 - Reminder from the range-test handoff: **K2GIA / K2GIA-1 = the 2 m Graywolf station; K2GIA-10 = the LoRa APRS node.** Don't conflate them.
