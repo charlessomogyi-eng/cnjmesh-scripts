@@ -158,3 +158,13 @@ Full detail in `todos.md` / Claude's memory — this is Meshtastic-adjacent, not
 - [V] aprs.fi for K2GIA-10 through 22:37 EDT showed only the 15-minute beacons, all `TCPIP*,qAC` via foreign T2 servers (T2SYDNEY, T2LAUSITZ, T2BELGIUM). No RF-path packet and no CQ appeared.
 - **Result: inconclusive.** K2GIA-10 doesn't self-gate (see `known-issues.md`), and aprs.fi can't distinguish "not transmitted" from "not gated". Whether anyone heard it over RF: unknown. A cooperating listener or an RX-only second board is needed.
 - The K2GIA (2 m, whip, Jul 24 ~16:57) CQ likewise never appeared on aprs.fi; accurate wording is "nothing relayed it to APRS-IS", not "nothing heard it".
+
+
+## Update 2026-10-13: Graywolf + LoRa APRS via "RXT" — watched, not adopted (researched Sep 22, 2026; from ops/APRS/GitHub handoff)
+A Discord post described moricef's fork of Graywolf adding LoRa APRS support via "RXT" (Remote Receiver Telemetry). The screenshots that prompted this came from that Discord post, **not** from this station; no RXT config exists on K2GIA-1 or cnjmesh1 (an earlier analysis wrongly treated the `192.168.1.241` screenshot as Charles's own device — corrected).
+
+Research as of Sep 22 (**[S]**, not re-checked since): Graywolf's own modem only decodes 2 m audio AFSK. RXT is an ingestion path on the Graywolf side (newline-delimited JSON over HTTP, schema "v1.0 candidate") for already-decoded packets plus signal metadata (RSSI, SNR, frequency offset, hop time) from a *separate* LoRa iGate that does its own RF decode. Both halves were unmerged experimental forks: a CA2RXU iGate-firmware branch `feature/aprs-json-producer` and a Graywolf branch `feature/rxt-telemetry`. Whether either has merged since: unknown.
+
+**Net effect: no change needed today.** K2GIA-10 stays a pure RF digipeater with local MQTT; K2GIA-1 stays 2 m only; they are unbridged. Revisit only if those branches appear in an actual release — check upstream first, since this note is dated. (The repo does not say whether K2GIA-10's firmware or Graywolf 0.13.13 are "stock", so that word is deliberately not used.)
+
+Related: the line above that says to use `ANSRVR`/`CQSRVR` "(see below)" has no "below" — `CQSRVR` appears nowhere else in the repo and is unverified. For ANSRVR-style check-ins see the nets table in `docs/aprs-bulletins-and-bridging-reference.md`.

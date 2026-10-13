@@ -156,3 +156,13 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 - **[OPEN] Does K2GIA-9 firmware offer BLE KISS?** Repo has it on Bluetooth Classic; "tracker supports BLE KISS" came from the CA2RXU wiki and is untested for this board. Don't plan KISSLink with K2GIA-9 until confirmed.
 - **[OPEN, low]** Check ODmaster for Android 2.6.5; check Graywolf version/update; decide whether to try Ramble / PocketCHIRP (no commitment made).
 - **[DECISION NEEDED — public repo]** (a) APRS-IS passcode is committed in many files (APRS passcodes derive from the callsign by a public algorithm, so low risk, but it conflicts with the "no passwords" rule); (b) K2GIA-1 coordinates appear in `docs/k2gia-5-aprsdroid-reference.md`; (c) `docs/td-h9-odmaster-aprs-messaging-bug.md` contains a retailer order number and full name. **None were changed in this merge.**
+
+
+### From the Sep 2 - Oct 13 ops / APRS / backups / GitHub handoff
+- **[OPEN] Confirm the `graywolf-watchdog` timer state on cnjmesh1** and reconcile the wording in `cnjmesh1-operations.md` (see the update note there; old text left in place).
+- **[OPEN] SD-card image backup:** is the `.gz` image on the laptop, complete, and where? Document the sudoers rule that was added (`/etc/sudoers.d/` on cnjmesh1) and decide whether to keep it. Then buy a new 64 GB (or larger) card and plan the swap. See `docs/backup-runbook.md`. (Related existing item: SATA SSD idea above.)
+- **[OPEN] cnjmesh3 backup was dated 2026-07-26** as of Sep 2 — over a month old; current state unknown.
+- **[OPEN, carried]** SJMesh relay topic fix (top of this file) — handoff shows it still not applied as of the Sep 6 repo state; status afterward unknown. Credential rotation items above — nothing in this handoff shows any rotation; a Discord webhook pasted Sep 2 matched the known unrotated leaked one by string match [S].
+- **[OPEN, carried]** meshcore-bot weather-alert truncation fix lives only on cnjmesh1's filesystem (not in git); real confirmation (a live NWS alert) was pending [S].
+- **[WATCH] Graywolf "RXT" LoRa APRS fork** — no action; check upstream for merges before revisiting (`docs/lora-aprs-reference.md`).
+- **[OPTIONAL]** weekly APRS check-in nets table saved in `docs/aprs-bulletins-and-bridging-reference.md`; add a reminder only if Charles wants one, and decide whether to test a check-in through K2GIA-1.

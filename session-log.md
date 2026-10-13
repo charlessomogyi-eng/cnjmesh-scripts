@@ -2631,3 +2631,20 @@ Source: `handoff-aprs-td-h9-messaging-2026-10-13.md`. No equipment touched in th
 **Corrections (earlier assistant errors per handoff):** a fabricated Play Store link was given; Messenger failure cause guessed wrongly first (message-ID dedup; real cause SSID field); IS Companion "Disconnected" misread as a bug; the "settled" filter was wrong; Kelvin's bridge first dismissed as Windows-only; "tracker supports BLE KISS" stated as if it applied to K2GIA-9 (unproven); a fresh chat wrongly guessed the repo is private.
 
 **Docs updated:** `known-issues.md`, `todos.md`, `docs/k2gia-5-aprsdroid-reference.md`, `docs/aprs-bulletins-and-bridging-reference.md`, `docs/td-h9-app-field-reference.md`.
+
+
+## 2026-10-13 — Handoff merge 3/6: CNJ Mesh ops, APRS (Graywolf/LoRa/check-in nets), backups, GitHub push breakage (source chat Sep 2 - Oct 13, 2026)
+
+Source: `handoff-cnjmesh-ops-aprs-github-2026-09-02-to-2026-10-13.md`. Nothing run on equipment in the merge. The Sep 2-3 work (Fing alerts, peer-check retirement, watchdog audit, mesh-discord-shim-watchdog, cnjmesh1 backup, CoreScope meshomatic banner, SJMesh root cause) is already logged above in this file and was not duplicated.
+
+**New in this handoff:**
+- Sep 2-3 (SD image): `dd | gzip` of cnjmesh1 `/dev/mmcblk0` to the laptop started after a sudoers prep step; completion never confirmed; sudoers rule not documented. See `docs/backup-runbook.md` update note.
+- Sep 22: Charles asked about a Discord post on a "moricef" Graywolf fork with LoRa APRS "RXT". The first analysis wrongly treated the screenshots as his own environment; he corrected that (they came from Discord). Outcome: watched, not adopted — note added to `docs/lora-aprs-reference.md`. The note was committed in that chat as `3b87611` and never pushed.
+- Sep 23: weekly APRS check-in nets (HOTG/ANSRVR, KV50S Fri, Hamfinity Sun, SARES Tue) documented — committed in that chat as `1a9426e`, never pushed; corrected text is in `docs/aprs-bulletins-and-bridging-reference.md`. Two patch files for `3b87611`/`1a9426e` were delivered Oct 5; whether they were applied is unknown.
+- Sep 22 - Oct 5: every push from that cloud chat failed with HTTP 403 "not in this session's authorized repository set" (proxy-injected credentials only; a pasted token made no difference). Probable cause: GitHub connector not linked / repo not attached to the session [I]. Reads still worked. Repo last commit before this merge: Sep 6 (`97249af`).
+
+**Corrections recorded in the handoff (earlier assistant errors):** mesh-discord-shim protocol was undocumented (MeshCore-specific; fixed Sep 2); NODE_LABEL unquoted-env bug recurred; RXT screenshot misattributed; "LoRa APRS will never be Graywolf-native" overclaimed; "stock" firmware/Graywolf unsupported by the repo; the Sep 23 net doc had several invented details (Charles "participates occasionally", Mike "runs" the net, Malaysia, "all run a full UTC day", "routes over APRS-IS", the `CQ`-addressee-workaround claim) — removed in the corrected text; Tuesday time conversion wrong (is Mon noon to Tue noon EDT); the Sep 24 "sessions have a baked-in authorized-repo list" explanation was a guess; the Oct 5 fallback told Charles to run `git am`/`git push` himself, violating the repo's hard rules.
+
+**Conflicts flagged:** (D1) Graywolf watchdog "disabled" vs "active alert-only" in `cnjmesh1-operations.md` — note added, not resolved; (D2) backup-runbook says SD image not documented vs attempted — note added; (D3/D4) `CLAUDE_CONTEXT.md` token workflow and reminder step — see merge 5/6; (D5) `CQSRVR` unexplained in `docs/lora-aprs-reference.md` — note added; (D6) `cnjmesh1-operations.md` header date stale — bumped; (D7) session-log Jul 14-15 "unsubscribed from HOTG" wording — clarified in the nets table note.
+
+**Docs updated:** `docs/lora-aprs-reference.md`, `docs/aprs-bulletins-and-bridging-reference.md`, `docs/backup-runbook.md`, `cnjmesh1-operations.md`, `todos.md`.

@@ -1,6 +1,6 @@
 # CNJ Mesh — Operations Runbook
 **For:** Anyone keeping CNJ Mesh running when Charles is unavailable.
-**Last updated:** 2026-07-24
+**Last updated:** 2026-10-13 (header date bumped; some content dates from 2026-07-24 and later)
 
 If you are an AI assistant, this file plus `todos.md` are the two short files to fetch at the start of a session. Only fetch `session-log.md` (long, narrative) if you need the backstory behind something. This document focuses on current-state reference facts, day-to-day operations, common problems, and who to contact.
 
@@ -264,6 +264,7 @@ For cnjmesh2, always `cd ~/meshtastic-mqtt` first before any docker compose comm
 ## Known Issues / Don't Touch
 
 - **Graywolf watchdog** — DISABLED intentionally. Files exist at `/etc/systemd/system/graywolf-watchdog.timer` and `.service`. Do not re-enable.
+  - **Update 2026-10-13 (apparent contradiction, flagged — not resolved):** this entry, "Common Problems" item 5 and `docs/aprs-2m-graywolf-reference.md` all say the Graywolf watchdog is disabled / must not be re-enabled, but the "Monitoring — Current State" section above lists `graywolf-watchdog` as one of seven **active alert-only** watchdogs, `watchdogs/graywolf-watchdog/` is in git, and `todos.md` (Sep 2 decision) calls the timer active. Likely reading ([I] per the ops handoff): the *old auto-restart* watchdog was disabled because its restarts broke PTT; the Sep 2 `graywolf-watchdog` is alert-only (never restarts) and is active. Never add a restart action. Confirm on **cnjmesh1**: `systemctl status graywolf-watchdog.timer`.
 - **meshcore-packet-capture TOML configs** — live inside the container, not on the host. If the container is recreated these configs will be lost. Do not recreate the container without backing up the configs first.
 - **Client 1 serial flapping** — Kendall Park Client 1 (Heltec V3) has known CP210x serial instability. This is a known issue, replacement with RAK/WisMesh is planned.
 - **MeshOmatic bridge** — configured in mosquitto.conf but MeshOmatic's MQTT broker goes down periodically. This is their problem, not ours. The bridge will reconnect automatically.

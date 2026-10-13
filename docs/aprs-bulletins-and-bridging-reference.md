@@ -33,3 +33,19 @@ None of these are set up or scheduled — this is a "worth knowing the landscape
 
 ## Update 2026-10-13: the "K2GIA-7 IS Companion won't connect" section above is stale
 `known-issues.md` (first APRS bullet) and session-log Aug 23 record that the IS Companion was never actually broken — it connected on retry (server `rotate.aprs2.net`, port 14580). The "Open issue" and "Next step" text above (left in place per the no-rewrite rule) should be read as resolved Aug 23. Candidate for deletion once Charles agrees; `known-issues.md` says resolved entries should be deleted.
+
+
+## Update 2026-10-13: Weekly APRS message check-in nets (reference, saved Sep 23, 2026; from ops/APRS/GitHub handoff)
+APRS **message-based** check-ins, not voice. The destination station is the net's own station; `CQ <NETNAME>` is the start of the message **body**, not the addressee. Details come from each net's own announcement (pasted text and flyers); "not stated" means the source gave no hours. Tags: **[V]** = taken from those sources.
+
+| Net | Day (UTC) | Send to | Body | Window | Notes |
+|---|---|---|---|---|---|
+| #APRSThursday (HOTG) | Thursday | `ANSRVR` | `CQ HOTG <message>` | "Thursday (UTC clock)", hours not stated | After the ACK, send `U HOTG` to stop further routed traffic (monitors also send it when done). Alternate: `APRSPH` with `HOTG <message>` (no `CQ`); counted in the summary but not broadcast. Post signed by Mike KC8OWL. DMR users: disable Brandmeister "Text Capture" and all SMS/data ACK options (note dated 27-APR-2026). Another handoff (aprs-github) reports the net runs Thursdays 00:00-23:59 UTC per aprsph.net/aprsthursday [V in that file]. |
+| KV50S APRS Friday | Friday | `9W4GTS` | `CQ KV50S <message>` | 00:00-11:59 UTC | Described as a new weekly net; site net.hamfinity.com. Logo text hard to read (appears to be "Komuniti VSD Samarahan") — verify before relying on it. |
+| Hamfinity Sunday | Sunday | `9M4GKS` | `CQ Hamfinity <message>` | 00:00-23:59 UTC | Check via aprs.hamfinity.com. ADIF log: net.hamfinity.com, eQSL, search callsign, download. |
+| SARES APRS CommCheck | Tuesday | `9M4CSR` (NCS) | `CQ SARES <message>` | 00:00-23:59 **MYT (UTC+8)** | Sarawak Amateur Radio Emergency Services & Society. Flyer: send a direct APRS text message to the NCS. |
+
+Eastern equivalents (EDT until Nov 1, 2026; one hour later on the clock in EST): Thursday = Wed 8 PM to Thu 8 PM if a full UTC day (see above); Friday = Thu 8 PM to Fri 8 AM; Sunday = Sat 8 PM to Sun 8 PM; Tuesday = Mon noon to Tue noon.
+
+**Routing caveats (unverified):** whether a check-in from K2GIA-1 goes over RF or APRS-IS depends on Graywolf's messaging config, which was not verified. K2GIA-10 has APRS-IS off (Aug 28), but another iGate that hears K2GIA-9/-10 traffic could still gate it (`docs/lora-aprs-reference.md`). Test one check-in end to end before assuming a route. The repo's earlier ANSRVR use is in session-log (Jul 14-15 session, `CQ HOTG ...` then `U HOTG`; `U HOTG` is the standard step after checking in, not "leaving the net"). I don't know whether Charles checks in regularly — he only asked what the Tuesday net is and to save details.
+**Do not rely on:** a claim made in an earlier chat draft that these nets use `CQ` as a workaround for rejected `CQ` addressees — that was wrong and was dropped.

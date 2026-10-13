@@ -77,3 +77,7 @@ No fixed schedule — ad hoc is fine, but run it:
   from this).
 - No automated OneDrive upload — manual scp + upload for now.
 - Full SD card image process not yet documented — add if this becomes routine.
+
+
+## Update 2026-10-13: SD-card image — attempted Sep 2-3, completion UNCONFIRMED (from ops/APRS/GitHub handoff)
+**[S]** On Sep 2-3 a full SD-card image of cnjmesh1 was started: `dd` of `/dev/mmcblk0` piped through `gzip` over SSH, streamed to Charles's laptop so the Pi's own disk isn't used, after a sudoers prep step on cnjmesh1. The PowerShell stream reached the SSH password prompt; **the output filename, location, size and whether it completed are unknown.** The exact sudoers rule text and file are also unknown and **not documented anywhere in the repo** — check `/etc/sudoers.d/` on cnjmesh1 before assuming what is there. Restore procedure: not written. Per the handoff, cnjmesh1's root filesystem was 58 G with 35 G used (63%) and Charles plans a new 64 GB card. The lines above ("not yet documented") remain accurate until this is confirmed.
