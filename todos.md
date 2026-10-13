@@ -166,3 +166,13 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 - **[OPEN, carried]** meshcore-bot weather-alert truncation fix lives only on cnjmesh1's filesystem (not in git); real confirmation (a live NWS alert) was pending [S].
 - **[WATCH] Graywolf "RXT" LoRa APRS fork** — no action; check upstream for merges before revisiting (`docs/lora-aprs-reference.md`).
 - **[OPTIONAL]** weekly APRS check-in nets table saved in `docs/aprs-bulletins-and-bridging-reference.md`; add a reminder only if Charles wants one, and decide whether to test a check-in through K2GIA-1.
+
+
+### From the Sep 24 / Oct 13 APRS RX recovery + GitHub push investigation handoff
+- **[DECISION] Keep or remove the Graywolf RT-scheduling override** (`graywolf.service.d/override.conf`) — it showed no benefit. POLLERR root cause unresolved; the Digirig replug is a workaround.
+- **[OPEN] What was physically unplugged ~15:51-15:55 on Sep 24** — hub power-cycle or Digirig only?
+- **[OPEN] Diff the live Graywolf Discord bridge script against the repo copy** (`md5sum` both, on cnjmesh1).
+- **[OPEN] Check `/dev/kpc1` / `/dev/kpr1` mapping on cnjmesh1** (`ls -l /dev/kpc1 /dev/kpr1`).
+- **Update on the "Graywolf PTT device pinning" item above:** `ptt_configs` already holds the by-id path (date unknown). Item can be closed once Charles agrees; old wording left in place.
+- **Update on the Aug 17 POLLERR item above:** "proven cosmetic" is too strong — see `known-issues.md` update. The RT override was tried Sep 24 with no effect.
+- **[OPEN] GitHub push from cloud chats:** unresolved on the platform side per the aprs-github handoff (reports similar to anthropics/claude-code issues #84581 and #96609, [S] unverified here). Charles's timeline: pushes worked ~6 months and stopped after about Sep 8. The Claude GitHub App was installed on `charlessomogyi-eng` Oct 13 (repo selection unconfirmed). Account note: `karchsomogyi` is a separate empty account — don't log in with it.

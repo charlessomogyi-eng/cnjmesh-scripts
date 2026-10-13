@@ -93,3 +93,12 @@ First live test of APRS OTA (aprsota.org) via K2GIA-1:
 - [I] Graywolf is now behind Cloudflare Access (`graywolf.cnjmesh.me`, email+PIN, session-log ~line 867), which was set up after the cookie work — API calls from outside the Pi may need to go to `localhost:8082` instead.
 - [S] Versions seen Jul 24: 0.13.13 installed, 0.14.12 available. Not re-checked since.
 - Do not conflate: **K2GIA / K2GIA-1 = the 2 m Graywolf station; K2GIA-10 = the LoRa APRS node.** This was the most frequent mistake in that chat.
+
+
+## Update 2026-10-13: Sep 24 RX loss, RT override, ANSRVR quirk (from aprs-github handoff)
+- **POLLERR vs RX:** the "Confirmed NOT blocking" list above is too strong. On Sep 24 a POLLERR flood coincided with dead RX (RX 14 vs TX 1738, DCD dark, ~120 Bad FCS) while TX/beacon worked; a Digirig replug restored RX at once (**[S]** — earlier chat's pasted summary). iGate RF-to-IS needs RX, so it was affected. Cause of the coincidence is unproven.
+- **RT scheduling tried (Sep 24):** `/etc/systemd/system/graywolf.service.d/override.conf` with `CPUSchedulingPolicy=rr`, `CPUSchedulingPriority=50`, `LimitRTPRIO=60` was added [S]; it did **not** stop POLLERR. The override is still installed; keep/remove is undecided. Removal (on cnjmesh1): delete that file, `sudo systemctl daemon-reload`, `sudo systemctl restart graywolf`.
+- **Unplugged what?** `by-id` creation times show the powered-hub devices re-enumerated ~15:51 and the Digirig ~15:55 [I]. Whether the hub was power-cycled or only the Digirig replugged is unknown.
+- **ANSRVR "rejected / retry budget exhausted":** messages to ANSRVR show `ack_state=rejected`, `attempts=4` even when they worked (ANSRVR answers with a text message, not a protocol ACK). Cosmetic [I]. `CQ HOTG` on Sep 24 16:32 EDT and `U HOTG` 16:37 EDT worked [V].
+- **Discord bridge:** Graywolf's DB-poller still relays *outbound* messages (including ones to `CQ`) to Discord — Discord shows what Graywolf sent, not that anyone received it. See the BLOCKLIST note in `cnjmesh1-operations.md`.
+- Sep 24 19:07 EDT `K2GIA listening from Kendall Park NJ` sent to CQ; Charles reported it in Discord (not checked in the bridge journal).

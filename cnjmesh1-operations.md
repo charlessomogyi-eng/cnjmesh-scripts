@@ -281,3 +281,14 @@ For cnjmesh2, always `cd ~/meshtastic-mqtt` first before any docker compose comm
 Full rebuild guide: `README.md`
 AI session context: `CLAUDE_CONTEXT.md`
 This runbook: `cnjmesh1-operations.md`
+
+
+---
+
+## Update 2026-10-13 — notes appended from the handoff merge (old text above left in place)
+- **USB map (Sep 24, [V] `ls -l /dev/serial/by-id/` 16:25):** the table above has K2GIA-10 (`58EF089845`) = ttyACM0 and K2GIA-9 (`58EF088583`) = ttyACM2. On Sep 24 it was the reverse: `58EF088583` -> ttyACM0, `58EF089845` -> ttyACM2; KPN6 (Espressif `90:70:69:84:1F:E0`) = ttyACM1; Digirig CP2102N (`beb31e2f...`) = ttyUSB3; CP2102 serial `0001` = ttyUSB2. Same-port replug normally keeps a number; renumbering happens on reboot, hub power-cycle, another device dropping, or a device being held open [I]. Prefer by-id paths. `ttyUSB2` references in "Common Problems" above are therefore unreliable for Digirig.
+- **Digirig line in "APRS Reference" ("paths shift after USB reconnects"):** an attached `.patch` (local commit `45ca39f`) in the aprs-github handoff carried a corrected wording. **That patch file was not provided for this merge**, so the correction was not applied; the note above is the replacement basis.
+- **Graywolf PTT:** `ptt_configs` already uses the by-id path (see `known-issues.md` update). The "UPDATE ... device='/dev/ttyUSB2'" fix in "Common Problems" is the *old* approach — use the by-id path shown under "USB Devices" instead.
+- **Graywolf RX loss recovery (Sep 24):** if RX is dead while TX works (DCD dark, POLLERR flood), replugging the Digirig restored RX. Unproven whether hub power-cycle or Digirig replug alone did it. Check `ls -l /dev/serial/by-id/` afterward — the Digirig may come back on a new ttyUSB number.
+- **KPR1/KPC1 serial `0001`:** only one `0001` by-id entry shows (ttyUSB2). Check `ls -l /dev/kpc1 /dev/kpr1` on cnjmesh1 to see which board is present.
+- **Graywolf Discord bridge BLOCKLIST** (`cnjmesh1/graywolf-discord/graywolf-discord-bridge.py` in this repo): `ANSRVR`, `9W2KEY-12`, `CT7AQH-5`, `OTA`; any message whose from or to call is listed is skipped in both the journal and DB-poller paths, so ANSRVR traffic never reaches Discord by design (reason per Charles: automated-reply spam). The bridge logs only on post success/error, so an empty journal is not evidence of silence. Whether the live `/opt/graywolf-discord/` copy matches the repo copy is unverified — compare with `md5sum` on cnjmesh1. Four webhooks (`aprs-rf-nj`, `aprs-internet-nj`, and the `-mc` MeshCore-server copies); the same channel names exist in both Discord servers.

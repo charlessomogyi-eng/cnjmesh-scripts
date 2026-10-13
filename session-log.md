@@ -2648,3 +2648,18 @@ Source: `handoff-cnjmesh-ops-aprs-github-2026-09-02-to-2026-10-13.md`. Nothing r
 **Conflicts flagged:** (D1) Graywolf watchdog "disabled" vs "active alert-only" in `cnjmesh1-operations.md` — note added, not resolved; (D2) backup-runbook says SD image not documented vs attempted — note added; (D3/D4) `CLAUDE_CONTEXT.md` token workflow and reminder step — see merge 5/6; (D5) `CQSRVR` unexplained in `docs/lora-aprs-reference.md` — note added; (D6) `cnjmesh1-operations.md` header date stale — bumped; (D7) session-log Jul 14-15 "unsubscribed from HOTG" wording — clarified in the nets table note.
 
 **Docs updated:** `docs/lora-aprs-reference.md`, `docs/aprs-bulletins-and-bridging-reference.md`, `docs/backup-runbook.md`, `cnjmesh1-operations.md`, `todos.md`.
+
+
+## 2026-10-13 — Handoff merge 4/6: APRS RX recovery + GitHub push investigation (source chat Sep 24 and Oct 13, 2026)
+
+Source: `handoff-aprs-github-2026-10-13.md`. No equipment touched in the merge. Much of its Sep 24 portion is [S] (taken from a pasted summary of the earlier chat).
+
+**Sep 24 (EDT):** K2GIA-1 Graywolf RX dead (RX 14 vs TX 1738, DCD dark, ~120 Bad FCS, cpal/ALSA POLLERR flood) [S]; RT-scheduling override added, no effect [S]; `graywolf-discord.service` restarted 15:50 [V journal]; by-id creation times show the hub devices re-enumerated ~15:51 and the Digirig replugged ~15:55 [V times, I interpretation]; Digirig replug restored RX at once [S]; `ls -l /dev/serial/by-id/` at 16:25 showed the swapped ACM numbers and Digirig on ttyUSB3 [V]; `CQ HOTG` (16:32) and `U HOTG` (16:37) to ANSRVR succeeded [V]; ANSRVR rows show "rejected / retry budget exhausted" though they worked [V]; 19:07 CQ message reached Discord per Charles [S].
+
+**Oct 13:** GitHub push investigation — cloud session push fails with HTTP 403 from the git proxy even with embedded tokens; `gh api` says "Use add_repo", which doesn't exist in that session; matches public issues #84581/#96609 [S]. Claude GitHub App installed Oct 13 and claude.ai shows "GitHub Integration" connected, but push still failed in that chat. Local commit `45ca39f` (Digirig wording in `cnjmesh1-operations.md`) existed only in a temporary container; its `.patch` **was not supplied** to this merge, so that wording change was not applied.
+
+**Contradictions with repo, handled by appended notes (old text kept):** POLLERR "cosmetic/TX-iGate unaffected" in `known-issues.md`, `cnjmesh1-operations.md`, `docs/aprs-2m-graywolf-reference.md`; `todos.md` RT-scheduling "not yet tried"; `todos.md`/session-log "PTT by-id pinning not done" vs. DB already by-id; USB table ACM0/ACM2 swapped; KPC1/KPR1 `0001` ambiguity; session-log ~2316 records OTA only in the bridge BLOCKLIST while the script lists ANSRVR, 9W2KEY-12, CT7AQH-5 and OTA; `docs/lora-aprs-reference.md` CQ line; `CLAUDE_CONTEXT.md` push workflow (note added, line 37-38 left).
+
+**Corrections recorded by the handoff:** "PTT on by-id since June 1" unsupported; "CQ is a general-query address" not established (repo says CQ is treated as an invalid addressee); ttyACM0/58EF088583 is K2GIA-9 per repo; KPC1/KPR1 can't be told apart by by-id; a browser site-permission changelog attribution was wrong; an assumption that a new session type would accept the GitHub App install was a guess.
+
+**Docs updated:** `known-issues.md`, `cnjmesh1-operations.md`, `docs/aprs-2m-graywolf-reference.md`, `docs/lora-aprs-reference.md`, `CLAUDE_CONTEXT.md`, `todos.md`.
