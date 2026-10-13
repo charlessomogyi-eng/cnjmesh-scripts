@@ -2678,3 +2678,18 @@ Source: `handoff-kpr3-500khz-cutover-2026-10-13.md`. No equipment touched in the
 **Conflicts with repo:** KPR3/500 kHz new (true). Claim "no 910.525/62.5/KPC2 anywhere" false (`docs/meshcore-repeater-settings.md`, `docs/nyme-sh-summary.md`, `docs/nws-weather-bot-reference.md`). KPN2/KPC2 are the same T-Deck per session-log Aug 8 — handoff's "KPR2/KPC2 canonical, KPN2 old label" is consistent. KPR1 "retired" vs "not retired" pre-existing inconsistency in `cnjmesh1-operations.md`. Observer model naming inconsistent. README B2 "match the regional settings" now has concrete values (update note added).
 
 **Docs updated:** `cnjmesh1-operations.md`, `docs/meshcore-repeater-settings.md`, `known-issues.md`, `todos.md`, `README.md`.
+
+
+## 2026-10-13 — Handoff merge 6/6: KPN2 (T-Deck Plus) WiFi / IP reservation + T096 battery connector (source chat Oct 9 - Oct 13, 2026)
+
+Source: `handoff-kpn2-wifi-tdeck-2026-10-09.md`. No push was attempted in that chat; the repo had no way to receive its findings. The merge touched no equipment.
+
+**Timeline (Oct 9, ET):** Charles asked how to identify KPN2 on home WiFi to reserve its IP. `docker logs mosquitto` on cnjmesh2 showed no `meshuser` hits; `arp -a` on cnjmesh2 showed only CJG1 (10.0.0.18) and CJG2 (10.0.0.234). Before/after ping-sweep diffs showed no new ESP32 — the T-Deck was off / its WiFi U.FL antenna had popped off inside the case; reseated. WiFi still 0.0.0.0 with correct-looking settings. **Root cause found ~11 PM: a trailing space after the SSID** (`C4Somogyi-24 `). Retyped without it, saved, WiFi connected. `ping 10.0.0.140` + `arp -a` on cnjmesh2 confirmed `esp32s3-CEC314`, MAC `80:b5:4e:ce:c3:14`; DHCP reservation set in the Xfinity app and router rebooted; IP confirmed in the phone Meshtastic app. Phone TCP connection to 10.0.0.140 stuck on "Connecting"; browser "Unable to connect" — MUI holds the single client slot (confirmed on the community Discord). BaseUI switch attempt (Settings -> shutdown menu -> Bluetooth icon programming mode -> press-hold) rebooted, outcome ambiguous. Separate topic: Heltec T096 battery connector (JST SH 1.25 mm vs the 10,000 mAh pack's PH2.0). Oct 13 17:17: handoff requested.
+
+**Real changes:** SSID corrected on KPN2 via Meshtastic web client (USB) [V]; DHCP reservation in the Xfinity router [V]; WiFi antenna reseated [V]. No Pi, container, service or repo change.
+
+**Conflicts / flags:** (1) The handoff says the repo has no mention of KPN2, its IP or MAC — false for `session-log.md` (July node table, line ~53; Aug 8 entry) and `CLAUDE_CONTEXT-backup-2026-07-24.md`; true only for `cnjmesh1-operations.md`, now fixed. (2) Handoff says KPN2 "does NOT connect to cnjmesh1/cnjmesh2 Mosquitto" and uses an "external broker", but only cnjmesh2's logs were checked and `mqtt.cnjmesh.me` (CNJ's own public broker) also uses `meshuser` — unverified, flagged. (3) todos Alfa-antenna and `meshuser` rotation items given dependency/clarification notes. (4) Firmware `2.7.15.567b8ea` dev vs stable `2.7.19` is [I]; the handoff's stable-version claim was not re-verified here.
+
+**Corrections recorded by the handoff:** 10.0.0.234 was first declared KPN2 (it is CJG2); `http://10.0.0.140` was never going to work; `meshuser` traffic was never going to appear in cnjmesh2's local Mosquitto; T096 is Heltec, not LilyGo; BaseUI success is unproven; Bluetooth programming mode cannot coexist with WiFi. The Bluetooth programming-mode PIN shown in that chat was intentionally not recorded here.
+
+**Docs updated:** `known-issues.md`, `cnjmesh1-operations.md`, `todos.md`.

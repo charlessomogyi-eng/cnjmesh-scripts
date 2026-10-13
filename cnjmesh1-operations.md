@@ -312,3 +312,15 @@ Tags: [V] = user showed or said it explicitly, [S] = secondhand, [I] = inference
 - **KPR1 status:** the table above says "RETIRED" while this file's USB table says KPR1 is NOT retired and dedicated to the Tilly integration, and `todos.md` says KPR1 is active (CNJ endpoint `b`). The handoff's user statement treats KPR1 as live on 62.5 kHz. Pre-existing repo inconsistency; flagged, not edited.
 - **Observer model:** "WisMesh Pocket v2, RAK4631" vs "WisMesh Pocket RAK4631" in the tables here; the handoff's chat summary calls it "WisMesh Pocket Mini". Unknown which is right — Charles to confirm.
 - **Regulatory caution ([S]/[I], from a pasted groups.io thread; not legal advice, CFR not verified here):** Part 15.247 treats 500 kHz bandwidth as necessary but not sufficient for 1 W; EIRP cap 36 dBm; module grant may not cover a gain antenna. Charles to decide whether the KPR3 Yagi setup and TX power are within the module's grant; record the actual TX power once known.
+
+
+## Update 2026-10-13 — Meshtastic node reference: KPN2 (from KPN2 WiFi/T-Deck handoff; [V] unless noted)
+The MeshCore tables above don't cover the T-Deck. (`session-log.md` has carried a KPN2 row since July; this file never did.)
+
+| Node | Hardware | IP / hostname | MAC | Notes |
+|---|---|---|---|---|
+| KPN2 (= KPC2 in its MeshCore role; same physical device, see Aug 8 session-log) | LilyGo T-Deck Plus | 10.0.0.140 (DHCP reservation in the Xfinity router), `esp32s3-CEC314` | `80:b5:4e:ce:c3:14` | WiFi SSID `C4Somogyi-24` (2.4 GHz). Firmware `2.7.15.567b8ea` is a dev build; stable was `2.7.19.bb3d6d5` when checked — reflash target in flasher.meshtastic.org is **T-Deck** (not T-Deck Pro) [I]. |
+
+Also identified on Oct 9 via `arp -a` on cnjmesh2: CJG1 = `esp32s3-CA423C` at 10.0.0.18, MAC `e8:f6:0a:ca:42:3c` (matches MQTT client ID `!0aca423c`); CJG2 = `esp32s3-A3E8D4` at 10.0.0.234 (Charles confirmed; shows as `Meshtastic` in the phone app's discovered devices).
+
+**MQTT — flagged, not resolved:** the handoff states KPN2 uses `meshuser` credentials and "does NOT connect to cnjmesh1/cnjmesh2 Mosquitto", but its only evidence is that `docker logs mosquitto` on **cnjmesh2** showed no `meshuser` hits. Nothing was checked on cnjmesh1, and the `MQTT Brokers` table above lists `meshuser` on `mqtt.cnjmesh.me` (CNJ's own public broker, which terminates on cnjmesh1). So "external broker" is unverified; KPN2 may well use `mqtt.cnjmesh.me`. Check KPN2's MQTT settings (web client over USB) and cnjmesh1's Mosquitto logs before relying on the handoff's statement. Credential rotation dependency: any rotation of `meshuser` on whichever broker KPN2 uses requires reconfiguring KPN2 too.

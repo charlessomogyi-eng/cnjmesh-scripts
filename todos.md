@@ -188,3 +188,12 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 - **[OPEN] Confirm KPR3 reaches Tck's area via the Yagi** (send one advert from KPR3 on 500); record KPR3's actual TX power; decide whether the Yagi setup is within the module's grant (see `cnjmesh1-operations.md` caution).
 - **[OPEN] Community notice** of the cutover (Discord/Facebook).
 - **[OPEN] Confirm Observer model** (WisMesh Pocket v2 vs Mini) and fix the KPR1 "retired" row in `cnjmesh1-operations.md`.
+
+
+### From the Oct 9-13 KPN2 (T-Deck Plus) WiFi / IP reservation handoff
+- **[OPEN] KPN2 phone/WiFi (TCP) management not working — BaseUI switch unconfirmed.** TCP from the phone app to 10.0.0.140 fails while MUI is running (MUI holds the single client slot). BaseUI switch attempted Oct 9, result ambiguous [I]. Likely fix (unverified): reflash to stable firmware (2.7.19+; current is dev build 2.7.15.567b8ea) and retry. Until resolved, USB + web client is the only confirmed management path.
+- **[OPEN] KPN2 WiFi U.FL antenna keeps popping loose** — consider a drop of clear nail polish or kapton tape over the seated connector once the correct socket is confirmed.
+- **[OPEN] Which broker does KPN2 actually use?** See the MQTT flag in `cnjmesh1-operations.md` (only cnjmesh2's Mosquitto was checked).
+- **Update on the `meshuser` credential rotation item above:** KPN2 uses `meshuser`; rotating it on whichever broker KPN2 connects to means reconfiguring KPN2 as well. Original item unchanged.
+- **Update on the "In-transit hardware ... 2x Alfa antennas (one for the T-Deck/KPN2 ...)" item above:** KPN2's WiFi now works, but that is separate from RF range; confirm whether the Alfa antennas arrived and whether the T-Deck one is still wanted. Status unknown.
+- **[OPEN] Heltec Mesh Node T096 battery splice not done.** T096 is a Heltec product (nRF52840), not LilyGo. It uses a JST SH 1.25 mm (1.25-2P) battery connector; Charles has a 10,000 mAh battery with a PH2.0 connector. Splice plan [S]: verify polarity with a multimeter first, cut/splice one wire at a time, solder + heat shrink. Charging a 10,000 mAh pack through the T096's USB-C will be very slow (charger designed for small cells) [S].
