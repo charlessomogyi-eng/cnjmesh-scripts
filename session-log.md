@@ -2616,3 +2616,18 @@ Source: handoff file `handoff-k2gia-lora-range-tests-meshview-malla-2026-10-13.m
 **Conflicts with the repo, flagged and NOT silently resolved:** (1) `todos.md` "Meshview ad-hoc Python processes" is stale — Meshview is systemd (`install-map-cnjmesh1.md`); update note added to `todos.md`. (2) `todos.md` Aug 16 SBNJ/FTRN-siting explanation vs. session-log ~2093 "dead mosquitto bridge" theory — both left; todo added saying the bridge theory is unproven. (3) UV-5R M antenna location now unknown — todo added. (4) Handoff proposes rewording `CLAUDE_CONTEXT.md` step 5 (token reminder) — see merge 3/6 and 5/6, handled once there.
 
 **Docs updated:** `known-issues.md` (3 APRS bullets), `todos.md`, `docs/aprs-2m-graywolf-reference.md` (Graywolf API section), `docs/lora-aprs-reference.md` (Jul 24 test result).
+
+
+## 2026-10-13 — Handoff merge 2/6: APRS messaging (TD-H9 / KISSLink / APRSdroid / Graywolf) (source chat Aug 20-24, 2026; follow-up Q&A Oct 5-13)
+
+Source: `handoff-aprs-td-h9-messaging-2026-10-13.md`. No equipment touched in the merge. The handoff says the Aug 23-24 doc pushes it made (known-issues, k2gia-5 reference, field reference, ODmaster bug doc, manuals, Icom reference) succeeded and already exist in the repo; no repo write was attempted by that chat after Aug 24.
+
+**What happened (per handoff):** Aug 23: KISSLink at K2GIA-7 sent a correct `::ADDRESSEE:text{id` packet, digipeated by KB2EAR-13 and ACKed in ~3 s [V]; TD-H9 squelch 0 to 1 stopped hiss [S]; APRS Messenger failed until SSID field changed from 1 to 7 [V]; APRSdroid sent nothing until Start Tracking was on [V]; APRSdroid server changed to `rotate.aprs2.net` [S]. Aug 24: TidRadio said the ODmaster messaging fix is planned for Android 2.6.5 [V repo]. Oct 5-13: Q&A only (Graywolf vs TD-H9 TNC, Ramble, PocketCHIRP BLE-KISS-to-TCP router, APRSPH Messenger, dl1gkk article) — no system changes. An APRS connection primer was written to a scratch file Oct 8 and **never committed; its text is not in this merge** (not provided).
+
+**Changes made by Charles on his own devices:** squelch, KISSLink/Messenger identity, SSID field, APRSdroid server + Tracking + SmartBeaconing fast speed. The corrected APRS-IS filter was never entered. "Upload RF-heard packets" on K2GIA-7 not changed.
+
+**Conflicts / flags:** (1) the repo's "settled" APRS-IS filter is probably wrong (OR semantics) — update notes added, old text kept, tagged [S]; (2) `docs/aprs-bulletins-and-bridging-reference.md` IS-Companion "open issue" is stale (resolved Aug 23 per `known-issues.md`) — note appended; (3) `todos.md` "K2GIA-9 on order" is stale — note appended; (4) public-repo exposure of passcode, home coordinates and a retailer order number — flagged in `todos.md`, **not scrubbed** (needs Charles's decision); (5) "Upload RF-heard" default vs. actual device state — todo added.
+
+**Corrections (earlier assistant errors per handoff):** a fabricated Play Store link was given; Messenger failure cause guessed wrongly first (message-ID dedup; real cause SSID field); IS Companion "Disconnected" misread as a bug; the "settled" filter was wrong; Kelvin's bridge first dismissed as Windows-only; "tracker supports BLE KISS" stated as if it applied to K2GIA-9 (unproven); a fresh chat wrongly guessed the repo is private.
+
+**Docs updated:** `known-issues.md`, `todos.md`, `docs/k2gia-5-aprsdroid-reference.md`, `docs/aprs-bulletins-and-bridging-reference.md`, `docs/td-h9-app-field-reference.md`.

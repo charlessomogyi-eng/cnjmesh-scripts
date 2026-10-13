@@ -113,3 +113,10 @@ Service shortcuts available: **WHO-IS** (query), **Path test**, **App group**, *
 - **Message sent but never ACKs**: check Setup/Settings SSID field first — a wrong SSID means the packet's source callsign is wrong, which can cause silent failures. Also possible: real RF conditions, digipeater unavailable, or (less likely) a message-ID collision if retrying the exact same text right after a failed send.
 - **Only one app can hold the BLE connection to the TD-H9 at a time.** Disconnect in one app before connecting in the other.
 - **Static/hiss on the radio itself when powered on**: check Squelch Level in the TD-H9's own radio menu — should be `1`. If it reads `0`, that's fully open squelch (passes all noise) and is not a fault.
+
+
+## Update 2026-10-13: additions from APRS-messaging handoff (all **[S]**, not tested by Charles)
+- PocketCHIRP (as of Oct 8 screenshots) has a BLE-KISS-to-TCP router, similar in purpose to Kelvin Hill's Android "BLE KISS TCP Bridge" (which re-presents BLE KISS as `127.0.0.1:8001` so stock APRSdroid could use the TD-H9). Neither is in use — KISSLink and the APRS Messenger already work.
+- A Facebook thread reports TidRadio saying the TD-H9 cannot mute for APRS ("hardware logic"). Not verified.
+- TD-H9 BLE KISS: service AF00, TX characteristic AF01 (write without response), RX AF02 (notify).
+- ODmaster "Send Message" fix was said to be planned for Android 2.6.5; check the Play Store version occasionally.

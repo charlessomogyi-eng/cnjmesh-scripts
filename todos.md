@@ -145,3 +145,14 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 - **[OPEN] Where is the UV-5R M antenna now?** Repo says roof dual-band antenna since Aug 17, and the Aug 18 item above says it should go back to a whip; Jul 24 chat had it on a whip. Current (Oct 13) location unknown — Charles to confirm, then close or keep the Aug 18 item.
 - **[OPEN] Oct 8 APRSThursday net:** K2GIA was not seen on page 1 of the net log; full log not checked [S]. Confirm whether K2GIA checked in.
 - **[OPEN] Fing Agent:** live `fingagent.bin` process on cnjmesh1 (PID 100151 on Jul 25) — already covered by the "Fing Agent" item above; decision to keep or uninstall still pending.
+
+
+### From the Aug 20-24 / Oct 5-13 APRS messaging (TD-H9 / KISSLink / APRSdroid / Graywolf) handoff
+- **Update 2026-10-13 on the Aug 23 "K2GIA-9, on order" item above:** stale — `known-issues.md` and `docs/lora-aprs-reference.md` show K2GIA-9 arrived, was flashed Aug 26 and is configured as Bluetooth Classic. Old item left in place.
+- **[OPEN] Enter the corrected APRSdroid filter** (`t/moi/K2GIA-1/150` or `/K2GIA-5/` — Charles to choose the anchor), then Stop/Start Tracking. Unverified — see `known-issues.md`.
+- **[OPEN] Verify/uncheck "Upload RF-heard packets to APRS-IS" on K2GIA-7** (Charles said it was checked [S]; repo's recommended default is unchecked; he leaned RF-only for the mobile).
+- **[OPEN] Retest K2GIA-5 to K2GIA-7 over APRS-IS** with Tracking on (already listed above, Aug 23).
+- **[OPEN] Unknown: what the 438.800 / 433.250 MHz items in Charles's feed refer to** — probably beacon comments or a gateway frequency [I]; screenshots never shared.
+- **[OPEN] Does K2GIA-9 firmware offer BLE KISS?** Repo has it on Bluetooth Classic; "tracker supports BLE KISS" came from the CA2RXU wiki and is untested for this board. Don't plan KISSLink with K2GIA-9 until confirmed.
+- **[OPEN, low]** Check ODmaster for Android 2.6.5; check Graywolf version/update; decide whether to try Ramble / PocketCHIRP (no commitment made).
+- **[DECISION NEEDED — public repo]** (a) APRS-IS passcode is committed in many files (APRS passcodes derive from the callsign by a public algorithm, so low risk, but it conflicts with the "no passwords" rule); (b) K2GIA-1 coordinates appear in `docs/k2gia-5-aprsdroid-reference.md`; (c) `docs/td-h9-odmaster-aprs-messaging-bug.md` contains a retailer order number and full name. **None were changed in this merge.**

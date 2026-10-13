@@ -29,3 +29,7 @@ Evaluated 2026-08-23 whether Reticulum could bridge K2GIA-1 (2m/VHF AFSK APRS) a
 - **APRStac** — mentioned as a third option; not evaluated in detail this session.
 
 None of these are set up or scheduled — this is a "worth knowing the landscape" entry, not an active project. If pursued later, worth deciding (same as the previously-noted APRStastic Meshtastic↔APRS bridge decision in `lora-aprs-reference.md`): which spare Pi to dedicate, and whether combining multiple bridge/gateway roles on one small host makes sense versus keeping them separate.
+
+
+## Update 2026-10-13: the "K2GIA-7 IS Companion won't connect" section above is stale
+`known-issues.md` (first APRS bullet) and session-log Aug 23 record that the IS Companion was never actually broken — it connected on retry (server `rotate.aprs2.net`, port 14580). The "Open issue" and "Next step" text above (left in place per the no-rewrite rule) should be read as resolved Aug 23. Candidate for deletion once Charles agrees; `known-issues.md` says resolved entries should be deleted.
