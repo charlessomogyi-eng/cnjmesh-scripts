@@ -31,3 +31,9 @@ Not yet applied to KPR1/KPR2. Worth evaluating against current settings
 (910.525 MHz / BW 62.5 / SF7 / CR5 / TX22) next time repeater config is
 touched — see todo #8 (node tagging) and #9 (KPR1 retirement decision) in
 CLAUDE_CONTEXT.md for related upcoming work.
+
+
+## Update 2026-10-13: 500 kHz cutover started Oct 11, 2026 (from KPR3 handoff; **[S]**, unverified)
+The "Applicability to CNJ Mesh" values above (910.525 / BW 62.5 / SF7 / CR5 / TX22) are no longer universal. On Oct 11 Charles moved **KPR3** (and the T-Deck companion KPC2) to **910.525 MHz, BW 500 kHz, SF10, CR5**, using numbers from community admin Tck; he reports most of NJ has moved except some near the south Jersey shore. KPR1, KPR2, KPC1 and the Observer remain on 62.5 kHz until cut over, so nodes on different settings cannot hear each other or be remotely administered. See `cnjmesh1-operations.md` for details.
+
+CLI notes from the handoff (MeshCore 1.17.1, **[S]**, not tested remotely): `set radio <freq>,<bw>,<sf>,<cr>` needs a reboot; `tempradio <freq>,<bw>,<sf>,<cr>,<mins>` reverts automatically and isn't saved; `set flood.advert.interval` valid range is 3-168 h (0 is invalid — an earlier chat said otherwise); no documented "disable TX" command for repeater firmware (workarounds: `set repeat off`, `tempradio`, lower `set tx`). A stale saved "Out Path" on a contact may break remote login after a bandwidth change [S]; the page above already says to reset the path after changing settings.

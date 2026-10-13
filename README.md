@@ -245,6 +245,8 @@ README (each typically needs to run as its own always-on service).
    contacts, Part 9, since these settings can change as the network evolves)
 3. Connect via USB to whichever Pi will host it
 
+> **Update 2026-10-13:** the settings this repo documents (910.525 MHz / 62.5 kHz / SF7 / CR5, see `docs/meshcore-repeater-settings.md`) are no longer the whole story. As of Oct 11, 2026 part of the regional network is moving to **910.525 MHz / 500 kHz / SF10 / CR5**; the values came from a community admin (Tck) and "most of NJ" had moved per Charles (south Jersey shore excepted) — **[S]**, unverified here. KPR3 is a third repeater (solar, outside, Yagi). Ask community contacts for the current values before configuring anything new.
+
 ### B3. whorepeated (Custom Tool)
 
 This repo includes a custom tool that resolves which repeater relayed a

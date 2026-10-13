@@ -292,3 +292,23 @@ This runbook: `cnjmesh1-operations.md`
 - **Graywolf RX loss recovery (Sep 24):** if RX is dead while TX works (DCD dark, POLLERR flood), replugging the Digirig restored RX. Unproven whether hub power-cycle or Digirig replug alone did it. Check `ls -l /dev/serial/by-id/` afterward — the Digirig may come back on a new ttyUSB number.
 - **KPR1/KPC1 serial `0001`:** only one `0001` by-id entry shows (ttyUSB2). Check `ls -l /dev/kpc1 /dev/kpr1` on cnjmesh1 to see which board is present.
 - **Graywolf Discord bridge BLOCKLIST** (`cnjmesh1/graywolf-discord/graywolf-discord-bridge.py` in this repo): `ANSRVR`, `9W2KEY-12`, `CT7AQH-5`, `OTA`; any message whose from or to call is listed is skipped in both the journal and DB-poller paths, so ANSRVR traffic never reaches Discord by design (reason per Charles: automated-reply spam). The bridge logs only on post success/error, so an empty journal is not evidence of silence. Whether the live `/opt/graywolf-discord/` copy matches the repo copy is unverified — compare with `md5sum` on cnjmesh1. Four webhooks (`aprs-rf-nj`, `aprs-internet-nj`, and the `-mc` MeshCore-server copies); the same channel names exist in both Discord servers.
+
+
+## Update 2026-10-13 — MeshCore Node Reference additions (from KPR3 / 500 kHz cutover handoff; old table above left in place)
+Tags: [V] = user showed or said it explicitly, [S] = secondhand, [I] = inference. Hardware and pubkey prefixes below come from the handoff's chat record.
+
+| Node | Hardware | Public Key Prefix | Location / role |
+|---|---|---|---|
+| **KPR3** | RAK4630 + RAK19003, solar-charged | `29dda9e3` | Backyard/outside, ~13 ft mast, 9-element Yagi (N-female; N-male to RP-SMA pigtail), vertical polarization [S]. Repeater. **First node moved to 500 kHz (Oct 11).** TX power setting unknown — never shown in that chat. |
+| **KPC2** | LilyGo T-Deck (companion, personal) | `e14166b8` | House, phone-app/standalone. On 500 kHz as of Oct 11. **Same physical device as "KPN2"** — see conflict note below. |
+
+**Settings used on the 500 kHz cutover [V]:** 910.525 MHz, BW 500 kHz, SF10, CR5 (values supplied by community admin Tck). Previous KPR3 values were not recorded in that chat. Procedure that worked [V]: change repeater (App: Repeater Admin -> Radio Settings -> check mark, "OK - reboot to apply"), reboot, then change companion and reboot. The app's reboot gives no confirmation; the first KPR3 reboot probably did not apply and a second was needed [I].
+
+**Status of the rest (as of the last message, Oct 11-13) [S]:** KPR1, KPR2, KPC1 and the Observer are still on 62.5 kHz. Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
+
+**Conflicts flagged between the KPR3 handoff and this repo (not silently resolved):**
+- The handoff says the repo has no KPR3, 910.525, 62.5 or KPC2 anywhere. **Not true:** 910.525/62.5/SF7/CR5 are in `docs/meshcore-repeater-settings.md` and `docs/nyme-sh-summary.md`; KPC2 is in `docs/nws-weather-bot-reference.md`; session-log Aug 8 says KPN2 and KPC2 are the same T-Deck. KPR3 and 500 kHz really are new.
+- **KPN2 vs KPC2:** repo evidence (session-log Aug 8 and `docs/nws-weather-bot-reference.md`) says one physical T-Deck Plus with two names: KPN2 = its Jul 14 WiFi/IP designation (`10.0.0.140`, MAC `80:b5:4e:ce:c3:14`), KPC2 = its MeshCore role. Keep both names until Charles picks one.
+- **KPR1 status:** the table above says "RETIRED" while this file's USB table says KPR1 is NOT retired and dedicated to the Tilly integration, and `todos.md` says KPR1 is active (CNJ endpoint `b`). The handoff's user statement treats KPR1 as live on 62.5 kHz. Pre-existing repo inconsistency; flagged, not edited.
+- **Observer model:** "WisMesh Pocket v2, RAK4631" vs "WisMesh Pocket RAK4631" in the tables here; the handoff's chat summary calls it "WisMesh Pocket Mini". Unknown which is right — Charles to confirm.
+- **Regulatory caution ([S]/[I], from a pasted groups.io thread; not legal advice, CFR not verified here):** Part 15.247 treats 500 kHz bandwidth as necessary but not sufficient for 1 W; EIRP cap 36 dBm; module grant may not cover a gain antenna. Charles to decide whether the KPR3 Yagi setup and TX power are within the module's grant; record the actual TX power once known.

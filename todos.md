@@ -176,3 +176,15 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 - **Update on the "Graywolf PTT device pinning" item above:** `ptt_configs` already holds the by-id path (date unknown). Item can be closed once Charles agrees; old wording left in place.
 - **Update on the Aug 17 POLLERR item above:** "proven cosmetic" is too strong — see `known-issues.md` update. The RT override was tried Sep 24 with no effect.
 - **[OPEN] GitHub push from cloud chats:** unresolved on the platform side per the aprs-github handoff (reports similar to anthropics/claude-code issues #84581 and #96609, [S] unverified here). Charles's timeline: pushes worked ~6 months and stopped after about Sep 8. The Claude GitHub App was installed on `charlessomogyi-eng` Oct 13 (repo selection unconfirmed). Account note: `karchsomogyi` is a separate empty account — don't log in with it.
+
+
+### From the Oct 4-13 KPR3 / KPC2 500 kHz cutover handoff
+- **[OPEN] KPR3 remote-admin login on 500 kHz fails** while packets relay (see `known-issues.md`). Ideas, none tested: reset the contact's Out Path; re-enter admin password; check status/uptime from KPC2.
+- **[OPEN] KPR2** (Heltec V4, cnjmesh3) to 500 kHz — reach it from inside the house on 62.5 first, change, reboot, retest.
+- **[OPEN] Observer** (RAK4631, cnjmesh3, `/dev/ttyACM0`, feeds CoreScope/MeshOmatic/LetsMesh via `meshcore-packet-capture`): Charles doesn't know how to change it. Needed: is it companion or repeater firmware, and what holds its serial port. Suggested read-only check, run on **cnjmesh3**: `systemctl list-units --type=service --no-pager | grep -i -E 'mesh|observer|mqtt'`. Stop the service holding the port before connecting. Not run.
+- **[OPEN] KPC1** (Heltec V3, cnjmesh1, `/dev/kpc1`, weather bot): status unknown (not in Charles's contacts). Check on **cnjmesh1**: `ls -l /dev/kpc1` and the weather-bot service; then move to 500 kHz so the bot isn't deaf.
+- **[OPEN] KPR1** (Tilly bridge): blocked on the RX_LOG_DATA/LOG_DATA question above; decide whether it moves to 500 kHz.
+- **[OPEN] path.hash.mode** on KPR1/KPR2: unchanged, decision pending.
+- **[OPEN] Confirm KPR3 reaches Tck's area via the Yagi** (send one advert from KPR3 on 500); record KPR3's actual TX power; decide whether the Yagi setup is within the module's grant (see `cnjmesh1-operations.md` caution).
+- **[OPEN] Community notice** of the cutover (Discord/Facebook).
+- **[OPEN] Confirm Observer model** (WisMesh Pocket v2 vs Mini) and fix the KPR1 "retired" row in `cnjmesh1-operations.md`.

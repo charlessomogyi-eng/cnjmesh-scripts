@@ -2663,3 +2663,18 @@ Source: `handoff-aprs-github-2026-10-13.md`. No equipment touched in the merge. 
 **Corrections recorded by the handoff:** "PTT on by-id since June 1" unsupported; "CQ is a general-query address" not established (repo says CQ is treated as an invalid addressee); ttyACM0/58EF088583 is K2GIA-9 per repo; KPC1/KPR1 can't be told apart by by-id; a browser site-permission changelog attribution was wrong; an assumption that a new session type would accept the GitHub App install was a guess.
 
 **Docs updated:** `known-issues.md`, `cnjmesh1-operations.md`, `docs/aprs-2m-graywolf-reference.md`, `docs/lora-aprs-reference.md`, `CLAUDE_CONTEXT.md`, `todos.md`.
+
+
+## 2026-10-13 — Handoff merge 5/6: KPR3 / KPC2 cutover to 500 kHz (MeshCore) (source chat Oct 4 - Oct 13, 2026; main work Oct 11)
+
+Source: `handoff-kpr3-500khz-cutover-2026-10-13.md`. No equipment touched in the merge; every change below was made by Charles in the MeshCore phone app. That handoff's own repo read was partial (`docs/` unread), so several of its "repo has nothing" claims were checked here — see conflicts.
+
+**Timeline (Oct 11 unless noted):** Oct 4 asked whether a MeshCore node can have TX turned off; Oct 11 asked how to silence KPR3 during the Yagi swap (no documented TX-disable for repeater firmware; `set repeat off` / `tempradio` / lower `set tx` offered, unverified); 9-element Yagi on a ~13 ft mast; decision to move to 910.525 MHz / 500 kHz / SF10 / CR5 (values from Tck); KPR3 changed and rebooted twice, KPC2 changed and rebooted; KPC2 briefly returned to 62.5 to regain admin access, then to 500; KPC2 on 500 saw W Boro and KB2EAR; View Path ~8:04 PM showed KPR3 repeating at 7.0 dB, 1 hop; remote admin login from KPC2 to KPR3 still fails (unresolved). "KPR3 heard at 5:34 PM" was KPC2's own reply to a 62.5 login, not a KPR3 broadcast (Charles corrected the assistant).
+
+**End state:** KPR3 and KPC2 on 500 kHz; KPR1, KPR2, KPC1, Observer on 62.5 kHz [S]. KPR3 TX power unknown. Nothing changed on Pis, KPR1/2, KPC1, Observer.
+
+**Corrections recorded by the handoff:** `flood.advert.interval 0` is invalid (range 3-168 h); the "Yagi forces ~18 dBm" claim was wrong (EIRP cap 36 dBm per the thread, CFR unverified); the back-lobe/range explanation of the failed login is unproven and probably wrong; the missing reboot-confirmation warning; one blank reply.
+
+**Conflicts with repo:** KPR3/500 kHz new (true). Claim "no 910.525/62.5/KPC2 anywhere" false (`docs/meshcore-repeater-settings.md`, `docs/nyme-sh-summary.md`, `docs/nws-weather-bot-reference.md`). KPN2/KPC2 are the same T-Deck per session-log Aug 8 — handoff's "KPR2/KPC2 canonical, KPN2 old label" is consistent. KPR1 "retired" vs "not retired" pre-existing inconsistency in `cnjmesh1-operations.md`. Observer model naming inconsistent. README B2 "match the regional settings" now has concrete values (update note added).
+
+**Docs updated:** `cnjmesh1-operations.md`, `docs/meshcore-repeater-settings.md`, `known-issues.md`, `todos.md`, `README.md`.
