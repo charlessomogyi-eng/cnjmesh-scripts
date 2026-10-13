@@ -175,7 +175,7 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 - **[OPEN] Check `/dev/kpc1` / `/dev/kpr1` mapping on cnjmesh1** (`ls -l /dev/kpc1 /dev/kpr1`).
 - **Update on the "Graywolf PTT device pinning" item above:** `ptt_configs` already holds the by-id path (date unknown). Item can be closed once Charles agrees; old wording left in place.
 - **Update on the Aug 17 POLLERR item above:** "proven cosmetic" is too strong — see `known-issues.md` update. The RT override was tried Sep 24 with no effect.
-- **[OPEN] GitHub push from cloud chats:** unresolved on the platform side per the aprs-github handoff (reports similar to anthropics/claude-code issues #84581 and #96609, [S] unverified here). Charles's timeline: pushes worked ~6 months and stopped after about Sep 8. The Claude GitHub App was installed on `charlessomogyi-eng` Oct 13 (repo selection unconfirmed). Account note: `karchsomogyi` is a separate empty account — don't log in with it.
+- **[OPEN] GitHub push from cloud chats:** unresolved on the platform side per the aprs-github handoff (reports similar to anthropics/claude-code issues #84581 and #96609, [S] unverified here). Charles's timeline: pushes worked ~6 months and stopped after about Sep 8. The Claude GitHub App was installed on `charlessomogyi-eng` Oct 13 (repo selection unconfirmed). The repo owner account is `charlessomogyi-eng`; make sure that account is the one logged in.
 
 
 ### From the Oct 4-13 KPR3 / KPC2 500 kHz cutover handoff
