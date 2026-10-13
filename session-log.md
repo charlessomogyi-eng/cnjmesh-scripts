@@ -2597,3 +2597,22 @@ Charles noticed SJMesh nodes no longer appear on `meshview.cnjmesh.me/nodegraph`
 Also corrected an earlier overstatement of mine: I'd described the narrowed scope as "never supposed to be permanent," which contradicts the record — the native bridge was disabled intentionally and permanently, with the relay as its designed replacement. The accurate framing is that the architecture change was permanent by design, but its side effect on Meshview's node graph was never documented or considered at the time.
 
 **Planned fix (deferred to next session, not applied):** add `("msh/US/2/e/SJMesh/#", 0)` to `SUBSCRIBE_TOPICS`, plus defensive SJMesh-path variants of the three blocked node IDs. **Must also verify** Meshview's own independent `[mqtt] topics` list in `~/meshview/config.ini` includes the SJMesh topic — relaying into the local broker only helps if Meshview subscribes to it. Full detail in `todos.md`.
+
+
+## 2026-10-13 — Handoff merge 1/6: K2GIA / K2GIA-10 range tests, Graywolf API, Meshview/Malla coverage (source chat Jul 24-25, 2026; follow-ups Oct 9 and Oct 13)
+
+Source: handoff file `handoff-k2gia-lora-range-tests-meshview-malla-2026-10-13.md`, merged by a Claude Code session on Oct 13. Nothing was run on any equipment to produce it or to merge it. Existing Jul 24-26 session-log entries are accurate and were not edited; this entry records what the handoff adds or corrects.
+
+**What the handoff says happened (tags as in the handoff):**
+- Jul 24: UV-5R M moved from roof antenna to a small whip (~16:54, [S]); K2GIA CQ sent ~16:57 [S]; K2GIA-10 connected to the roof antenna that evening [S]. aprs.fi showed neither CQ [V]. Result inconclusive: aprs.fi shows only gated packets.
+- Jul 24: Graywolf API cookie-login method worked out; packet buffer had aged out the 16:57 CQ [V].
+- Jul 24/25: the repo push of this chat landed as commit `ccf3d18` (Jul 26 18:31 UTC); the hash chat reported (`fbbfc76`) differs because the Aug 30 `git filter-repo` scrub rewrote history [V for `ccf3d18` existing, I for the cause].
+- Jul 25 20:25 EDT cnjmesh1 health check: up 1d 22:57, load 1.27/1.39/1.37, 43.8 C, throttled=0x0, 12 containers up, disk 39% [V]. Jul 25: Charles decided not to enable MQTT on KPN6 [V].
+- Jul 25: Meshview compared against MTX1's; Malla "gateway diversity" shown as 1 [S]. A dead-Mosquitto-bridge theory was floated and never confirmed.
+- Oct 8-9: APRSThursday net log shared; assistant said K2GIA was absent after reading only page 1 (incomplete check). Oct 13: GitHub push troubleshooting (see merge 5/6).
+
+**Corrections recorded by the handoff (earlier assistant errors):** K2GIA and K2GIA-10 were conflated repeatedly; "Pushed fbbfc76" was later wrongly doubted (it landed as `ccf3d18`); a bearer-token Graywolf method was guessed wrongly; "nothing heard it" should read "nothing relayed it to APRS-IS"; the dead-bridge explanation is unproven.
+
+**Conflicts with the repo, flagged and NOT silently resolved:** (1) `todos.md` "Meshview ad-hoc Python processes" is stale — Meshview is systemd (`install-map-cnjmesh1.md`); update note added to `todos.md`. (2) `todos.md` Aug 16 SBNJ/FTRN-siting explanation vs. session-log ~2093 "dead mosquitto bridge" theory — both left; todo added saying the bridge theory is unproven. (3) UV-5R M antenna location now unknown — todo added. (4) Handoff proposes rewording `CLAUDE_CONTEXT.md` step 5 (token reminder) — see merge 3/6 and 5/6, handled once there.
+
+**Docs updated:** `known-issues.md` (3 APRS bullets), `todos.md`, `docs/aprs-2m-graywolf-reference.md` (Graywolf API section), `docs/lora-aprs-reference.md` (Jul 24 test result).

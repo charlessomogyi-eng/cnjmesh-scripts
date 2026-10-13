@@ -151,3 +151,10 @@ K2GIA-10's syslog currently points only to `10.0.0.181` (cnjmesh1, local). The p
 Full detail in `todos.md` / Claude's memory — this is Meshtastic-adjacent, not part of the LoRa APRS (K2GIA-9/-10) build itself; kept as a separate consideration.
 
 **APRS-Agent** (map.aprsagent.com) — self-hostable APRS-IS bridge/automation platform with AI Gateway, repeater/silence monitoring, propagation detection. Reference only, not yet involved with — plan is to revisit once both 2m APRS (Graywolf) and LoRa APRS builds are fully stable. Would run on a separate VPS/spare Pi, not cnjmesh1. Charles has ruled out German hosting providers (Contabo, Hetzner) specifically due to ID-verification friction — would need a non-German alternative (DigitalOcean, Linode, Vultr) if pursued.
+
+
+## Update 2026-10-13: Jul 24 K2GIA-10 roof-antenna CQ test — inconclusive (from range-test handoff)
+- [S] K2GIA-10 was connected to the roof dual-band antenna (powered and data via cnjmesh1) on the evening of Jul 24 and a CQ was sent via aprs-tnc-web ("CQ Sent Successfully").
+- [V] aprs.fi for K2GIA-10 through 22:37 EDT showed only the 15-minute beacons, all `TCPIP*,qAC` via foreign T2 servers (T2SYDNEY, T2LAUSITZ, T2BELGIUM). No RF-path packet and no CQ appeared.
+- **Result: inconclusive.** K2GIA-10 doesn't self-gate (see `known-issues.md`), and aprs.fi can't distinguish "not transmitted" from "not gated". Whether anyone heard it over RF: unknown. A cooperating listener or an RX-only second board is needed.
+- The K2GIA (2 m, whip, Jul 24 ~16:57) CQ likewise never appeared on aprs.fi; accurate wording is "nothing relayed it to APRS-IS", not "nothing heard it".

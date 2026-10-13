@@ -84,3 +84,12 @@ First live test of APRS OTA (aprsota.org) via K2GIA-1:
 - Chased K0TFU-6 (Jared, the APRS OTA developer, live from DBARA monthly meeting) and K9CMP-9 — both confirmed
 - Full handbook reference saved in Claude's persistent memory (all pages read and cited)
 - Correction learned: QSL confirmations must be sent `@chasercallsign QSL ...` addressed to **OTA**, never directly to the chaser — direct messages to chasers do not register as confirmed contacts
+
+
+## Update 2026-10-13: Reading Graywolf packets from the Pi (from Jul 24 range-test handoff)
+- [V] Auth is a **session cookie** named `graywolf_session`, set by `POST /api/auth/login` with a JSON body of username and password. The cookie authenticates later calls. Do not put the password in this repo (see `session-log.md` ~line 855, scrubbed).
+- [V] Bearer tokens are **Android-only** (`pkg/webauth/bearer.go`); an earlier chat guessed a bearer method and was wrong.
+- [I] The packet ring buffer holds roughly 1000 packets / ~30 min (exact size from source read, not independently re-tested), so the API can't answer "did my message go out?" later. Use aprs.fi or `journalctl -u graywolf`.
+- [I] Graywolf is now behind Cloudflare Access (`graywolf.cnjmesh.me`, email+PIN, session-log ~line 867), which was set up after the cookie work — API calls from outside the Pi may need to go to `localhost:8082` instead.
+- [S] Versions seen Jul 24: 0.13.13 installed, 0.14.12 available. Not re-checked since.
+- Do not conflate: **K2GIA / K2GIA-1 = the 2 m Graywolf station; K2GIA-10 = the LoRa APRS node.** This was the most frequent mistake in that chat.

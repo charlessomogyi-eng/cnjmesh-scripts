@@ -131,3 +131,17 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
   - **Process agreed for actually rotating each one, whenever time is scheduled for this:** (1) grep every host (`cnjmesh1`, `cnjmesh2`, `cnjmesh3` — separately, each is an independent filesystem) for the webhook's numeric ID under `/opt`, `/home/somog`, `/etc/systemd/system` to find every real reference, don't rely on documentation/memory alone since that's already been proven incomplete tonight (KPN6 sat undocumented for an unknown period; "Spidey Bot" was stale); (2) regenerate the webhook in Discord; (3) Charles pastes the new URL directly in chat (not into any git-tracked file); (4) update each found script/service file directly on its host via a live command (e.g. `sed`), confirm the service picks it up and post a test; (5) never commit the real value to git at any point in this process.
 
 
+
+
+---
+
+## Items added by the 2026-10-13 handoff merge
+*(Source: six handoff files from separate chats. Tags: [V] verified, [S] secondhand, [I] inference. Old items above are untouched; these are additions/update notes.)*
+
+### From the Jul 24-25 K2GIA / K2GIA-10 range-test + Meshview/Malla handoff
+- **Update 2026-10-13 on the "Meshview runs as ad-hoc background Python processes" item above:** that wording is stale. Meshview runs as systemd units `meshview-db` and `meshview-web` ([V] `install-map-cnjmesh1.md`, `docs/pre-tilly-master-checklist.md:24`, session-log Jul 31 health check). Left in place per the no-rewrite rule; treat the systemd description as correct.
+- **[OPEN] Malla "gateway diversity" dropped to 1 (observed Jul 25).** Cause unknown. The "dead Mosquitto bridge" theory was proposed but no diagnostic output was ever seen — unproven. The Aug 14 SJMesh topic omission (see top of this file) began *after* Jul 25, so it cannot explain the Jul 25 drop. Next step (unrun): check Mosquitto bridge status and `mosquitto.conf` on cnjmesh1.
+- **[OPEN] Coordinated RF test for K2GIA-10 still not done** — ask a nearby operator to watch their iGate while a CQ is sent on 433.775. K2GIA-10 non-self-gating means aprs.fi alone can't prove reach.
+- **[OPEN] Where is the UV-5R M antenna now?** Repo says roof dual-band antenna since Aug 17, and the Aug 18 item above says it should go back to a whip; Jul 24 chat had it on a whip. Current (Oct 13) location unknown — Charles to confirm, then close or keep the Aug 18 item.
+- **[OPEN] Oct 8 APRSThursday net:** K2GIA was not seen on page 1 of the net log; full log not checked [S]. Confirm whether K2GIA checked in.
+- **[OPEN] Fing Agent:** live `fingagent.bin` process on cnjmesh1 (PID 100151 on Jul 25) — already covered by the "Fing Agent" item above; decision to keep or uninstall still pending.
