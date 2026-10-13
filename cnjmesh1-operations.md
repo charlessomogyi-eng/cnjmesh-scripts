@@ -238,7 +238,7 @@ docker logs meshcore-packet-capture --tail 10
 - Callsign: **K2GIA-1** (changed Aug 17 2026 from bare K2GIA — digi+iGate combo SSID convention)
 - Runs on **cnjmesh1** (Graywolf web UI port 8082)
 - Radio: UV-5R M, **roof dual-band VHF/UHF antenna** (as of Aug 17 2026 — was whip)
-- Interface: Digirig — check current path with `udevadm`, don't assume `/dev/ttyUSB2` (paths shift after USB reconnects)
+- Interface: Digirig — check current path with `ls -l /dev/serial/by-id/` rather than assuming a fixed `/dev/ttyUSBx`. A clean same-port replug normally keeps the same index; renumbering happens on reboot, hub power-cycle, another device on the bus also down, or a process holding the device open at unplug. The by-id path is the durable reference.
 - iGate server: `rotate.aprs2.net:14580`
 - Passcode: 16025 (generated from base callsign K2GIA — SSID-independent, unaffected by K2GIA-1 change)
 - Digipeater: WIDE1-1, confirmed enabled
@@ -287,7 +287,7 @@ This runbook: `cnjmesh1-operations.md`
 
 ## Update 2026-10-13 — notes appended from the handoff merge (old text above left in place)
 - **USB map (Sep 24, [V] `ls -l /dev/serial/by-id/` 16:25):** the table above has K2GIA-10 (`58EF089845`) = ttyACM0 and K2GIA-9 (`58EF088583`) = ttyACM2. On Sep 24 it was the reverse: `58EF088583` -> ttyACM0, `58EF089845` -> ttyACM2; KPN6 (Espressif `90:70:69:84:1F:E0`) = ttyACM1; Digirig CP2102N (`beb31e2f...`) = ttyUSB3; CP2102 serial `0001` = ttyUSB2. Same-port replug normally keeps a number; renumbering happens on reboot, hub power-cycle, another device dropping, or a device being held open [I]. Prefer by-id paths. `ttyUSB2` references in "Common Problems" above are therefore unreliable for Digirig.
-- **Digirig line in "APRS Reference" ("paths shift after USB reconnects"):** an attached `.patch` (local commit `45ca39f`) in the aprs-github handoff carried a corrected wording. **That patch file was not provided for this merge**, so the correction was not applied; the note above is the replacement basis.
+- **Digirig line in "APRS Reference" — corrected 2026-10-13:** the original line said "check current path with `udevadm`, don't assume `/dev/ttyUSB2` (paths shift after USB reconnects)". An attached `.patch` (local commit `45ca39f`) in the aprs-github handoff was meant to correct it but was never provided; Charles supplied the corrected wording directly and the line was replaced (see the USB-map note above for the Sep 24 evidence).
 - **Graywolf PTT:** `ptt_configs` already uses the by-id path (see `known-issues.md` update). The "UPDATE ... device='/dev/ttyUSB2'" fix in "Common Problems" is the *old* approach — use the by-id path shown under "USB Devices" instead.
 - **Graywolf RX loss recovery (Sep 24):** if RX is dead while TX works (DCD dark, POLLERR flood), replugging the Digirig restored RX. Unproven whether hub power-cycle or Digirig replug alone did it. Check `ls -l /dev/serial/by-id/` afterward — the Digirig may come back on a new ttyUSB number.
 - **KPR1/KPC1 serial `0001`:** only one `0001` by-id entry shows (ttyUSB2). Check `ls -l /dev/kpc1 /dev/kpr1` on cnjmesh1 to see which board is present.
