@@ -55,7 +55,7 @@ Also visible correctly in Graywolf's own message dashboard (proper DM thread, un
 **Conclusion: radio firmware/TNC is fully capable of correct message encoding. The bug is isolated to ODmaster's app code specifically.**
 
 ## TidRadio support interaction — RESOLVED, fix acknowledged for v2.6.5 (Aug 24, 2026)
-- Contacted odmaster@tid-china.com with full bug report, packet evidence, order info (Amazon order 111-1614976-3750661, Charles R Somogyi)
+- Contacted odmaster@tid-china.com with a full bug report and packet evidence
 - Support rep "Gideon" responded, asked for Android version + more logs; mentioned Android version 2.6.4 is in beta prep
 - Sent follow-up: Android version 16, device Pixel 7 Pro, ODmaster 2.6.3 confirmed current on Play Store (lagging behind iOS's 2.6.8)
 - Sent further follow-up with the native-SMS-menu proof (radio works, app doesn't) and the "Postscript" field finding — should let their dev team pinpoint the exact bug in code

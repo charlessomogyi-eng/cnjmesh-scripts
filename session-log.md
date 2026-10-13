@@ -6,7 +6,7 @@ Last updated: 2026-07-17
 ---
 
 ## Who You're Talking To
-- **Charles Somogyi**, K2GIA — experienced operator, ~25 years IT/backup/recovery background (Dell Technologies SE)
+- **Charles**, K2GIA — experienced operator, ~25 years IT/backup/recovery background (Dell Technologies SE)
 - Based in Kendall Park / South Brunswick, NJ
 - Built CNJ Mesh from scratch into a 300+ node Meshtastic network, later expanded to dual-protocol (Meshtastic + MeshCore)
 - Not a software developer but highly technical — explain things plainly, don't over-explain basics he clearly already knows
