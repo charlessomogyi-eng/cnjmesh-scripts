@@ -2693,3 +2693,14 @@ Source: `handoff-kpn2-wifi-tdeck-2026-10-09.md`. No push was attempted in that c
 **Corrections recorded by the handoff:** 10.0.0.234 was first declared KPN2 (it is CJG2); `http://10.0.0.140` was never going to work; `meshuser` traffic was never going to appear in cnjmesh2's local Mosquitto; T096 is Heltec, not LilyGo; BaseUI success is unproven; Bluetooth programming mode cannot coexist with WiFi. The Bluetooth programming-mode PIN shown in that chat was intentionally not recorded here.
 
 **Docs updated:** `known-issues.md`, `cnjmesh1-operations.md`, `todos.md`.
+
+## 2026-10-13 (later) — Cleanup of the handoff merge, at Charles's direction
+
+Five deliberate edits to existing lines, one commit each (no history rewrite, no force-push):
+1. `cnjmesh1-operations.md` "APRS Reference": the Digirig line ("check current path with `udevadm` ... paths shift after USB reconnects") replaced with `ls -l /dev/serial/by-id/` guidance and the conditions under which USB indexes renumber. The Oct 13 merge note was changed to say the line was corrected; the missing `.patch` is no longer pending.
+2. Retailer order number and full personal name removed from `docs/td-h9-odmaster-aprs-messaging-bug.md` (the sentence that a full bug report with packet evidence was sent was kept). Same full name removed from the "Who You're Talking To" line in this file and in `CLAUDE_CONTEXT-backup-2026-07-24.md`. Past git history still contains the old text and was not rewritten.
+3. `CLAUDE_CONTEXT.md`: step 5 of "How to End Each Session" (token reminder) removed; Charles manages his own tokens.
+4. `todos.md`: the note naming a second GitHub account replaced by "The repo owner account is charlessomogyi-eng; make sure that account is the one logged in."
+5. `todos.md` "DECISION NEEDED — public repo": order number/name marked done; APRS-IS passcode deliberately left (derived from the callsign by a public algorithm); coordinates item left open.
+
+Not changed (flagged for Charles): personal email in an earlier entry of this file, WiFi SSID and Pi usernames containing his surname, and the K2GIA-1 coordinates.
