@@ -304,7 +304,7 @@ Tags: [V] = user showed or said it explicitly, [S] = secondhand, [I] = inference
 
 **Settings used on the 500 kHz cutover [V]:** 910.525 MHz, BW 500 kHz, SF10, CR5 (values supplied by community admin Tck). Previous KPR3 values were not recorded in that chat. Procedure that worked [V]: change repeater (App: Repeater Admin -> Radio Settings -> check mark, "OK - reboot to apply"), reboot, then change companion and reboot. The app's reboot gives no confirmation; the first KPR3 reboot probably did not apply and a second was needed [I].
 
-**Status of the rest [S] (updated Oct 14):** KPR1, KPR2 and KPC1 are still on 62.5 kHz; the Observer moved to 500 kHz on Oct 13 (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
+**Status of the rest [S] (updated Oct 14):** KPR1 and KPC1 are still on 62.5 kHz (confirm); the Observer moved to 500 kHz on Oct 13 and KPR2 on Oct 14, probably (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
 
 **Conflicts flagged between the KPR3 handoff and this repo (not silently resolved):**
 - The handoff says the repo has no KPR3, 910.525, 62.5 or KPC2 anywhere. **Not true:** 910.525/62.5/SF7/CR5 are in `docs/meshcore-repeater-settings.md` and `docs/nyme-sh-summary.md`; KPC2 is in `docs/nws-weather-bot-reference.md`; session-log Aug 8 says KPN2 and KPC2 are the same T-Deck. KPR3 and 500 kHz really are new.
@@ -353,3 +353,23 @@ docker start meshcore-packet-capture
 docker logs meshcore-packet-capture --tail 20
 ```
 Expect the new "Radio info" line, 4/4 brokers, and "Waiting for packets...". After the change the Observer hears only the new settings, so nodes still on the old ones disappear from the feeds.
+
+## Update 2026-10-14 — KPR2 moved to 500 kHz (cnjmesh3); repeater-console runbook (from the KPR2 handoff; [V] = pasted output/screenshots, [I] = inference)
+**KPR2 entry update (old MeshCore table above left in place — it still shows KPR2 with the old location text):** Heltec WiFi LoRa 32 V4 (16 MB flash / 2 MB PSRAM), MeshCore **repeater** firmware 1.16.0-07a3ca9 (Build 06-Jun-2026), advertised as "Kendall Park Repeater 2", `/dev/ttyACM1` on cnjmesh3 (by-id `*heltec*`). Radio was 910.525 / 62.5 kHz / SF7 / CR5; set to **910.525 MHz / 500 kHz / SF10 / CR5 on Oct 14, 2026** (`get radio` prints `910.5250244,…` — float rounding of 910.525). [V] for the commands and read-backs, **[I] for the radio actually running 500 kHz**: the Observer (next to KPR2, on 500 kHz) logged a type-4 advert at -25 dBm the moment `advert` was sent, plus relayed copies at -53/-115/-91 dBm. Whether KPR2 rebooted is unknown (the console did not drop on `reboot`, twice).
+
+**Runbook — change KPR2's radio settings (repeater console).** The `meshcore-mqtt-bridge` container holds KPR2's serial port, so stop it first (its KPR2 feed has a gap meanwhile; it was ~25 min on Oct 14). Run this on **cnjmesh3**:
+```bash
+docker stop meshcore-mqtt-bridge
+K=$(ls /dev/serial/by-id/*heltec*)
+timeout 300 meshcore-cli -s $K -r
+```
+Inside that console (on **cnjmesh3**; use the network's current values): `get radio`, then `set radio 910.525,500,10,5` (answers "OK - reboot to apply"), then `reboot`. Plain `meshcore-cli infos` does not work on repeater firmware ("To connect to a repeater, use -r"). **`get radio` is not proof** — it shows the saved value even before a reboot. If the console does not drop after `reboot`, treat the reboot as unconfirmed and power-cycle KPR2 (USB, plus battery if connected; the bare V4 has no power switch and its buttons did not behave as expected). Verify with a real packet: in the console run `advert` (replies "OK - Advert sent") and look for a new strong type-4 packet in the Observer's log, still on **cnjmesh3**:
+```bash
+docker logs meshcore-packet-capture --tail 40
+```
+Then restart the bridge, still on **cnjmesh3**:
+```bash
+docker restart meshcore-mqtt-bridge
+docker ps
+```
+Expect the bridge "Up ... (healthy)" and a log line "MeshCore CONNECTED ... /dev/ttyACM1". After a power cycle of the Observer, `docker restart meshcore-packet-capture` is a cheap precaution.
