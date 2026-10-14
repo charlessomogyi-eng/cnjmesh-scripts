@@ -172,3 +172,7 @@ Related: the line above that says to use `ANSRVR`/`CQSRVR` "(see below)" has no 
 
 ## Update 2026-10-13 (clarification, from aprs-github handoff)
 The line above that "messages to CQ go nowhere useful" is true for delivery, but Graywolf's DB-poller still relays Graywolf's own *outbound* CQ messages to Discord — Discord reflects what was sent, not what was received.
+
+
+## Update 2026-10-14: LoRa APRS Discord servers (stated by Charles, [S])
+Charles told people to move to the **LoRa APRS Discord** because he was shutting down the **"LoRa APRS U.S." Discord**; that server has now been shut down. Nothing about this was in the repo before. **Unclear from the repo** whether the "NJ LoRa APRS Discord (#general)" used for the Aug 26 outreach above is the server that was shut down or the one people were sent to — ask Charles before editing that section. Separately, the two `lora-aprs-70cm-relay` relay channels in Charles's own Meshtastic and MeshCore Discord servers were deleted Aug 30 after the webhook abuse (see `CLAUDE_CONTEXT.md`); whether replacements were ever created is not recorded. Open todo: set a per-server nickname ("Name CALLSIGN") in the LoRa APRS Discord (`todos.md`).
