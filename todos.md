@@ -180,9 +180,11 @@ Decision, not a gap: APRS message traffic/silence is not a reliable signal of Gr
 
 ### From the Oct 4-13 KPR3 / KPC2 500 kHz cutover handoff
 - **[OPEN] KPR3 remote-admin login on 500 kHz fails** while packets relay (see `known-issues.md`). Ideas, none tested: reset the contact's Out Path; re-enter admin password; check status/uptime from KPC2.
-- **[OPEN] KPR2** (Heltec V4, cnjmesh3) to 500 kHz — reach it from inside the house on 62.5 first, change, reboot, retest.
-- **[OPEN] Observer** (RAK4631, cnjmesh3, `/dev/ttyACM0`, feeds CoreScope/MeshOmatic/LetsMesh via `meshcore-packet-capture`): Charles doesn't know how to change it. Needed: is it companion or repeater firmware, and what holds its serial port. Suggested read-only check, run on **cnjmesh3**: `systemctl list-units --type=service --no-pager | grep -i -E 'mesh|observer|mqtt'`. Stop the service holding the port before connecting. Not run.
-- **[OPEN] KPC1** (Heltec V3, cnjmesh1, `/dev/kpc1`, weather bot): status unknown (not in Charles's contacts). Check on **cnjmesh1**: `ls -l /dev/kpc1` and the weather-bot service; then move to 500 kHz so the bot isn't deaf.
+- **[OPEN] KPR2** (Heltec V4, cnjmesh3, `/dev/ttyACM1`) to 500 kHz (910.525 / 500 / SF10 / CR5) — next in line, not started. Either reach it from inside the house on 62.5 first (phone app), or use `meshcore-cli` on **cnjmesh3**; per `install-map-cnjmesh3.md` the `meshcore-mqtt-bridge` container holds its port and would have to be stopped first. Method not yet chosen.
+- **[DONE Oct 13, [V]] Observer moved to 910.525 / 500 / SF10 / CR5** (companion firmware v1.16.0-07a3ca9, via `meshcore-cli` over USB on cnjmesh3; procedure in `cnjmesh1-operations.md`). Replaces the earlier open item "Observer: Charles doesn't know how to change it".
+- **[OPEN] Confirm in the CoreScope UI** that the CNJ Mesh Observer row is updating and KPR3/KPC2 now appear — not yet checked in the UI (capture logs show packets going to all four brokers, which is strong evidence but not the UI).
+- **[OPEN] Observer clock ~27 h ahead** (see `known-issues.md`): optional full power-cycle test (USB unplug, plus the power switch if it has one); otherwise just documented. If it gets fixed, record how.
+- **[OPEN] KPC1** (Heltec V3, cnjmesh1, `/dev/kpc1`, weather bot — still on 62.5 kHz, so deaf to 500 kHz traffic until moved): status unknown (not in Charles's contacts). Check on **cnjmesh1**: `ls -l /dev/kpc1` and the weather-bot service; then move to 500 kHz so the bot isn't deaf.
 - **[OPEN] KPR1** (Tilly bridge): blocked on the RX_LOG_DATA/LOG_DATA question above; decide whether it moves to 500 kHz.
 - **[OPEN] path.hash.mode** on KPR1/KPR2: unchanged, decision pending.
 - **[OPEN] Confirm KPR3 reaches Tck's area via the Yagi** (send one advert from KPR3 on 500); record KPR3's actual TX power; decide whether the Yagi setup is within the module's grant (see `cnjmesh1-operations.md` caution).
