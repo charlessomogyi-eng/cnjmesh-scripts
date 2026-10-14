@@ -304,7 +304,7 @@ Tags: [V] = user showed or said it explicitly, [S] = secondhand, [I] = inference
 
 **Settings used on the 500 kHz cutover [V]:** 910.525 MHz, BW 500 kHz, SF10, CR5 (values supplied by community admin Tck). Previous KPR3 values were not recorded in that chat. Procedure that worked [V]: change repeater (App: Repeater Admin -> Radio Settings -> check mark, "OK - reboot to apply"), reboot, then change companion and reboot. The app's reboot gives no confirmation; the first KPR3 reboot probably did not apply and a second was needed [I].
 
-**Status of the rest [S] (updated Oct 14):** only KPR1 is still on 62.5 kHz; the Observer moved to 500 kHz on Oct 13, KPR2 (probably) and KPC1 on Oct 14 (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
+**Status of the rest [S] (updated Oct 14):** only KPR1 is still on 62.5 kHz; the Observer moved to 500 kHz on Oct 13, KPR2 (confirmed ~12:00 PM by a "Heard 3 Repeats" screenshot showing it repeating a KPC2 message) and KPC1 on Oct 14 (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
 
 **Conflicts flagged between the KPR3 handoff and this repo (not silently resolved):**
 - The handoff says the repo has no KPR3, 910.525, 62.5 or KPC2 anywhere. **Not true:** 910.525/62.5/SF7/CR5 are in `docs/meshcore-repeater-settings.md` and `docs/nyme-sh-summary.md`; KPC2 is in `docs/nws-weather-bot-reference.md`; session-log Aug 8 says KPN2 and KPC2 are the same T-Deck. KPR3 and 500 kHz really are new.
