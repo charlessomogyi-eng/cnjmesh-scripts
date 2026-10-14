@@ -290,7 +290,7 @@ This runbook: `cnjmesh1-operations.md`
 - **Digirig line in "APRS Reference" — corrected 2026-10-13:** the original line said "check current path with `udevadm`, don't assume `/dev/ttyUSB2` (paths shift after USB reconnects)". An attached `.patch` (local commit `45ca39f`) in the aprs-github handoff was meant to correct it but was never provided; Charles supplied the corrected wording directly and the line was replaced (see the USB-map note above for the Sep 24 evidence).
 - **Graywolf PTT:** `ptt_configs` already uses the by-id path (see `known-issues.md` update). The "UPDATE ... device='/dev/ttyUSB2'" fix in "Common Problems" is the *old* approach — use the by-id path shown under "USB Devices" instead.
 - **Graywolf RX loss recovery (Sep 24):** if RX is dead while TX works (DCD dark, POLLERR flood), replugging the Digirig restored RX. Unproven whether hub power-cycle or Digirig replug alone did it. Check `ls -l /dev/serial/by-id/` afterward — the Digirig may come back on a new ttyUSB number.
-- **KPR1/KPC1 serial `0001`:** only one `0001` by-id entry shows (ttyUSB2). Check `ls -l /dev/kpc1 /dev/kpr1` on cnjmesh1 to see which board is present.
+- **KPR1/KPC1 serial `0001`:** only one `0001` by-id entry shows (ttyUSB2). Check `ls -l /dev/kpc1 /dev/kpr1` on cnjmesh1 to see which board is present. (Done Oct 14: `/dev/kpc1 -> ttyUSB2`, `/dev/kpr1 -> ttyUSB0`; see the Oct 14 KPC1 update at the end of this file.)
 - **Graywolf Discord bridge BLOCKLIST** (`cnjmesh1/graywolf-discord/graywolf-discord-bridge.py` in this repo): `ANSRVR`, `9W2KEY-12`, `CT7AQH-5`, `OTA`; any message whose from or to call is listed is skipped in both the journal and DB-poller paths, so ANSRVR traffic never reaches Discord by design (reason per Charles: automated-reply spam). The bridge logs only on post success/error, so an empty journal is not evidence of silence. Whether the live `/opt/graywolf-discord/` copy matches the repo copy is unverified — compare with `md5sum` on cnjmesh1. Four webhooks (`aprs-rf-nj`, `aprs-internet-nj`, and the `-mc` MeshCore-server copies); the same channel names exist in both Discord servers.
 
 
@@ -304,7 +304,7 @@ Tags: [V] = user showed or said it explicitly, [S] = secondhand, [I] = inference
 
 **Settings used on the 500 kHz cutover [V]:** 910.525 MHz, BW 500 kHz, SF10, CR5 (values supplied by community admin Tck). Previous KPR3 values were not recorded in that chat. Procedure that worked [V]: change repeater (App: Repeater Admin -> Radio Settings -> check mark, "OK - reboot to apply"), reboot, then change companion and reboot. The app's reboot gives no confirmation; the first KPR3 reboot probably did not apply and a second was needed [I].
 
-**Status of the rest [S] (updated Oct 14):** KPR1 and KPC1 are still on 62.5 kHz (confirm); the Observer moved to 500 kHz on Oct 13 and KPR2 on Oct 14, probably (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
+**Status of the rest [S] (updated Oct 14):** only KPR1 is still on 62.5 kHz; the Observer moved to 500 kHz on Oct 13, KPR2 (probably) and KPC1 on Oct 14 (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
 
 **Conflicts flagged between the KPR3 handoff and this repo (not silently resolved):**
 - The handoff says the repo has no KPR3, 910.525, 62.5 or KPC2 anywhere. **Not true:** 910.525/62.5/SF7/CR5 are in `docs/meshcore-repeater-settings.md` and `docs/nyme-sh-summary.md`; KPC2 is in `docs/nws-weather-bot-reference.md`; session-log Aug 8 says KPN2 and KPC2 are the same T-Deck. KPR3 and 500 kHz really are new.
@@ -373,3 +373,31 @@ docker restart meshcore-mqtt-bridge
 docker ps
 ```
 Expect the bridge "Up ... (healthy)" and a log line "MeshCore CONNECTED ... /dev/ttyACM1". After a power cycle of the Observer, `docker restart meshcore-packet-capture` is a cheap precaution.
+
+## Update 2026-10-14 — KPC1 moved to 500 kHz; weather bot restarted; runbooks (from the KPC1 handoff; [V] = pasted output)
+**KPC1 row update (old USB-table row above left in place):** Heltec V3 companion, board name **"CNJWeatherBot"**, companion firmware v1.16.0-07a3ca9, tx_power 22/22, public-key prefix `df8a4432`, `/dev/kpc1 -> ttyUSB2` as of Oct 14 (KPR1: `/dev/kpr1 -> ttyUSB0`; both symlinks dated Sep 24 15:52). **Radio changed Oct 14 from 910.525 / 62.5 / SF7 / CR5 to 910.525 MHz / 500 kHz / SF10 / CR5.** KPC1 sits on the powered hub, KPR1 directly on the Pi, matching the table above. KPR1 was not touched; `/dev/kpr1` is held by the healthy `meshcore-mqtt-kpr1-bridge` container. Because KPC1 and KPR1 share serial `0001`, the symlinks name USB *ports* — only `infos` says which board is which.
+
+**Which bot is which:** the CentralNJ-MC weather bot is **`meshcore-bot.service`** (agessaman/meshcore-bot, config `/etc/meshcore-bot/config.ini`, `serial_port = /dev/kpc1`, runs `/opt/meshcore-bot/meshcore_bot.py`). `meshing-around` (`/opt/meshing-around/`) is the separate `mesh_bot.service`. Any text in this repo that calls the weather bot "meshing-around" is wrong.
+
+**Runbook — change KPC1's radio settings.** KPC1 is a companion, so `meshcore-cli ... infos` and `set radio` work (unlike the KPR2 repeater console). The bot holds `/dev/kpc1` while it runs, so stop it first (the port was already free on Oct 14 because the bot was down). Run this on **cnjmesh1**:
+```bash
+sudo systemctl stop meshcore-bot.service
+meshcore-cli -s /dev/kpc1 infos
+```
+Still on **cnjmesh1** (example values; use the network's current ones):
+```bash
+meshcore-cli -s /dev/kpc1 set radio 910.525,500,10,5
+meshcore-cli -s /dev/kpc1 infos
+sudo systemctl start meshcore-bot.service
+```
+`set radio` answered `ok` and the read-back showed the new values immediately (name "CNJWeatherBot" confirms it is KPC1, not KPR1).
+
+**Runbook — weather bot recovery (`start-limit-hit`).** Run this on **cnjmesh1**:
+```bash
+systemctl status meshcore-bot.service
+sudo systemctl reset-failed meshcore-bot.service
+sudo systemctl start meshcore-bot.service
+systemctl is-active meshcore-bot.service
+journalctl -u meshcore-bot.service -n 30
+```
+Make sure KPC1 is actually present first (`ls -l /dev/kpc1`), otherwise the bot exits again. Detail and the watchdog's design gaps: `known-issues.md`.
