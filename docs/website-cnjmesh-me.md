@@ -36,6 +36,8 @@ Branding: header reads "CNJ & South Jersey Mesh" on desktop, shortens to "CNJ Me
 
 ## To do / open items
 
+- **Oct 14, 2026: update the MeshCore settings table to 500 kHz (keep 62.5 kHz as "Pre-FCC Concern Configuration").** New file staged at `website/pending/getting-started.html`; steps in `docs/website-update-howto.md`. After deploying, move it into `website/cnjmesh-me/` and re-sync the other pages from live (the backup is missing the homepage `CentralNJ-MC` how-to and `network-news.html`).
+
 - **Migrate to Git-based Netlify deploy.** Connect this repo (or a dedicated one) to Netlify so pushes here auto-deploy, instead of manually dragging a folder from a laptop. This would fix the stale-file class of bug above entirely and matches how the rest of this project already works (Claude commits/pushes, Charles doesn't run git by hand).
 - MeshCore channel list for the Getting Started page — not yet written; ask Charles for exact channel names + region scoping before adding.
 - Full MeshCore repeater config section (advert intervals, `region put`/`region allowf` setup) — not yet written; needs CNJ-specific region codes from Charles first.
