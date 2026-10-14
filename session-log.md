@@ -2704,3 +2704,15 @@ Five deliberate edits to existing lines, one commit each (no history rewrite, no
 5. `todos.md` "DECISION NEEDED — public repo": order number/name marked done; APRS-IS passcode deliberately left (derived from the callsign by a public algorithm); coordinates item left open.
 
 Not changed (flagged for Charles): personal email in an earlier entry of this file, WiFi SSID and Pi usernames containing his surname, and the K2GIA-1 coordinates.
+
+## 2026-10-13 (evening; merged Oct 14) — Handoff merge 7: Observer (cnjmesh3) moved to 500 kHz
+
+Source: `handoff-observer-500khz-2026-10-13.md`, a follow-on to the KPR3/KPC2 cutover (merge 5/6). About 10:30–10:41 PM Eastern Oct 13 (02:30–02:41 UTC Oct 14). Everything below was run by Charles on cnjmesh3; tags per the handoff ([V] pasted output). No equipment touched in the merge.
+
+**What was run on cnjmesh3:** stopped `meshcore-packet-capture` (up 2 months, healthy; also `meshcore-mqtt-bridge` running); `meshcore-cli infos` showed companion firmware v1.16.0-07a3ca9, tx_power 22, radio 910.525 / 62.5 kHz / SF7 / CR5; `set radio 910.525,500,10,5` -> `ok`, read-back 910.525 / 500 / SF10 / CR5 with no reboot needed; reboot test, settings still held (reboot itself unproven); restarted the capture container: 4/4 brokers, packets within ~5 s, more after a final restart ~02:40 UTC. 255,241 packets had been captured before the first stop (since the container's 2-month uptime).
+
+**Finding — Observer clock ~27 h ahead of the Pi:** +100,693 s at 02:32 UTC, +97,027 s after reboot (offset shifted ~1 h, rate correct). `clock sync` -> "No time sync needed"; setting the time -> `ERR_CODE_ILLEGAL_ARG` (6); the capture tool never corrects a clock that is ahead. Brokers still accept JWT logins. Effect on the Observer's own adverts/messages unknown; reset method unproven (full power cycle untried).
+
+**Doc handling:** the KPR3 handoff's network-split entries in `known-issues.md` and open items in `todos.md` were **updated in place** (no second entries), as asked. New: Observer clock known issue, Observer node row and radio-change runbook in `cnjmesh1-operations.md`, CoreScope-UI and clock todos. Unchanged: the Observer model conflict (v2 vs plain vs Mini) — handoff says revision still unconfirmed; `install-map-cnjmesh3.md` (nothing about the container or device changed; refresh only if a fresh date is wanted); `README.md` generic Observer wording (optional per the handoff). The Observer's advertised lat/lon was deliberately not recorded. Packet `type` numbers in the capture log were not interpreted.
+
+**Still open (also in `todos.md`):** KPR2 to 500 kHz (method not chosen), KPR1 and KPC1 still on 62.5, KPR3 remote-admin login from KPC2 on 500 kHz, Observer clock, CoreScope UI check.
