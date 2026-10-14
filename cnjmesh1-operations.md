@@ -304,7 +304,7 @@ Tags: [V] = user showed or said it explicitly, [S] = secondhand, [I] = inference
 
 **Settings used on the 500 kHz cutover [V]:** 910.525 MHz, BW 500 kHz, SF10, CR5 (values supplied by community admin Tck). Previous KPR3 values were not recorded in that chat. Procedure that worked [V]: change repeater (App: Repeater Admin -> Radio Settings -> check mark, "OK - reboot to apply"), reboot, then change companion and reboot. The app's reboot gives no confirmation; the first KPR3 reboot probably did not apply and a second was needed [I].
 
-**Status of the rest (as of the last message, Oct 11-13) [S]:** KPR1, KPR2, KPC1 and the Observer are still on 62.5 kHz. Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
+**Status of the rest [S] (updated Oct 14):** KPR1, KPR2 and KPC1 are still on 62.5 kHz; the Observer moved to 500 kHz on Oct 13 (see below). Nodes on different BW/SF/frequency cannot hear each other or be remotely administered across the split.
 
 **Conflicts flagged between the KPR3 handoff and this repo (not silently resolved):**
 - The handoff says the repo has no KPR3, 910.525, 62.5 or KPC2 anywhere. **Not true:** 910.525/62.5/SF7/CR5 are in `docs/meshcore-repeater-settings.md` and `docs/nyme-sh-summary.md`; KPC2 is in `docs/nws-weather-bot-reference.md`; session-log Aug 8 says KPN2 and KPC2 are the same T-Deck. KPR3 and 500 kHz really are new.
@@ -324,3 +324,32 @@ The MeshCore tables above don't cover the T-Deck. (`session-log.md` has carried 
 Also identified on Oct 9 via `arp -a` on cnjmesh2: CJG1 = `esp32s3-CA423C` at 10.0.0.18, MAC `e8:f6:0a:ca:42:3c` (matches MQTT client ID `!0aca423c`); CJG2 = `esp32s3-A3E8D4` at 10.0.0.234 (Charles confirmed; shows as `Meshtastic` in the phone app's discovered devices).
 
 **MQTT — flagged, not resolved:** the handoff states KPN2 uses `meshuser` credentials and "does NOT connect to cnjmesh1/cnjmesh2 Mosquitto", but its only evidence is that `docker logs mosquitto` on **cnjmesh2** showed no `meshuser` hits. Nothing was checked on cnjmesh1, and the `MQTT Brokers` table above lists `meshuser` on `mqtt.cnjmesh.me` (CNJ's own public broker, which terminates on cnjmesh1). So "external broker" is unverified; KPN2 may well use `mqtt.cnjmesh.me`. Check KPN2's MQTT settings (web client over USB) and cnjmesh1's Mosquitto logs before relying on the handoff's statement. Credential rotation dependency: any rotation of `meshuser` on whichever broker KPN2 uses requires reconfiguring KPN2 too.
+
+## Update 2026-10-14 — Observer moved to 500 kHz (cnjmesh3); runbook (from the Observer handoff; [V] = pasted command output)
+**Node reference addition (old tables above left in place):**
+
+| Node | Hardware | Public Key Prefix | Location / radio |
+|---|---|---|---|
+| Observer ("CNJ Mesh Observer") | RAK4631 (WisMesh Pocket; exact revision still unconfirmed — see model conflict above), **companion firmware v1.16.0-07a3ca9, USB serial** | `a8c40bf3` | `/dev/ttyACM0` on cnjmesh3 (by-id `*RAK4631*`). **Cut over Oct 13, 2026 to 910.525 MHz / 500 kHz / SF10 / CR5** (was 910.525 / 62.5 / SF7 / CR5); tx_power 22. |
+
+Capture log after the change: "Radio info: 910.525,500.0,10,5", 4/4 MQTT brokers connected (letsmesh-us, letsmesh-eu, meshomatic, local 10.0.0.181:1883), packets captured within ~5 s, SNR ~7–8 dB at RSSI -90 to -50. Observer clock problem: see `known-issues.md`.
+
+**Runbook — change the Observer's radio settings** (worked Oct 13; the `meshcore-cli` path is `/home/somog/.local/bin/meshcore-cli`). `meshcore-packet-capture` holds the serial port, so stop it first; the cnjmesh3 watchdog does not touch that container (`grep -n -i packet /opt/meshcore-mqtt-watchdog/watchdog.sh` returned nothing).
+
+Run this on **cnjmesh3**:
+```bash
+docker stop meshcore-packet-capture
+D=$(ls /dev/serial/by-id/*RAK4631*)
+meshcore-cli -s $D infos
+```
+Still on **cnjmesh3** (example values; use the network's current ones):
+```bash
+meshcore-cli -s $D set radio 910.525,500,10,5
+meshcore-cli -s $D infos
+```
+`set radio` replied `ok` and applied immediately on this firmware; the read-back showed the new values. A `reboot` test (wait ~20 s, `infos` again) still showed them, but the output did not show uptime, so the reboot itself is not proven [I]. Then, still on **cnjmesh3**:
+```bash
+docker start meshcore-packet-capture
+docker logs meshcore-packet-capture --tail 20
+```
+Expect the new "Radio info" line, 4/4 brokers, and "Waiting for packets...". After the change the Observer hears only the new settings, so nodes still on the old ones disappear from the feeds.
