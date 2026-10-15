@@ -2753,3 +2753,6 @@ Charles shared two screenshots from the MeshCore app on KPC2 (CentralNJ-MC chann
 
 ## 2026-10-14 (afternoon) — cnjmesh.me website review for the 500 kHz change
 Charles asked whether the site's MeshCore text reflects the move to 500 kHz. Finding: `getting-started.html` (repo and live) still lists 62.5 kHz / SF7; the other pages carry no radio numbers. The repo backup is also behind the live site (live has the `CentralNJ-MC` how-to and a News page not in the repo). Logged in `todos.md`; nothing changed on the live site. Charles's context [S]: the 500 kHz move was prompted by a possible FCC compliance concern, and some people say 500 kHz raises the noise floor.
+
+## 2026-10-15 (early) — MeshOmatic banner and CARTO "API KEY REQUIRED" watermark
+Charles sent CoreScope Live and MeshOmatic screenshots. The "No packets from meshomatic" banner (79656 min, about 55 days) is the existing open item in `todos.md`; it predates the 500 kHz changes. The "API KEY REQUIRED" watermark is a separate, new item: CARTO basemap tiles now need a free API key. Both logged in `todos.md`. Nothing changed on the servers.
