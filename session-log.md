@@ -2756,3 +2756,6 @@ Charles asked whether the site's MeshCore text reflects the move to 500 kHz. Fin
 
 ## 2026-10-15 (early) — MeshOmatic banner and CARTO "API KEY REQUIRED" watermark
 Charles sent CoreScope Live and MeshOmatic screenshots. The "No packets from meshomatic" banner (79656 min, about 55 days) is the existing open item in `todos.md`; it predates the 500 kHz changes. The "API KEY REQUIRED" watermark is a separate, new item: CARTO basemap tiles now need a free API key. Both logged in `todos.md`. Nothing changed on the servers.
+
+## 2026-10-15 (late morning) — SP0LND balloon notes filed
+Charles shared three Discord screenshots about SQ2CPA's SP0LND balloons (Poland, flying over North America). Filed as `docs/spolnd-balloons-notes.md` plus a future to-do in `todos.md`. Nothing tested or changed on any station.

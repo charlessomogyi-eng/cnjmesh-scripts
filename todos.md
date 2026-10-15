@@ -237,3 +237,7 @@ Seen on `corescope.cnjmesh.me` Live view (Charles's screenshot). Cause (confirme
 
 ### [OPEN — Oct 15, 2026] 7am Meshtastic CentralNJ weather report did not appear
 Charles reported (screenshot of the CentralNJ channel at 8:47 AM, only a TUM2 post at 8:37 AM that day) that the 7am report is missing. Sender is `mesh_bot.service` (meshing-around, `/opt/meshing-around`, cnjmesh1), scheduler `time = 07:00`, transmitting through CJG1 (10.0.0.18, TCP 4403). Prior silent miss: Aug 4 (service down). CJG1 Wi-Fi flapping is also a documented, unresolved suspect. Not yet diagnosed; read-only checks given to Charles (service status, journal 06:45-07:30, error grep, ping and port test to 10.0.0.18). Also ask whether the MeshCore 7:05 forecast arrived, to tell a cnjmesh1/network problem from a Meshtastic-only one. The "weather-broadcast success monitor" to-do is the long-term fix (awaiting Charles's OK once the cause is known).
+
+### [FUTURE — APRS pivot] SP0LND balloons (Poland): track them and consider LoRa APRS involvement (added Oct 15, 2026)
+Charles wants to keep an eye on this and revisit it when he returns to the LoRa APRS project. Notes and open questions are in `docs/spolnd-balloons-notes.md` (statements by SQ2CPA and others in Discord, unverified). Short version: balloons fly across North America, support APRS-IS to RF messaging and remote activation, and a station on 433.775 MHz can help; K2GIA-10 has APRS-IS disabled by design, so any involvement is a decision for later. No action needed now.
+
