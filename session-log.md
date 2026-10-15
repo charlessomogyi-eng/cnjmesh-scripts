@@ -2765,3 +2765,6 @@ Charles asked which LoRa APRS node is on the roof antenna, which should move ups
 
 ## 2026-10-15 (evening) — website live-tiles / embedded-map idea logged
 Charles asked how lvmesh.com integrates CoreScope and whether cnjmesh.me could do the same with CoreScope or Malla. Research and the open steps are logged in `todos.md`. Nothing built or changed.
+
+## 2026-10-15 (evening) — website live-tiles / embedded-map idea DROPPED
+Charles decided not to pursue it (does not want to draw attention to the community's infrastructure or invite people to poke at it) and asked for the to-do to be removed. Removed from `todos.md`. Nothing was ever built or changed. Related items that remain: confirm Malla's CVE-2026-43980 patch status (existing item) and the MeshCore 500 kHz settings page fix (`website/pending/getting-started.html`).
