@@ -2759,3 +2759,6 @@ Charles sent CoreScope Live and MeshOmatic screenshots. The "No packets from mes
 
 ## 2026-10-15 (late morning) — SP0LND balloon notes filed
 Charles shared three Discord screenshots about SQ2CPA's SP0LND balloons (Poland, flying over North America). Filed as `docs/spolnd-balloons-notes.md` plus a future to-do in `todos.md`. Nothing tested or changed on any station.
+
+## 2026-10-15 (midday) — LoRa APRS physical work reconciled and logged
+Charles asked which LoRa APRS node is on the roof antenna, which should move upstairs to cnjmesh3, and which needs a button. Reconciled from the repo and logged as a not-yet-started checklist (`todos.md`, `docs/lora-aprs-reference.md`). Findings: no LoRa APRS node is permanently on the roof antenna; the repo has two upstairs plans (K2GIA-10 vs the RX-only board); the button is for K2GIA-9 and its IO15 pin needs verifying first. Nothing changed on any device.

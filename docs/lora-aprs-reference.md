@@ -176,3 +176,30 @@ The line above that "messages to CQ go nowhere useful" is true for delivery, but
 
 ## Update 2026-10-14: LoRa APRS Discord servers (stated by Charles, [S])
 Charles told people to move to the **LoRa APRS Discord** because he was shutting down the **"LoRa APRS U.S." Discord**; that server has now been shut down. Nothing about this was in the repo before. Charles's own server was named **"LoRa APRS U.S."** — he says he knows of no "NJ LoRa APRS Discord", so that label in the Aug 26 outreach section above is **unverified and probably wrong** (which server that message actually went to is not recorded; the old text is left in place). Anyone referring to "the LoRa APRS Discord" now means the server people were moved to. Separately, the two `lora-aprs-70cm-relay` relay channels in Charles's own Meshtastic and MeshCore Discord servers were deleted Aug 30 after the webhook abuse (see `CLAUDE_CONTEXT.md`); whether replacements were ever created is not recorded. Open todo: set a per-server nickname ("Name CALLSIGN") in the LoRa APRS Discord (`todos.md`).
+
+
+## Update 2026-10-15: physical work reconciliation (roof antenna, upstairs move, button) — requested by Charles, NOT yet started
+
+Charles could not remember which LoRa APRS node is on the roof antenna, which should move upstairs to cnjmesh3, or which needs a button. This section reconciles what the repo says. Sources: this file, `todos.md`, `CLAUDE_CONTEXT-backup-2026-07-24.md` (Jul 16 notes), `cnjmesh1-operations.md`. Items marked [I] are my reading, not confirmed.
+
+### 1. Which LoRa APRS node is on the roof antenna? **None permanently.**
+- **K2GIA-10** (LilyGo LoRa APRS iGate board, 433.775 MHz) normally uses an **Abree dual-band whip** (Jul 16 note). It was connected to the roof dual-band antenna **once, on Jul 24**, through a PL-259-to-SMA adapter, for a CQ test (inconclusive; see the Jul 24 update above). The return to the whip is not recorded [I].
+- **K2GIA-9** (mobile tracker) has no fixed antenna and is not on the roof.
+- The **roof dual-band UHF/VHF antenna is reserved for the Icom 2730** (Jul notes: fixed constraint). The 2 m Graywolf radio (UV-5R M, K2GIA-1) used it from Aug 17, and an open item says to move that radio back to a whip; where it is now is unconfirmed (`todos.md`, Oct 13 item).
+- **KPN6** (MeshCore/Meshtastic node) has its own separate roof antenna. That is not a LoRa APRS node.
+
+### 2. Which node goes upstairs? The repo has **two different plans**, so a decision is needed
+- **A. K2GIA-10 upstairs, for antenna height.** Decided, not done (`todos.md`). It is WiFi-based (web UI at 10.0.0.74); today it only takes USB power from the cnjmesh1 hub and nothing reads its serial, so moving it is a placement and antenna job. The Jul notes say explicitly that it was **not** moved to cnjmesh3 for serial reasons, but powering it from cnjmesh3's USB is consistent with them [I].
+- **B. The second, RX-only ESP32 LoRa board** (ordered Jul 15, "in transit"; arrival not confirmed). Plan: connect it to **cnjmesh3** over USB and use an **indoor antenna** (garage was the guess), so it can hear K2GIA-10's own transmissions and gate them (K2GIA-10 cannot gate its own packets).
+- Charles's Oct 15 description (move a node upstairs, plug it into cnjmesh3, antenna in the room) mixes both. **Decide which board it is.** If K2GIA-10 and the RX-only board end up in the same room, keep some distance and antenna separation between them so the receiver is not overloaded by a close transmitter [I, general RF practice].
+- Upstairs RF feeds already in use: Alfa antennas out 2nd-floor windows for CJG1/CJG2 and KPR2; the Observer antenna was planned there too.
+
+### 3. Which node needs a button? **K2GIA-9** (most likely)
+- K2GIA-9 is a LilyGo T3 V1.6.1 (LoRa32 V2.1/1.6.1 family), flashed with the "LoRa32 V2.1/1.6.1 TNC (433MHz)" non-GPS tracker build. This board has **no user button populated**, only reset. Without one, the config AP (`LoRaTracker-AP`) can only be reopened by re-flashing.
+- Install steps already in this file (section "Physical button"): 2-lead momentary button, one leg to **IO15**, the other to any **GND**, no polarity, no resistor.
+- **Open risk, resolve before soldering:**
+  1. The IO15 pad-touch workaround on this board produced "going into deep sleep" instead of the config AP (see CAUTION above); the cause was never found.
+  2. On Oct 15 the LilyGO wiki ([LoRa32 page](https://wiki.lilygo.cc/get_started/en/LoRa_GPS/LoRa32/LoRa32.html)) lists **GPIO15 as the TF/SD card MOSI line** for the LoRa32 V1.6.1, with no free-pin column, and lists RESET + BOOT buttons only. So IO15 is shared with the SD slot. Probably harmless with no SD card inserted [I].
+  3. The earlier note that the firmware uses `BUTTON_PIN 15` could not be re-checked on Oct 15 (GitHub file fetch failed). **Re-check `board_pinout.h` in `richonguzman/LoRa_APRS_Tracker` for the exact target used (TNC, non-GPS) before soldering.** If that target does not define a button on IO15, the button will do nothing or the wrong thing.
+- **Parts:** any 2-pin, normally-open momentary switch works. Example: Adafruit [Tactile Button switch (6mm) x 20 pack, #367](https://www.adafruit.com/product/367) (solder wires to the legs, per the steps above). Also needed: 30 AWG stranded wire, heat-shrink or tape, hot glue, soldering iron.
+- K2GIA-10 is a different board (LilyGo LoRa APRS iGate); whether it needs a button is not recorded.

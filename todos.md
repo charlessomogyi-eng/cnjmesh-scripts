@@ -241,3 +241,13 @@ Charles reported (screenshot of the CentralNJ channel at 8:47 AM, only a TUM2 po
 ### [FUTURE — APRS pivot] SP0LND balloons (Poland): track them and consider LoRa APRS involvement (added Oct 15, 2026)
 Charles wants to keep an eye on this and revisit it when he returns to the LoRa APRS project. Notes and open questions are in `docs/spolnd-balloons-notes.md` (statements by SQ2CPA and others in Discord, unverified). Short version: balloons fly across North America, support APRS-IS to RF messaging and remote activation, and a station on 433.775 MHz can help; K2GIA-10 has APRS-IS disabled by design, so any involvement is a decision for later. No action needed now.
 
+
+### [NOT STARTED — Charles is not ready yet] LoRa APRS physical work: upstairs node, antenna, button (added Oct 15, 2026)
+Full reconciliation is in `docs/lora-aprs-reference.md` ("Update 2026-10-15: physical work reconciliation"). Checklist, all open:
+- [ ] **Decide which board goes upstairs:** K2GIA-10 (antenna height; WiFi unit, USB power only) or the second RX-only board (plugs into cnjmesh3, indoor antenna). The repo has both plans; Charles remembers a mix. Answer to "which is on the roof antenna": none permanently (K2GIA-10 uses an Abree whip; it was on the roof dual-band only for the Jul 24 test; the roof antenna is reserved for the Icom 2730).
+- [ ] **Confirm the hardware status:** did the second RX-only board, 433 MHz antennas, cases, and the two Alfa antennas arrive? (Existing "in-transit hardware" item is stale or unknown.)
+- [ ] **Choose and place the upstairs antenna** (433 MHz capable; whip or indoor; connector type SMA vs RP-SMA unconfirmed). Power from a cnjmesh3 USB port; K2GIA-10 needs no serial there.
+- [ ] **Button for K2GIA-9** (LilyGo T3 V1.6.1, no user button): buy a 2-pin momentary switch (example link in the reference doc), then solder IO15 to GND per the steps in the reference doc.
+- [ ] **Before soldering, verify the pin:** re-check `BUTTON_PIN` for the exact firmware target in `richonguzman/LoRa_APRS_Tracker` (`board_pinout.h`). Known concerns: the earlier IO15 pad-touch caused "deep sleep", and LilyGO lists GPIO15 as the SD-card MOSI pin on this board. Do not insert an SD card.
+- [ ] After any move: test K2GIA-9 to K2GIA-10 digipeat again, and decide whether the Jul 24 roof-antenna test is still wanted.
+- Related existing items: UV-5R M antenna location (Oct 13 item), K2GIA-10 reach test, SP0LND balloon notes.
