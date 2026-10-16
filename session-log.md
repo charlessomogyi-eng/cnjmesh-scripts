@@ -2771,3 +2771,6 @@ Charles decided not to pursue it (does not want to draw attention to the communi
 
 ## 2026-10-16 — Weather alert truncation still present (Sep 1 fix did not take effect)
 Charles's Discord relay screenshot: 7:05 AM daily forecast arrived intact in 3 chunks (forecast fix works), but the 3:56 PM NWS alert still read "🟠 Severe Thunders Watch Kent til 10PM by NWS MOUN". Repo history shows the Aug forecast patches were applied to `/opt/meshcore-bot/modules/service_plugins/weather_service.py` (the copy the service runs), while the Sep 1 alert patch was applied to `~/meshcore-bot/modules/service_plugins/weather_service.py` (the git clone) — likely the wrong copy [S, unverified]. Diagnostic and re-patch steps are in `todos.md`. Cosmetic extras noted: doubled "CNJWeatherBot:" prefix in the relay; forecast chunk 3 overlaps chunk 2.
+
+## 2026-10-16 (evening) — APRS Q&A, Nooelec idea
+Answered: TD-H9 (K2GIA-7) is not a Pi iGate; phone + KISSLink IS tab + "Upload RF-heard packets to APRS-IS" box makes it a receive-only mobile iGate (RF to internet only); with app off or box unticked it is RF only (radio still beacons via its own GPS and can digipeat if DIGI enabled). Parked Nooelec SDR / OrcSDR (theorc.dev) idea in `todos.md`.
