@@ -2768,3 +2768,6 @@ Charles asked how lvmesh.com integrates CoreScope and whether cnjmesh.me could d
 
 ## 2026-10-15 (evening) — website live-tiles / embedded-map idea DROPPED
 Charles decided not to pursue it (does not want to draw attention to the community's infrastructure or invite people to poke at it) and asked for the to-do to be removed. Removed from `todos.md`. Nothing was ever built or changed. Related items that remain: confirm Malla's CVE-2026-43980 patch status (existing item) and the MeshCore 500 kHz settings page fix (`website/pending/getting-started.html`).
+
+## 2026-10-16 — Weather alert truncation still present (Sep 1 fix did not take effect)
+Charles's Discord relay screenshot: 7:05 AM daily forecast arrived intact in 3 chunks (forecast fix works), but the 3:56 PM NWS alert still read "🟠 Severe Thunders Watch Kent til 10PM by NWS MOUN". Repo history shows the Aug forecast patches were applied to `/opt/meshcore-bot/modules/service_plugins/weather_service.py` (the copy the service runs), while the Sep 1 alert patch was applied to `~/meshcore-bot/modules/service_plugins/weather_service.py` (the git clone) — likely the wrong copy [S, unverified]. Diagnostic and re-patch steps are in `todos.md`. Cosmetic extras noted: doubled "CNJWeatherBot:" prefix in the relay; forecast chunk 3 overlaps chunk 2.
