@@ -2774,3 +2774,6 @@ Charles's Discord relay screenshot: 7:05 AM daily forecast arrived intact in 3 c
 
 ## 2026-10-16 (evening) — APRS Q&A, Nooelec idea
 Answered: TD-H9 (K2GIA-7) is not a Pi iGate; phone + KISSLink IS tab + "Upload RF-heard packets to APRS-IS" box makes it a receive-only mobile iGate (RF to internet only); with app off or box unticked it is RF only (radio still beacons via its own GPS and can digipeat if DIGI enabled). Parked Nooelec SDR / OrcSDR (theorc.dev) idea in `todos.md`.
+
+## 2026-10-16 (evening) — LV Mesh / 500 kHz Discord notes filed
+Filed notes from a Discord screenshot (Tck and Charles) on LV Mesh's stance (stay on 62.5 kHz for now, bridge to 500 kHz planned, per Tck, secondhand). See `docs/meshcore-repeater-settings.md` (Update 2026-10-16) and the WATCH item in `todos.md`.
