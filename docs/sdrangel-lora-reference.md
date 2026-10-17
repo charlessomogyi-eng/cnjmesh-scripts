@@ -1,6 +1,6 @@
 # SDRangel ChirpChat (LoRa) Demodulator — Quick Reference for CNJ
 
-Created 2026-10-16. Condensed in my own words from the plugin's README (github.com/f4exb/sdrangel, `plugins/channelrx/demodchirpchat/readme.md`). Tags: **[V]** = taken from that README or from Charles's screenshot; **[S]** = my suggestion, untested on Charles's setup. Charles's machine: Windows 10 laptop, SDRangel 7.22.9, Nooelec RTL-SDR (model not yet confirmed).
+Created 2026-10-16. Condensed in my own words from the plugin's README (github.com/f4exb/sdrangel, `plugins/channelrx/demodchirpchat/readme.md`). Tags: **[V]** = taken from that README or from Charles's screenshot; **[S]** = my suggestion, untested on Charles's setup. Charles's machine: Windows 10 laptop, SDRangel 7.22.9, Nooelec NESDR SMArt v5 RTL-SDR (confirmed from photos, Oct 16).
 
 ## What this is
 SDRangel's **ChirpChat Demodulator** is its LoRa decoder (the plugin is "LoRa-inspired" with LoRa-compatible decoding from community reverse engineering) **[V]**. The README says it is meant for experimentation, not production, and that it was verified mostly at SF11/SF12 with DE=2 (RN2483 transmitters; not tested with SX127x) **[V]** — so expect it to need tuning, and SF10 at 500 kHz is outside what the author verified.
