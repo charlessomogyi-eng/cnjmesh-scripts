@@ -220,7 +220,7 @@ Two repo conflicts can only be settled by looking at the real hardware. Walk thr
 
 
 ### [OPEN] LoRa APRS Discord — set per-server nickname (added Oct 14, 2026)
-- **[OPEN] Rename yourself in the LoRa APRS Discord to "Name CALLSIGN"** (i.e. "Charles K2GIA"). The server's admin posted an @everyone request in `#welcome` (a reply under it is dated Oct 12) because many new people joined and nobody can tell who is who. It changes the name in that server only, not globally. Admin's steps (desktop): right-click the server icon in the left column -> **Edit Per-server Profile**, then click your name to edit and save. (From a screenshot Charles shared; the phone-app path wasn't shown.)
+- **[DONE Oct 16 2026] Rename yourself in the LoRa APRS Discord to "Name CALLSIGN"** (done in the per-server profile; nickname set to "Charlie K2GIA", confirmed working by Charles) (i.e. "Charles K2GIA"). The server's admin posted an @everyone request in `#welcome` (a reply under it is dated Oct 12) because many new people joined and nobody can tell who is who. It changes the name in that server only, not globally. Admin's steps (desktop): right-click the server icon in the left column -> **Edit Per-server Profile**, then click your name to edit and save. (From a screenshot Charles shared; the phone-app path wasn't shown.)
 
 ### [OPEN] cnjmesh.me website — MeshCore text still shows the old 62.5 kHz / SF7 settings (added Oct 14, 2026)
 Charles asked for a review of the site's MeshCore wording against the 500 kHz change. Result (review of the repo copy plus the live pages, Oct 14):

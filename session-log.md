@@ -2777,3 +2777,6 @@ Answered: TD-H9 (K2GIA-7) is not a Pi iGate; phone + KISSLink IS tab + "Upload R
 
 ## 2026-10-16 (evening) — LV Mesh / 500 kHz Discord notes filed
 Filed notes from a Discord screenshot (Tck and Charles) on LV Mesh's stance (stay on 62.5 kHz for now, bridge to 500 kHz planned, per Tck, secondhand). See `docs/meshcore-repeater-settings.md` (Update 2026-10-16) and the WATCH item in `todos.md`.
+
+## 2026-10-16 (evening) — LoRa APRS Discord rename done
+Charles set his per-server nickname in the LoRa APRS Discord (right-click/dropdown, Edit Per-server Profile, click the name in the preview, save) to "Charlie K2GIA", as the admin requested. Todo closed. Note: in the current Discord UI there is no separate nickname box; you click the name in the profile preview.
