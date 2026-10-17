@@ -514,11 +514,23 @@ footer a:hover { color: var(--ink); }
     <ol>
       <li>Flash your device with the latest firmware at <a href="https://flasher.meshcore.io">flasher.meshcore.io</a>.</li>
       <li>Install the MeshCore app on your phone or desktop and pair it with your device as a <strong>companion</strong>.</li>
-      <li>Set your radio to the US region defaults so you're on the same air as the rest of us (see the table below).</li>
+      <li>Set your radio to the current CNJ 500&nbsp;kHz configuration so you're on the same air as the rest of us (see the first table below).</li>
       <li>Add the local channels and send a hello — then check <a href="https://corescope.cnjmesh.me/#/map">CoreScope</a> to see yourself appear.</li>
     </ol>
 
-    <h4>MeshCore radio settings</h4>
+    <h4>Current MeshCore 500&nbsp;kHz Configuration for CNJ</h4>
+    <p class="note" style="margin-top:0"><strong>910.525 MHz &middot; BW 500 kHz &middot; SF10 &middot; CR5</strong></p>
+    <table class="settings">
+      <tr><th>Setting</th><th>Value</th></tr>
+      <tr><td>Frequency</td><td>910.525 MHz</td></tr>
+      <tr><td>Bandwidth</td><td>500 kHz</td></tr>
+      <tr><td>Spreading factor</td><td>10</td></tr>
+      <tr><td>Coding rate</td><td>5</td></tr>
+    </table>
+    <p class="note">This is the configuration CNJ nodes use now, and the one to choose if you want to reach the CNJ mesh over the air. CNJ moved to 500&nbsp;kHz as a precaution over a possible regulatory (FCC) question. Both bandwidths are in use around the region, and neither is &ldquo;right&rdquo; or &ldquo;wrong&rdquo;. If your app's preset list doesn't offer these exact values, use its custom (manual) radio entry. Radios on different bandwidth settings cannot hear each other directly, so if you suddenly see no traffic, check this table first.</p>
+
+    <h4>Pre-FCC Concern Configuration, but still used by many users</h4>
+    <p class="note" style="margin-top:0"><strong>910.525 MHz &middot; BW 62.5 kHz &middot; SF7 &middot; CR5</strong> (US / Canada preset)</p>
     <table class="settings">
       <tr><th>Setting</th><th>Value</th></tr>
       <tr><td>Preset</td><td>US / Canada</td></tr>
@@ -527,7 +539,7 @@ footer a:hover { color: var(--ink); }
       <tr><td>Spreading factor</td><td>7</td></tr>
       <tr><td>Coding rate</td><td>5</td></tr>
     </table>
-    <p class="note">These are the standard US MeshCore parameters, shared with our neighboring networks so traffic can cross between meshes. If your messages aren't getting through, nudging the coding rate up can help — it stays cross-compatible.</p>
+    <p class="note">This is the standard US / Canada MeshCore preset and what CNJ used before the move. It is still in wide use, including by some neighboring meshes, and it works fine. CNJ nodes are on 500&nbsp;kHz now, so use the 500&nbsp;kHz configuration above to reach the CNJ mesh over the air, and use these values if the mesh you want to reach is on 62.5&nbsp;kHz. A node on 62.5&nbsp;kHz will not hear, or be heard by, a node on 500&nbsp;kHz, so pick the setting that matches the mesh you are joining.</p>
 
     <p style="margin-top:24px"><a class="btn btn-ghost" href="https://discord.gg/3erAvWHdNs">Get help in the MeshCore NJ Discord</a></p>
   </div>

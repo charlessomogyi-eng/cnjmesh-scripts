@@ -58,12 +58,12 @@ header {
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
 }
-.nav { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+.nav { display: flex; align-items: center; justify-content: space-between; height: 62px; flex-wrap: wrap; }
 .brand {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700; font-size: 1.5rem; letter-spacing: .06em;
   color: var(--ink); display: flex; align-items: center; gap: 10px;
-  text-transform: uppercase;
+  text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
 }
 .brand:hover { text-decoration: none; }
 .brand .onair {
@@ -77,7 +77,7 @@ header {
   70% { box-shadow: 0 0 0 10px rgba(196,43,61,0); }
   100% { box-shadow: 0 0 0 0 rgba(196,43,61,0); }
 }
-nav.links { display: flex; gap: 26px; align-items: center; }
+nav.links { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; row-gap: 6px; }
 nav.links a {
   color: var(--muted);
   font-family: 'Barlow Condensed', sans-serif;
@@ -448,6 +448,7 @@ footer a:hover { color: var(--ink); }
       <a href="getting-started.html">Getting started</a>
       <a href="index.html#maps" class="hide-sm">Live maps</a>
       <a href="index.html#discords" class="hide-sm">Discords</a>
+      <a href="network-news.html">News</a>
       <a href="contact.html">Contact</a>
     </nav>
   </div>
@@ -469,7 +470,7 @@ footer a:hover { color: var(--ink); }
         <div><b>$0</b>monthly cost</div>
       </div>
     </div>
-    <svg class="njmap" viewBox="0 0 300 547" role="img" aria-label="Coverage plot of New Jersey showing the CNJ Mesh core in Central Jersey with links reaching Jersey City, Morristown, Trenton, Toms River, and the Lehigh Valley">
+    <svg class="njmap" viewBox="0 0 300 547" role="img" aria-label="Coverage plot of New Jersey showing the CNJ Mesh core in Central Jersey with links reaching Jersey City, Morristown, Trenton, Toms River, Tuckerton, Cape May, and the Lehigh Valley">
       <path class="outline" d="M121.7,287.5 L147.7,275.1 L150.7,269.7 L128.2,243.2 L95.8,214.7 L94.2,188.2 L89.0,182.7 L74.3,178.1 L73.3,143.4 L77.3,137.8 L87.6,135.0 L97.0,119.1 L83.2,96.0 L84.0,92.3 L110.5,71.6 L109.6,68.2 L124.6,51.7 L128.0,38.8 L138.7,22.2 L155.2,14.0 L286.0,91.0 L264.7,152.4 L253.3,165.2 L237.8,166.5 L233.6,184.2 L228.1,186.6 L228.5,192.7 L224.1,199.7 L234.8,211.0 L246.5,206.8 L267.6,216.2 L270.0,209.4 L265.8,202.7 L269.4,203.9 L273.4,229.7 L263.6,282.5 L252.9,354.6 L229.4,399.1 L223.4,407.8 L217.9,409.4 L219.0,416.9 L201.3,440.6 L183.5,450.6 L168.3,465.4 L139.2,519.4 L127.5,530.4 L116.2,532.9 L109.9,530.4 L123.8,483.7 L111.5,477.0 L100.6,476.1 L99.5,471.6 L87.8,472.5 L82.6,479.2 L76.4,465.8 L65.9,459.1 L64.2,453.6 L58.2,455.8 L50.9,443.9 L45.8,444.7 L34.8,434.0 L29.4,423.9 L17.8,419.3 L16.7,411.6 L19.3,410.8 L21.6,394.2 L14.6,388.2 L14.0,383.1 L37.6,346.4 L55.3,336.1 L71.0,332.7 L109.5,293.6 Z"/>
       <circle class="ring" cx="177" cy="214" r="38"/>
       <circle class="ring" cx="177" cy="214" r="72"/>
@@ -479,6 +480,8 @@ footer a:hover { color: var(--ink); }
       <line class="link-line" x1="177" y1="214" x2="236" y2="314"/>
       <line class="link-line" x1="177" y1="214" x2="69" y2="157"/>
       <line class="link-line" x1="177" y1="214" x2="195" y2="200"/>
+      <line class="link-line" x1="177" y1="214" x2="119" y2="518"/>
+      <line class="link-line" x1="177" y1="214" x2="185" y2="410"/>
       <circle class="pulse" cx="177" cy="214" r="30"/>
       <circle class="pulse p2" cx="177" cy="214" r="30"/>
       <circle class="core" cx="177" cy="214" r="5.5"/>
@@ -488,12 +491,16 @@ footer a:hover { color: var(--ink); }
       <circle class="node" cx="236" cy="314" r="3.5"/>
       <circle class="node" cx="195" cy="200" r="3.5"/>
       <circle class="node" cx="69" cy="157" r="3.5"/>
+      <circle class="node" cx="119" cy="518" r="3.5"/>
+      <circle class="node" cx="185" cy="410" r="3.5"/>
       <text class="coretext" x="106" y="219">CNJ CORE</text>
       <text x="212" y="146">JERSEY CITY</text>
       <text x="122" y="127">MORRISTOWN</text>
       <text x="87" y="262">TRENTON</text>
       <text x="184" y="322">TOMS RIVER</text>
       <text x="30" y="146">LEHIGH VLY</text>
+      <text x="35" y="522">CAPE MAY</text>
+      <text x="193" y="414">TUCKERTON</text>
     </svg>
   </div>
 </div>
@@ -536,6 +543,14 @@ footer a:hover { color: var(--ink); }
           <span class="key">mqtt    :</span> <span class="val">mqtt.meshtastic.org</span><br>
           <span class="key">login   :</span> <span class="val">meshdev / large4cats</span>
         </div>
+        <p style="margin-top:14px; margin-bottom:0; color:var(--muted); font-size:.92rem;">Also bridging with our friends at <a href="https://sjmesh.net/">SJMesh</a>? Point MQTT at their broker:</p>
+        <div class="config-block" id="sj-config">
+          <button class="copy-btn" data-copy="sj-config-text" aria-label="Copy SJMesh MQTT settings">Copy</button>
+          <span class="key">mqtt       :</span> <span class="val">mqtt.sjmesh.net</span><br>
+          <span class="key">user       :</span> <span class="val">meshuser</span><br>
+          <span class="key">pass       :</span> <span class="val">mesh4life</span><br>
+          <span class="key">root topic :</span> <span class="val">msh/US</span>
+        </div>
         <p style="margin-top:6px">
           <a class="btn btn-ghost" href="getting-started.html#meshtastic">Meshtastic setup guide</a>
         </p>
@@ -545,6 +560,12 @@ footer a:hover { color: var(--ink); }
         <span class="sub">Growing across Central NJ</span>
         <p>A mesh platform built around smart routing instead of flooding — every user runs a companion node, and dedicated repeaters and room servers carry traffic across the network. Encrypted end to end, with apps on Android, iOS, and desktop.</p>
         <p>We're building out MeshCore repeater coverage in Central Jersey, with infrastructure in the Kendall Park area and a live map on CoreScope.</p>
+        <p style="margin-top:14px; margin-bottom:0; color:var(--muted); font-size:.92rem;">Our channel for Central NJ operators is <code>CentralNJ-MC</code>. In the MeshCore app, tap the ⋮ menu → Add Channel → Enter Secret Key:</p>
+        <div class="config-block" id="mc-config">
+          <button class="copy-btn" data-copy="mc-config-text" aria-label="Copy CentralNJ-MC channel settings">Copy</button>
+          <span class="key">channel :</span> <span class="val">CentralNJ-MC</span><br>
+          <span class="key">key     :</span> <span class="val">dcc94b369feeee309800ee15a12403ed</span>
+        </div>
         <p style="margin-top:22px">
           <a class="btn btn-ghost" href="getting-started.html#meshcore">MeshCore setup guide</a>
         </p>
@@ -656,9 +677,15 @@ footer a:hover { color: var(--ink); }
 </footer>
 
 <script>
+  var copyTexts = {
+    "mt-config-text": "Channel: CentralNJ\nPSK: f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=\nMQTT: mqtt.meshtastic.org\nLogin: meshdev / large4cats",
+    "sj-config-text": "MQTT: mqtt.sjmesh.net\nUser: meshuser\nPass: mesh4life\nRoot topic: msh/US",
+    "mc-config-text": "Channel: CentralNJ-MC\nKey: dcc94b369feeee309800ee15a12403ed"
+  };
   document.querySelectorAll('.copy-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
-      var text = "Channel: CentralNJ\nPSK: f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=\nMQTT: mqtt.meshtastic.org\nLogin: meshdev / large4cats";
+      var key = btn.getAttribute('data-copy');
+      var text = copyTexts[key] || "";
       navigator.clipboard.writeText(text).then(function(){
         btn.textContent = "Copied";
         setTimeout(function(){ btn.textContent = "Copy"; }, 1600);
