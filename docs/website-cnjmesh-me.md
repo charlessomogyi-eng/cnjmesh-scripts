@@ -49,3 +49,6 @@ Charles asked that the website present 500 kHz and 62.5 kHz as two valid options
 **Follow-up Oct 16 (Charles's wording, applied):** heading set to "Pre-FCC Concern Configuration, but still used by many users"; the sentence "The community is exploring ways to bridge the two." was removed (nothing about bridges or LV Mesh is on the page). The 500 kHz note keeps: CNJ moved as a precaution over a possible regulatory question; both bandwidths are in use in the region; neither is right or wrong.
 
 **Note Oct 16 2026 [V, screenshot]:** in the Netlify dashboard (team CommunityKitchen, account of Charles) the project is displayed as **cnjmesh.me**, last deployed from Netlify Drop on Sep 5. The older `tranquil-palmier-f6462b` name above may now be only its netlify.app subdomain [S].
+
+## Update 2026-10-16 22:30: deployed
+Charles deployed the corrected `getting-started.html` to cnjmesh.me via Netlify (drag the unzipped live-site folder onto the project overview's "Already built it?" box); confirmed the site looks good. Netlify's deploy showed "1 new file uploaded". Repo backup `website/cnjmesh-me/` is still behind the live site until re-synced from the live zip.
