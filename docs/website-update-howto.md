@@ -9,7 +9,7 @@ A drag-and-drop deploy uploads a whole folder as the new version of the site. Ne
 ## Steps
 
 1. **Get the live files first (this is also your backup).**
-   - Sign in at <https://app.netlify.com/> and open the project `tranquil-palmier-f6462b` (Projects list).
+   - Sign in at <https://app.netlify.com/> and open the project named **cnjmesh.me** in the Projects list (team "CommunityKitchen"; seen on screen Oct 16, 2026, last published Sep 5 via Netlify Drop). Do not touch the other projects in the list (communityoven.net and two others). The project's netlify.app subdomain may still be `tranquil-palmier-f6462b`.
    - Open **Deploys**, click the most recent *Published* deploy to open its detail page.
    - Download the deploy as a zip (a download arrow on the detail page, or the download link in the **Deploy file explorer** below the deploy log; Netlify has described both, and the button may be labeled differently in the current UI).
    - Unzip it into a new folder, for example `cnjmesh-live-2026-10-14`. Keep the original zip untouched as the backup.
