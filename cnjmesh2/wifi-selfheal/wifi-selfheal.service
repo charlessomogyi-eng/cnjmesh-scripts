@@ -1,0 +1,8 @@
+[Unit]
+Description=cnjmesh2 Wi-Fi self-heal check (ping gateway, escalate on failure)
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/wifi-selfheal/wifi-selfheal.sh
+Nice=10
