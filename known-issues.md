@@ -46,3 +46,6 @@ See `cnjmesh1-operations.md`'s own "Known Issues / Don't Touch" section — not 
 ---
 
 *(This file is new as of 2026-08-23, created after a fresh session reviewed a KISSLink screenshot, saw correctly-filled-in IS fields, and incorrectly declared APRS-IS "configured fine" without checking the actual connection status — the K2GIA-7 entry above is that exact issue. Purpose of this file is to make that class of mistake structurally harder: known gotchas live in one short, always-fetched place instead of being buried in long-form reference docs a session might not think to open.)*
+
+## meshcore-bot has two copies on cnjmesh1 (found Oct 16 2026)
+`meshcore-bot.service` runs `/opt/meshcore-bot/` (root-owned, installed copy, holds the Aug forecast fixes). `~/meshcore-bot/` is the git clone and is NOT what runs. Edits belong in `/opt` (use sudo), or they have no effect; the Sep 1 alert patch was lost this way. The alert fix was applied to `/opt` on Oct 16 (see `todos.md`). Patch script: `cnjmesh1/meshcore-bot-custom/patch_alert_chunking.py`. Delete this entry once a real alert is confirmed correct and the doubled-prefix issue is looked at.

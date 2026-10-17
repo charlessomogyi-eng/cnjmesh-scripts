@@ -2780,3 +2780,6 @@ Filed notes from a Discord screenshot (Tck and Charles) on LV Mesh's stance (sta
 
 ## 2026-10-16 (evening) — LoRa APRS Discord rename done
 Charles set his per-server nickname in the LoRa APRS Discord (right-click/dropdown, Edit Per-server Profile, click the name in the preview, save) to "Charlie K2GIA", as the admin requested. Todo closed. Note: in the current Discord UI there is no separate nickname box; you click the name in the profile preview.
+
+## 2026-10-16 (night) — meshcore-bot alert truncation fixed in the live copy
+Compared the two copies of `weather_service.py` on cnjmesh1: `/opt/meshcore-bot/` (what `meshcore-bot.service` runs; changed Aug 11; has the Aug forecast fixes but the old alert truncation) vs `~/meshcore-bot/` (git clone; changed Sep 1; has only the Sep 1 alert formatter and none of the forecast work). The Sep 1 alert patch therefore never took effect. Wrote `cnjmesh1/meshcore-bot-custom/patch_alert_chunking.py` (exact-match-or-abort, compile check, timestamped backup; tested on a stand-in built from the dump), ran it on cnjmesh1 with sudo at 20:52: it printed OK and the backup name; the bot restarted and came up active with the weather service loaded. Not yet confirmed on a live alert. Lesson: patch `/opt/meshcore-bot/`, not `~/meshcore-bot/`; check `ls -l` dates on both.
