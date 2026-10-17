@@ -49,3 +49,9 @@ See `cnjmesh1-operations.md`'s own "Known Issues / Don't Touch" section — not 
 
 ## meshcore-bot has two copies on cnjmesh1 (found Oct 16 2026)
 `meshcore-bot.service` runs `/opt/meshcore-bot/` (root-owned, installed copy, holds the Aug forecast fixes). `~/meshcore-bot/` is the git clone and is NOT what runs. Edits belong in `/opt` (use sudo), or they have no effect; the Sep 1 alert patch was lost this way. The alert fix was applied to `/opt` on Oct 16 (see `todos.md`). Patch script: `cnjmesh1/meshcore-bot-custom/patch_alert_chunking.py`. Delete this entry once a real alert is confirmed correct and the doubled-prefix issue is looked at.
+
+## cnjmesh2 (10.0.0.91) found unreachable, 2nd time (Oct 16 2026 ~22:36 ET)
+- Symptom: malla2.cnjmesh.me showed Cloudflare Error 1033; from cnjmesh1 `ping 10.0.0.91` = "Destination Host Unreachable" (no ARP answer) while cnjmesh3 (10.0.0.186) pinged fine. So the host is off the LAN (hung, powered off, or Wi-Fi dropped), not just cloudflared.
+- cnjmesh2 is documented as a Raspberry Pi Zero 2 W (512 MB RAM, Wi-Fi) running malla-web, malla-capture, mosquitto, cloudflared. Suspects to check after it is back: out-of-memory hang, Wi-Fi drop/power-save, undervoltage (`vcgencmd get_throttled`), SD/disk errors. Charles is wary of pulling power (SD corruption risk).
+- Whether journald is persistent on cnjmesh2 decides if the cause is visible in `journalctl -b -1`; if not, enable persistent logs so the next outage leaves evidence.
+- Status: OPEN, waiting for Charles to power-cycle and run the post-boot checks. Delete this entry when cause is found and fixed.
