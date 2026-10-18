@@ -151,3 +151,23 @@ to skip a CNJ-specific broker connection entirely and instead help him get
 his own observer set up as a proper LetsMesh observer with an NJ IATA code —
 which is likely a smoother, more standard path for him than any custom CNJ
 broker config.
+
+---
+
+# Update 2026-10-18 — KPR2 and KPR3 confirmed visible on the LetsMesh Analyzer
+
+**Source:** Charles's phone screenshots of `analyzer.letsmesh.net/nodes` (Repeaters tab, filters "Last 7d" and "EWR") at about 4:40 and 4:44 PM EDT. [S] I could not load the Analyzer pages myself (fetch error), so what follows is read from the screenshots; the explanations of how the tags work are my understanding, not read from LetsMesh documentation. [I]
+
+| Node | Public key (as shown) | Last heard | Region tags shown |
+|---|---|---|---|
+| **Kendall Park Repeater 2** (KPR2) | `977F8AE4...195566F7` | 7h ago | PCT, EWR, ABE, PHL |
+| **KPR3** | `29DDA9E3...F4DD842C` (+1 more tag hidden) | 1d ago | PCT, EWR, PHL, CNJ (+1) |
+
+- The `29DDA9E3` prefix matches the KPR3 key prefix already in `cnjmesh1-operations.md` (`29dda9e3`), so this is the same node.
+- Both repeaters are on the public map data and the nodes list, so the 500 kHz cutover (KPR3 Oct 11, KPR2 Oct 14) is reaching LetsMesh through our Observer.
+- **What the 3-letter tags are [I]:** region codes (IATA-style codes chosen by each observer's operator). A node is listed under every region where an observer heard its advert and uploaded it. EWR is our Observer (it sits next to KPR2 on cnjmesh3). PCT (Princeton), PHL (Philadelphia) and ABE (Lehigh Valley) mean observers in those regions also heard KPR2/KPR3, probably after the adverts were repeated across the mesh (not verified). Nothing was configured on the repeaters to produce the tags.
+- **Observation:** a **CNJ** region code also appears (on KPR3 and on "Bowmanstown Hillside"). Charles's Observer uses EWR, so some other observer uses CNJ. Who runs it is unknown.
+- **How a node gets listed:** it only has to be heard. A repeater that sends an advert that any observer picks up appears, under its advertised name (KPR2 is advertised as "Kendall Park Repeater 2", not "KPR2").
+- **Search tip:** the Analyzer's quick search is the Ctrl+K / ⌘K shortcut, which does not exist on a phone; on a phone use the page menu or the browser's Find in page.
+- The page header showed a red "Reconnect" indicator once at 4:38 PM and a green one later; not investigated.
+
