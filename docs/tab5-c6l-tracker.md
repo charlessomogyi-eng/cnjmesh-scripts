@@ -13,10 +13,10 @@ installing, because several of these projects move weekly.
 
 | Item | Status | Notes |
 |---|---|---|
-| M5Stack Tab5 | Shipped, in the mail (as of 2026-10-22) | Confirm whether it is the plain Tab5 (C145, no battery) or the Kit (K145, includes NP-F550 battery). See power notes. |
+| M5Stack Tab5 | Shipped, in the mail (as of 2026-10-22) | **Kit with battery** (K145, includes NP-F550), confirmed by owner 2026-10-22. See power notes. |
 | M5Stack Unit C6L (U202) | Shipped, in the mail | Ships with two SMA whips (868 MHz LoRa + 2.4 GHz). |
 | Tab5 Keyboard (A164) | Ordered, expected a few weeks out | 70-key, plugs into Tab5 Ext.Port1. |
-| Nooelec RTL-SDR (owner says "V4") | On hand | Model needs confirming. See open question Q2. |
+| Nooelec **NESDR SMArt v5** | On hand | Confirmed from owner's photos 2026-10-22 (FCC ID 2A8GD-SMArt-V5, "v5" printed on case, SMA input). Listed as accepted for FT8 in OrcSDR v0.4.0-beta.1. |
 | Antennas on hand | Muzi whip, Alfa 915 MHz (~6-7 in), SMA pigtails | Alfa connector type and gender not yet checked. |
 
 ---
@@ -24,12 +24,14 @@ installing, because several of these projects move weekly.
 ## 2. Checklist and open questions
 
 ### Before it arrives
-- [ ] **Q1.** Plain Tab5 or Kit with battery? One Tab5-SDR author says the Tab5 browns out on USB power alone
-      under the dongle's ~300 mA load and needs its internal battery connected. If it is the plain Tab5, plan an
-      NP-F550 battery (7.4 V, 2000 mAh).
-- [ ] **Q2.** Exact SDR model. The label on the dongle should say. OrcSDR's documented receivers are the
-      **RTL-SDR Blog V4**, V4L and V3c, plus the **Nooelec NESDR SMArt V5** (accepted for FT8 in v0.4.0-beta.1).
-      A "Nooelec V4" is not named anywhere I found.
+- [x] **Q1. Resolved 2026-10-22:** owner bought the Tab5 **with battery** (Kit, NP-F550). That matters because one
+      Tab5-SDR author says the Tab5 browns out on USB power alone under the dongle's ~300 mA load and needs its
+      internal battery connected. Keep the battery installed when running the SDR.
+- [x] **Q2. Resolved 2026-10-22:** the dongle is a **Nooelec NESDR SMArt v5** (owner's photos). OrcSDR's documented
+      receivers are the RTL-SDR Blog V4, V4L and V3c, plus the NESDR SMArt V5. The V5 passed FT8 acceptance in
+      v0.4.0-beta.1 (40 m, 7.074 MHz, MLA-30+ antenna; valid decodes after tightening the antenna connection).
+      Earlier beta7 notes called V5 support experimental, so expect rough edges. Note that the Blog V4's built-in
+      HF upconverter (used by the 9a3zi project) is a V4 feature and is not described for the V5.
 - [ ] **Q3.** Alfa 915 MHz antenna connector: SMA or RP-SMA? Check against the C6L's LoRa port and the
       pigtails. Sources conflict on the C6L's own antenna connector (M5Stack's page and OpenELAB say RP-SMA,
       retailer listings say SMA with female pin), so check the gender with the hardware in hand.
@@ -37,6 +39,7 @@ installing, because several of these projects move weekly.
 - [ ] Get a microSD card for the Tab5 (OrcSDR uses it for captures and data packs).
 - [ ] Short USB-A extension cable for the dongle (recommended by the 9a3zi tab5-SDR project).
 - [ ] Decide on an HF antenna (long wire plus 9:1 unun is the usual start) and a 1090 MHz antenna for ADS-B.
+- [ ] V5 tips from the OrcSDR FT8 notes: tighten the SMA antenna connection firmly, and use manual gain if auto-gain clips.
 
 ### On arrival
 - [ ] Check the sticker on the back of the Tab5 for the display driver revision (ST7121 expected for a late-2026 unit, **unverified**).
@@ -265,7 +268,8 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 - No Tab5 APRS decoder (144.390 MHz or LoRa APRS) in any project I found.
 - No Tab5-native LoRa radio, so no standalone Tab5 Meshtastic or MeshCore node.
 - OrcSDR's LoRa monitor does not mention MeshCore.
-- No confirmation that the Nooelec "V4" works with OrcSDR (see Q2).
+- Nooelec NESDR SMArt V5 support in OrcSDR is recent (FT8 accepted 2026-10-09). Results on other bands and the V5's HF
+  route are not documented beyond that test.
 - OrcSDR's HF support was only recently added; 9a3zi's project is the other HF option.
 
 **Watch:**
@@ -290,3 +294,4 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 ## 11. Changelog
 
 - 2026-10-22: Created from first research pass (Tab5, C6L, OrcSDR, Trail Mate, accessories, community).
+- 2026-10-22: Owner confirmed Tab5 Kit with battery (Q1) and dongle is a Nooelec NESDR SMArt v5 from photos (Q2).
