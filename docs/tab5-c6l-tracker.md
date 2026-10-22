@@ -285,6 +285,31 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 
 ---
 
+## 9b. Repo-informed plan (added Oct 22, 2026 after reading the CNJ Mesh repo)
+
+Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
+
+**Why the C6L's job is not "one more MeshCore repeater" [I]:** MeshCore already has KPR2 (Heltec V4, cnjmesh3), KPR3 (RAK4630, 9-el Yagi) and the Observer; KPR1 is the Tilly bridge on 62.5 kHz. A fourth indoor repeater adds little. The C6L is USB-C 5 V only (no battery), so it suits a fixed, powered job.
+
+**Repo items the C6L could fill [V]:**
+- `todos.md`: APRStastic (Meshtastic to APRS gateway) needs a dedicated spare Meshtastic node that is not CJG1/CJG2.
+- `docs/ehn-gateway-project.md`: the idea stage EHN-style gateway needs a Meshtastic node on USB (and a separate MeshCore companion on USB).
+- MTMC-Bridge (MeshCore to Meshtastic public-channel relay) needs one USB node of each protocol.
+
+**Recommendation (draft, Charlie decides):** start the C6L on Meshtastic (official M5Stack flashing path, no known boot-loop, matches the existing Meshtastic community and tooling), as the spare USB node above. Revisit MeshCore on it after MeshCore PR #3098 (QIO boot-loop fix) is merged. Reflashing is cheap (download mode), so this is reversible.
+
+**If MeshCore anyway:** USB companion for a Pi (not BLE, because of the reported BLE PIN/display problems on v1.17.1), radio 910.525 / BW 500 / SF10 / CR5 (only the settings in `cnjmesh1-operations.md`; nodes on other settings cannot hear each other). Part 15.247 caution for 500 kHz applies as for KPR3; the C6L module's FCC grant is unknown.
+
+**Antenna:** connector gender of the Alfa 915 MHz and the C6L LoRa port still unverified (Q3).
+
+**Fun projects that fit this network [I]:**
+1. OrcSDR passive Meshtastic monitor on 902-928 MHz, compared against what CJG1/CJG2 report to MQTT (is the RF picture the same as the broker's?).
+2. OrcSDR FT8 / Shortwave dashboard as a first step into HF (check what the NESDR SMArt v5 can receive below ~24 MHz before promising anything; an upconverter may be needed).
+3. OrcSDR ADS-B and POCSAG: easy wins on the dongle.
+4. Tab5 plus `docs/sdrangel-lora-reference.md`: OrcSDR does not mention MeshCore, so MeshCore 500 kHz packet-presence checks still go through SDRangel on the laptop.
+5. C6L as the APRStastic or EHN/MTMC-Bridge Meshtastic node (above).
+6. Trail Mate on the Tab5 as a field chat screen (Meshtastic + MeshCore), once the keyboard arrives.
+
 ## 10. Test log (fill in as you go)
 
 | Date | What | Result |
@@ -295,3 +320,4 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 
 - 2026-10-22: Created from first research pass (Tab5, C6L, OrcSDR, Trail Mate, accessories, community).
 - 2026-10-22: Owner confirmed Tab5 Kit with battery (Q1) and dongle is a Nooelec NESDR SMArt v5 from photos (Q2).
+- 2026-10-22: Added section 9b (repo-informed C6L role, recommendation and project ideas) after reading the CNJ Mesh repo.
