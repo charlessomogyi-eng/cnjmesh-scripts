@@ -291,12 +291,13 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 
 **Why the C6L's job is not "one more MeshCore repeater" [I]:** MeshCore already has KPR2 (Heltec V4, cnjmesh3), KPR3 (RAK4630, 9-el Yagi) and the Observer; KPR1 is the Tilly bridge on 62.5 kHz. A fourth indoor repeater adds little. The C6L is USB-C 5 V only (no battery), so it suits a fixed, powered job.
 
-**Repo items the C6L could fill [V]:**
-- `todos.md`: APRStastic (Meshtastic to APRS gateway) needs a dedicated spare Meshtastic node that is not CJG1/CJG2.
-- `docs/ehn-gateway-project.md`: the idea stage EHN-style gateway needs a Meshtastic node on USB (and a separate MeshCore companion on USB).
-- MTMC-Bridge (MeshCore to Meshtastic public-channel relay) needs one USB node of each protocol.
+**Charlie's decision (Oct 22) [stated]:** the C6L is his **mobile node**, whichever protocol it runs. KPN6 is his main Meshtastic node (indoors, fed by LMR400 to a roof antenna), so a fixed gateway role is not needed. EHN-style gateway: very experimental, only being evaluated, nothing bought.
 
-**Recommendation (draft, Charlie decides):** start the C6L on Meshtastic (official M5Stack flashing path, no known boot-loop, matches the existing Meshtastic community and tooling), as the spare USB node above. Revisit MeshCore on it after MeshCore PR #3098 (QIO boot-loop fix) is merged. Reflashing is cheap (download mode), so this is reversible.
+**What "mobile" means for this board [V from M5Stack specs]:** USB-C 5 V only, no battery, no GPS. Needs a USB power bank, the included 108 mm whip, and a phone for the interface (and for position, if the app can share phone location, to be verified on the chosen firmware).
+
+**Protocol for a mobile node [I]:** the phone link is Bluetooth, and the MeshCore C6L companion_radio_ble build had reported PIN/display problems on v1.17.1, so Meshtastic is the lower-risk first flash. Meshtastic cannot use Bluetooth and Wi-Fi at once. Reflashing is cheap (download mode), so try Meshtastic first and revisit MeshCore after PR #3098 and the BLE issues are sorted. A real GPS-equipped mobile node already exists (T-Deck Plus, KPC2/KPN2).
+
+**Parked ideas (not decided, nothing bought):** APRStastic (afourney/aprstastic, Meshtastic to APRS gateway) and the EHN/MTMC-Bridge gateway would need a fixed, USB-attached node and are not C6L jobs now; see `todos.md` and `docs/ehn-gateway-project.md`.
 
 **If MeshCore anyway:** USB companion for a Pi (not BLE, because of the reported BLE PIN/display problems on v1.17.1), radio 910.525 / BW 500 / SF10 / CR5 (only the settings in `cnjmesh1-operations.md`; nodes on other settings cannot hear each other). Part 15.247 caution for 500 kHz applies as for KPR3; the C6L module's FCC grant is unknown.
 
@@ -307,7 +308,7 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 2. OrcSDR FT8 / Shortwave dashboard as a first step into HF (check what the NESDR SMArt v5 can receive below ~24 MHz before promising anything; an upconverter may be needed).
 3. OrcSDR ADS-B and POCSAG: easy wins on the dongle.
 4. Tab5 plus `docs/sdrangel-lora-reference.md`: OrcSDR does not mention MeshCore, so MeshCore 500 kHz packet-presence checks still go through SDRangel on the laptop.
-5. C6L as the APRStastic or EHN/MTMC-Bridge Meshtastic node (above).
+5. C6L as a pocket mobile node on the CNJ meshes (above): range tests against KPR2/KPR3 (MeshCore) or KPN6/CJG1/CJG2 (Meshtastic).
 6. Trail Mate on the Tab5 as a field chat screen (Meshtastic + MeshCore), once the keyboard arrives.
 
 ## 10. Test log (fill in as you go)
@@ -321,3 +322,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-22: Created from first research pass (Tab5, C6L, OrcSDR, Trail Mate, accessories, community).
 - 2026-10-22: Owner confirmed Tab5 Kit with battery (Q1) and dongle is a Nooelec NESDR SMArt v5 from photos (Q2).
 - 2026-10-22: Added section 9b (repo-informed C6L role, recommendation and project ideas) after reading the CNJ Mesh repo.
+- 2026-10-22: Owner says the C6L is his mobile node (either protocol); KPN6 is the main fixed Meshtastic node; EHN gateway is only being evaluated. Section 9b updated.
