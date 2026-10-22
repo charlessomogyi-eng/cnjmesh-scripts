@@ -244,6 +244,7 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 ## 7. Other Tab5 projects (non-RF)
 
 - [loadout-tab5](https://github.com/katinadelgado74/loadout-tab5): firmware launcher that boots .bin files from the SD card with OTA rollback.
+- [Launcher by bmorcelli](https://github.com/bmorcelli/Launcher) [S: README/changelog read Oct 22, not tested]: multi-firmware launcher; Tab5 support since 2.6.0 (2.6.7 added USB mass-storage and Launcher self-update on Tab5; 2.10.0 fixed OTA crashes). Menu: SD (install .bin from card), OTA (install from M5Burner or GitHub links), WUI (web interface), USB (mass storage), PMan (partition manager), CFG, OFF. Charlie saw it in a YouTube Short by @Valleytechsolutions on Oct 22 (video itself not readable by Claude; only screenshots). [I] Caveat: unknown whether OrcSDR (needs its own partition layout and ESP-Hosted C6 firmware) runs from Launcher; for the first OrcSDR install use the documented M5Burner path, and treat Launcher as a later experiment (flashing OrcSDR with M5Burner writes at 0x0 and would replace Launcher).
   Could be handy for switching between OrcSDR and other firmware. Very early (3 commits). MIT.
 - [dmatking/m5stack-tab5-gps](https://github.com/dmatking/m5stack-tab5-gps): handheld GPS with offline maps, needs M5Stack GPS Module v2.1 on the M-Bus. Apache-2.0, ESP-IDF 6.0.1.
 - [esp-cpp/tab5-emu](https://github.com/esp-cpp/tab5-emu) (game emulation), [Paqurin/tab5-apps](https://github.com/Paqurin/tab5-apps),
@@ -324,3 +325,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-22: Added section 9b (repo-informed C6L role, recommendation and project ideas) after reading the CNJ Mesh repo.
 - 2026-10-22: Owner says the C6L is his mobile node (either protocol); KPN6 is the main fixed Meshtastic node; EHN gateway is only being evaluated. Section 9b updated.
 - 2026-10-22: Q4 resolved: C6L starts on Meshtastic (mobile node).
+- 2026-10-22: Added Launcher (bmorcelli) note after Charlie shared a YouTube Short about Tab5 updates.
