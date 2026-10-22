@@ -35,7 +35,7 @@ installing, because several of these projects move weekly.
 - [ ] **Q3.** Alfa 915 MHz antenna connector: SMA or RP-SMA? Check against the C6L's LoRa port and the
       pigtails. Sources conflict on the C6L's own antenna connector (M5Stack's page and OpenELAB say RP-SMA,
       retailer listings say SMA with female pin), so check the gender with the hardware in hand.
-- [ ] **Q4.** Decide the C6L's job: Meshtastic node or MeshCore (repeater / companion). See section 5.
+- [x] **Q4.** RESOLVED Oct 22 (Charlie): C6L starts on Meshtastic, as his mobile node. MeshCore can be revisited later (reflash is cheap).
 - [ ] Get a microSD card for the Tab5 (OrcSDR uses it for captures and data packs).
 - [ ] Short USB-A extension cable for the dongle (recommended by the 9a3zi tab5-SDR project).
 - [ ] Decide on an HF antenna (long wire plus 9:1 unun is the usual start) and a 1090 MHz antenna for ADS-B.
@@ -323,3 +323,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-22: Owner confirmed Tab5 Kit with battery (Q1) and dongle is a Nooelec NESDR SMArt v5 from photos (Q2).
 - 2026-10-22: Added section 9b (repo-informed C6L role, recommendation and project ideas) after reading the CNJ Mesh repo.
 - 2026-10-22: Owner says the C6L is his mobile node (either protocol); KPN6 is the main fixed Meshtastic node; EHN gateway is only being evaluated. Section 9b updated.
+- 2026-10-22: Q4 resolved: C6L starts on Meshtastic (mobile node).
