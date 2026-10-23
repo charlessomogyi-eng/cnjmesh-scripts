@@ -1,0 +1,6 @@
+[Unit]
+Description=cnjmesh2 flight recorder (one health line to the journal)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/flight-recorder.sh

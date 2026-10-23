@@ -1,0 +1,10 @@
+[Unit]
+Description=Run flight recorder every minute
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

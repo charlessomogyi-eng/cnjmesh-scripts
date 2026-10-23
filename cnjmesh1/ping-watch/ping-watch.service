@@ -1,0 +1,10 @@
+[Unit]
+Description=Log cnjmesh2 up/down transitions
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ping-watch-cnjmesh2.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
