@@ -119,6 +119,16 @@ case "${HOST}" in
     # the old note here said it had none, so that folder was never backed up. Its config/env is also
     # in the container run-state captured above (docker/inspect-meshcore-mqtt-bridge.json).
     copy_if /home/somog/meshcore-bridge-data "meshcore-bridge-data"
+    # Oct 23 2026: ~/meshcore-mqtt-tilly (Tilly's fork of the bridge, with our local changes) was also never backed up.
+    # Size-guarded so a stray venv or build dir cannot blow up the archive.
+    if [ -d /home/somog/meshcore-mqtt-tilly ]; then
+      TILLY_KB=$(du -sk /home/somog/meshcore-mqtt-tilly 2>/dev/null | cut -f1)
+      if [ "${TILLY_KB:-0}" -lt 300000 ]; then
+        copy_if /home/somog/meshcore-mqtt-tilly "meshcore-mqtt-tilly"
+      else
+        echo "  WARNING: ~/meshcore-mqtt-tilly is ${TILLY_KB} KB (>300 MB), skipped; back it up by hand"
+      fi
+    fi
     ;;
 
   *)
