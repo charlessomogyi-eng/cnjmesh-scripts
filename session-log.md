@@ -2812,3 +2812,5 @@ Trigger: a TEST tsunami alert for Texas ("by NWS NATI") was relayed into `#centr
 **Other.** Wrong-host mix-up (a cnjmesh2 command run on cnjmesh1) caused no change. `restart` approvals: Charlie clarified he runs every command himself; no need to ask permission before giving one. Pending test-restore plan, cnjmesh2 power swap, inventory refresh, and the items in `todos.md`.
 
 **Commits tonight (newest last):** f60030e, 11e41bc, 0087661, 0b0e370, eebfce8, 3c06d45, ecba72e, 1b54516, 61382fa, 1fcd70a, 4786317, eae3654, fca143e, 8fcd463, 3ca2070, ab79fcb, 4d32773, 9b44018, 5c6461c, 7bd1faf, 4b41117, c59eb5b, b114836 (plus this one).
+
+**Handoff (Oct 23 21:45 ET):** chat ran long, so Charlie moved to a new chat. Full handoff written to `docs/new-chat-handoff-2026-10-23.md` (commits 2cf7bd0, 36acb17) and linked from `CLAUDE_CONTEXT.md`. Repo verified in sync with GitHub after the final push.
