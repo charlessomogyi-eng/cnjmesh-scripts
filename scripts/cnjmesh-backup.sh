@@ -115,8 +115,10 @@ case "${HOST}" in
     echo "[cnjmesh3] meshcore packet-capture + bridge configs ..."
     copy_if /opt/meshcore-packet-capture "meshcore-packet-capture"
     copy_if /opt/meshcore-mqtt "meshcore-mqtt"
-    # NOTE: meshcore-mqtt-bridge has no bind mount — its config is in the
-    # container run-state captured above (docker/inspect-meshcore-mqtt-bridge.json).
+    # Oct 23 2026: the bridge DOES have a bind mount (/home/somog/meshcore-bridge-data -> /data);
+    # the old note here said it had none, so that folder was never backed up. Its config/env is also
+    # in the container run-state captured above (docker/inspect-meshcore-mqtt-bridge.json).
+    copy_if /home/somog/meshcore-bridge-data "meshcore-bridge-data"
     ;;
 
   *)
