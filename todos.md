@@ -366,3 +366,12 @@ Found during an unrelated check: `meshcore-cli -s /dev/kpc1 infos` returned "No 
 
 ### [RESOLVED Oct 23 2026] KPN2 vs KPC2 naming, finally settled
 Charlie confirmed: one physical LilyGo T-Deck Plus. **KPN2** = its name from when it ran Meshtastic firmware. **KPC2** = its name since being reflashed to MeshCore. Same hardware, two names from two eras — use KPC2 for anything current. See `cnjmesh1-operations.md`'s KPN2/KPC2 conflict note for the full history.
+
+### [DONE Oct 23 2026] New MeshCore companion KPC3 (Heltec T096) brought online
+Charlie found a previously-unused, never-set-up Heltec Mesh Node T096 (nRF52840, pubkey prefix `1dd56074`) on the bench and brought it online tonight as a stand-in personal companion while KPC2 (T-Deck) is apart for its battery swap.
+- Flashed via flasher.meshcore.io: Companion Bluetooth, **v1.18.0** (15-Oct-2026 build). First flash attempt hit "nRF flashing failed: Read timeout" — fixed by using the flasher's built-in "Enter DFU mode" button before retrying Flash.
+- Antenna: reused KPC2's old antenna on the LoRa u.FL port (right-hand connector on this board; left is GNSS).
+- Paired over BLE from the phone app (PIN shown on-device, e.g. "Pin: 396940" — changes per pairing attempt, not a fixed value).
+- Named **KPC3**. Radio set to 910.525 MHz / 500 kHz / SF10 / CR5 (bandwidth was 62.5/SF7 by default, both changed), coding rate was already 5, path hash size left at 2-byte (matches other CNJ nodes), TX power raised from the 9 dBm default to **22 dBm** to match KPC1. Position set to 40.42423 / -74.55746 (same QTH as KPC1/cnjmesh1).
+- **Confirmed live end-to-end:** its advert was heard by the Observer (cnjmesh3) and relayed to Discord `#cnj-new-node-relay` ("Node heard: KPC3", 11:09 PM pubkey prefix `1dd560744e81fb5b...`).
+- Not yet done: channel key(s) added (CentralNJ-MC etc., to match KPC1/KPC2) — confirm this happened before relying on KPC3 for channel messaging, not just node-heard visibility. Physical case/mounting not addressed.
