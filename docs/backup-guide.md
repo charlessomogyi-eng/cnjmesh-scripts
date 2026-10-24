@@ -29,6 +29,7 @@ Version = date of the last change in git. Check the current one with `git log -1
 | `scripts/cnjmesh1-backup.sh` | **cnjmesh1** | `~/backups/cnjmesh1-backup-<date>.tar.gz` (~180 MB), with a built-in verification step | 2026-08-11 (verification added; created 2026-07-12) |
 | `scripts/cnjmesh1-extra-backup.sh` | **cnjmesh1** | `~/backups/cnjmesh1-extra-<date>.tar.gz` (~125 MB, mode 600, owned by somog) | 2026-10-23 (created) |
 | `scripts/cnjmesh-backup.sh` | **cnjmesh3** (host-aware; **never run on cnjmesh2**) | `~/backups/cnjmesh3-backup-<date>.tar.gz` (~0.6 MB) | 2026-10-23 (bridge data + Tilly fork added; created 2026-07-26) |
+| `scripts/verify-archive-sqlite.sh` | any Pi with an archive | light test restore of the SQLite DBs inside an archive (prints quick_check and row counts) | 2026-10-23 (created) |
 | `scripts/pull-cnjmesh1-backup.ps1` | **Charlie's Windows laptop** | Copies the latest archives from the Pis into `Documents\cnjmesh-backups` | 2026-10-23 (extra archive + real Documents folder; created 2026-07-12) |
 
 **cnjmesh2 has no backup archive, by design.** A full backup overloaded the Pi Zero 2 W on 2026-07-26 (load above 11,
@@ -79,7 +80,7 @@ This script has no verification step: check that the output lists every folder i
 
 - **Location on the laptop:** `C:\Users\charl\Documents\scripts\pull-cnjmesh1-backup.ps1`, run from the desktop shortcut
   "pull-cnjmesh1-backup - Shortcut".
-- **Destination:** the real Documents folder `Documents\cnjmesh-backups` (OneDrive-synced, so it uploads automatically).
+- **Destination:** `C:\Users\charl\OneDrive\Documents\cnjmesh-backups` (shown in Explorer as This PC > Documents > cnjmesh-backups; OneDrive-synced, so it uploads automatically). The script itself sits in a different, local folder (`C:\Users\charl\Documents\scripts`).
   Since 2026-10-23 the script finds Documents with `[Environment]::GetFolderPath("MyDocuments")`; before that it assumed
   `%USERPROFILE%\OneDrive\Documents`.
 - **What it pulls:** for each entry in its `$Pis` list it finds the **newest** file matching `<prefix>-*.tar.gz` and copies it
@@ -135,6 +136,8 @@ named volumes with `sudo find /var/lib/docker/volumes -name '*.db' -o -name '*.s
 changes live in the `-wal` file. A plain copy of only the `.db` **loses them**. Graywolf is like this (found Oct 23);
 the main script's plain copy of it is superseded by the correct copy in the extra archive.
 
+**Quick check of a whole archive (light test restore):** `bash scripts/verify-archive-sqlite.sh ~/backups/<archive>.tar.gz` unpacks every SQLite database from the archive into a scratch folder, runs `PRAGMA quick_check`, counts tables and rows, then deletes the scratch folder (finishes on its own; tested on a synthetic archive, which it correctly flagged a corrupt file in).
+
 **Prove a database copy is good (do this at least once per DB, "test restore"):** copy it to a scratch folder, open it
 and count rows, for example:
 `python3 -c "import sqlite3;d=sqlite3.connect('/tmp/scratch.db');print(d.execute('PRAGMA quick_check').fetchone(), d.execute('select count(*) from <table>').fetchone())"`
@@ -152,7 +155,7 @@ Fastest whole-Pi recovery for cnjmesh1 is the SD image plus the newest archives;
 
 ## 7. Known gaps and to-dos (keep this list current)
 
-- [ ] **Test restore** of at least one SQLite DB, Postgres and MySQL; verify the Sep 2 SD image (`gzip -t`, or write it to a spare card).
+- [ ] **Test restore:** run `scripts/verify-archive-sqlite.sh` on the newest archives (script written Oct 23, not yet run on the real ones); still to do for Postgres and MySQL; verify the Sep 2 SD image (`gzip -t`, or write it to a spare card).
 - [ ] **cnjmesh2 config-only backup** (compose, mosquitto.conf, cloudflared config, systemd units incl. `wifi-selfheal` and `flight-recorder`); no `docker inspect`, no data tar. Audit the live Pi first.
 - [ ] Fold `cnjmesh1-extra-backup.sh` into the main script (one archive).
 - [ ] Hub volume `meshcore-hub_data`: non-database files (~68 MB, probably the WAL) were skipped by the 400 MB size guard; the DB itself is saved.
@@ -165,7 +168,7 @@ Fastest whole-Pi recovery for cnjmesh1 is the SD image plus the newest archives;
 
 ## 8. Change log
 
-- **2026-10-23** Audit prompted by Charlie asking whether running databases were captured safely. Added `cnjmesh1-extra-backup.sh`;
+- **2026-10-23** First pull to the laptop and OneDrive: all three archives pulled OK (180M, 123M, 620K). Audit prompted by Charlie asking whether running databases were captured safely. Added `cnjmesh1-extra-backup.sh`;
   fixed `cnjmesh-backup.sh` (cnjmesh3 bridge bind mount and Tilly fork were never backed up); pull script now pulls the extra archive
   and finds the real Documents folder. First verified runs: cnjmesh1 main 188 MB, extra 129 MB (14 components, all DB copies passed `quick_check`),
   cnjmesh3 620 KB. Journald made persistent on cnjmesh1 and cnjmesh3 so logs survive reboots.

@@ -37,4 +37,5 @@ PY
   [ $rc -eq 0 ] || BAD=$((BAD+1))
 done < <(find "$SCRATCH" -type f \( -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \) | sort)
 echo "Checked $FOUND database(s); $BAD problem(s)."
-[ "$FOUND" -gt 0 ] && [ "$BAD" -eq 0 ] && echo "RESULT: all databases in the archive open and pass quick_check." || echo "RESULT: PROBLEM, see above."
+if [ "$FOUND" -gt 0 ] && [ "$BAD" -eq 0 ]; then echo "RESULT: all databases in the archive open and pass quick_check."; exit 0; fi
+echo "RESULT: PROBLEM, see above."; exit 1
