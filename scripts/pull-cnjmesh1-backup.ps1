@@ -24,7 +24,8 @@ $Pis = @(
     @{ Name = "cnjmesh3"; Host = "somog@10.0.0.186"; Dir = "/home/somog/backups"; Prefix = "cnjmesh3-backup" }
 )
 
-$LocalDir = "$env:USERPROFILE\OneDrive\Documents\cnjmesh-backups"
+# Real Documents folder (works whether or not OneDrive has redirected it); Charlie's folder is Documents\cnjmesh-backups
+$LocalDir = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "cnjmesh-backups"
 
 if (-not (Test-Path $LocalDir)) {
     New-Item -ItemType Directory -Path $LocalDir | Out-Null
