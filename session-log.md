@@ -2814,3 +2814,6 @@ Trigger: a TEST tsunami alert for Texas ("by NWS NATI") was relayed into `#centr
 **Commits tonight (newest last):** f60030e, 11e41bc, 0087661, 0b0e370, eebfce8, 3c06d45, ecba72e, 1b54516, 61382fa, 1fcd70a, 4786317, eae3654, fca143e, 8fcd463, 3ca2070, ab79fcb, 4d32773, 9b44018, 5c6461c, 7bd1faf, 4b41117, c59eb5b, b114836 (plus this one).
 
 **Handoff (Oct 23 21:45 ET):** chat ran long, so Charlie moved to a new chat. Full handoff written to `docs/new-chat-handoff-2026-10-23.md` (commits 2cf7bd0, 36acb17) and linked from `CLAUDE_CONTEXT.md`. Repo verified in sync with GitHub after the final push.
+
+## 2026-10-23 (late) — new main chat; KPC2 swollen battery
+New chat started from `docs/new-chat-handoff-2026-10-23.md`. Before any backup work, Charlie found KPC2 (T-Deck Plus companion) with a swollen battery. He removed the cell and put it outside. Photos showed a Tewaycell 405070 2000 mAh (2025-08-02) with PCM and pressure dents; board undamaged. Socket measured 4.44 mm body = 1.25 mm MX1.25. Replacement criteria and disposal plan recorded in `todos.md`. Backup verify, cnjmesh2 check and SD questions deferred to the next session.
