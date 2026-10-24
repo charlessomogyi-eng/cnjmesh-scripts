@@ -2,6 +2,7 @@
 #
 # Pulls the most recent backup archive from cnjmesh1 AND cnjmesh3 to your
 # local OneDrive-synced Documents folder so it auto-uploads to OneDrive.
+# Since Oct 23 2026 it also pulls the cnjmesh1 "extra" archive (bot, Meshview, Hub DB, configs; private).
 # (cnjmesh2 intentionally excluded - Pi Zero 2W, recovers from git config instead)
 #
 # As of Aug 6 2026, cnjmesh1's archive includes Malla + CoreScope DB snapshots
@@ -19,6 +20,7 @@ $ErrorActionPreference = "Stop"
 
 $Pis = @(
     @{ Name = "cnjmesh1"; Host = "somog@10.0.0.181"; Dir = "/home/somog/backups"; Prefix = "cnjmesh1-backup" },
+    @{ Name = "cnjmesh1-extra"; Host = "somog@10.0.0.181"; Dir = "/home/somog/backups"; Prefix = "cnjmesh1-extra" },
     @{ Name = "cnjmesh3"; Host = "somog@10.0.0.186"; Dir = "/home/somog/backups"; Prefix = "cnjmesh3-backup" }
 )
 

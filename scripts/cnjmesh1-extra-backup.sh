@@ -133,6 +133,7 @@ main() {
   echo "[6/7] Creating archive ${ARCHIVE_NAME}"
   tar -czf "${ARCHIVE}" -C "${BACKUP_DIR}" "extra-staging-${TS}"
   chmod 600 "${ARCHIVE}"
+  chown "${SUDO_USER:-somog}:" "${ARCHIVE}" 2>/dev/null   # so scp (as somog) can read it; still private (mode 600)
 
   echo "[7/7] Verifying"
   local listing e; listing="$(tar -tzf "${ARCHIVE}")"
