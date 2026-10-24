@@ -1,5 +1,7 @@
 # CNJ Mesh — cnjmesh1 Backup Runbook
 
+> **Start with `docs/backup-guide.md`** (Oct 23 2026): the current, all-Pi guide with the audit method and the extra archive. This runbook is the older cnjmesh1-only detail.
+
 **Last updated:** 2026-09-02
 
 ## Purpose

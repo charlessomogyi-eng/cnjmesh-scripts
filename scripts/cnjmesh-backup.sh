@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Script version: 2026-10-23 (cnjmesh3 bridge data + Tilly fork added). See docs/backup-guide.md. Never run on cnjmesh2.
 #
 # cnjmesh-backup.sh — host-aware disaster-recovery backup for any CNJ Mesh Pi.
 #

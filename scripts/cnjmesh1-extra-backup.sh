@@ -1,4 +1,5 @@
 #!/bin/bash
+# Script version: 2026-10-23. See docs/backup-guide.md.
 #
 # cnjmesh1-extra-backup.sh  --  SECOND archive for what cnjmesh1-backup.sh does not cover.
 # Run it in addition to cnjmesh1-backup.sh (that one stays unchanged).

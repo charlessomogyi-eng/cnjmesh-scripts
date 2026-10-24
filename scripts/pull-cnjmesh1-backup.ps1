@@ -1,3 +1,4 @@
+# Script version: 2026-10-23 (extra archive, real Documents folder). See docs/backup-guide.md.
 # pull-cnjmesh1-backup.ps1
 #
 # Pulls the most recent backup archive from cnjmesh1 AND cnjmesh3 to your

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Script version: 2026-08-11 (step 10 verification). See docs/backup-guide.md. NOTE: Graywolf and seen_nodes DBs are plain copies; cnjmesh1-extra-backup.sh holds the safe copies.
 #
 # cnjmesh1-backup.sh
 # Ad hoc backup of configs, compose files, and databases on cnjmesh1.
