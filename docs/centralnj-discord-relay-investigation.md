@@ -8,7 +8,7 @@ Tags: [V] = seen directly in the screenshots or the repo. [S] = someone said it.
 
 **Red flags**
 1. **No path from CNJ's broker to SJMesh's broker since Aug 14** (`sjmesh-relay` is inbound-only). CNJ messages reach the MeshBridge Discord only if an SJMesh gateway happens to hear them over RF. [V config, I conclusion]
-2. **CJG2's 3:08 PM test is missing from Malla**, so CJG2's uplink may not be working. Unverified: need CJG2's settings. [V absence, I cause]
+2. **CJG2's 3:08 PM test is missing from Malla**, so CJG2's uplink may not be working. CJG2's settings (read Oct 25 3:41 PM) look correct, so the cause is still open; see `docs/meshtastic-gateway-mqtt-settings.md`. [V absence, I cause]
 3. **Live `relay.py` lacks the `!db51bb30` block that the repo copy has.** That node may be flooding. One-line check in `known-issues.md`. [V diff]
 
 **FYI (not problems)**
