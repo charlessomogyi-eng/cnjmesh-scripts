@@ -68,6 +68,19 @@ The same radio packet can show up several times, once per gateway that heard it,
 
 **Direction matters:** `sjmesh-relay` (`cnjmesh1/sjmesh-relay/relay.py`) is **one-way, SJMesh → cnjmesh1**, for `msh/US/2/e/CentralNJ/#` and `msh/US/NJ/2/e/CentralNJ/#` only, with three flood nodes blocked. The old native bridge that also sent traffic *out* to SJMesh was replaced on Aug 14. [V, repo] So, as far as the repo knows, **nothing CJG1/CJG2 hear is pushed to SJMesh's broker by our infrastructure.** That fits the weather alert arriving at MeshBridge after 3 RF hops. [I] Check the live `mosquitto.conf` before relying on this.
 
+## Update Oct 25, 3:07 PM: Charlie's hunch, and the repo agrees
+
+Charlie: "SJMesh kinda works correctly and my side, from an MQTT perspective, does not." The repo history backs this up [V, session-log]:
+- **Aug 5:** the cnjmesh1 ↔ SJMesh Mosquitto bridge was set to `both` directions on CentralNJ (fix for a loop).
+- **Aug 9:** `msh/US/2/e/SJMesh/# both 0` added so KPN6's SJMesh-channel messages reached SJMesh's community.
+- **Aug 14:** that two-way bridge was replaced by `sjmesh-relay.py`, which is **inbound only** (SJMesh → cnjmesh1, CentralNJ topics), to stop the flood nodes.
+
+So since Aug 14, **nothing CJG1/CJG2 upload goes to SJMesh's broker**. That's a missing outbound path left over from the flood fix, not a broken service. It explains Test #1 and the weather alert that only arrived after 3 RF hops. The "Unknown" names and the blank post are still MeshBridge's own issues. [I for the conclusion]
+
+Also from the Aug 9 entry: Badwolf shared the SJMesh channel key in Discord, so Badwolf likely runs the SJMesh broker. Compy (KD2QED) runs the bots (Rak Roof Bot, likely MeshBridge). [I]
+
+**Likely fix (design only, not built):** add an outbound path cnjmesh1 → `mqtt.sjmesh.net` that sends **only packets our own gateways uploaded** (topics ending in CJG1/CJG2's `!id`) on CentralNJ (and maybe SJMesh). It must not echo back anything the inbound relay pulled from SJMesh; that echo is exactly what caused the Aug 5 loop. Simplest is probably a second small function in `sjmesh-relay.py` (local → SJMesh, gateway-ID allowlist) and the inbound side skipping our own gateway IDs. Check with Badwolf that he's OK with us publishing to his broker again. Prove it with a repeat of Test #1.
+
 ## Do we need to capture anything now?
 
 No. Nothing here is likely to vanish before we come back:
