@@ -11,6 +11,12 @@ Keys are public by design here, so they are recorded in full. Charlie asked to k
 | **Published key** | `f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=` | cnjmesh.me (index and getting-started pages, copied verbatim from the repo copy); KPN6 channel 3 (3:46 PM) | **The key to use.** Charlie says the CentralNJ key has not changed since day one. |
 | **CJG2's key** | `kpKQLDIsINsKGdeC+p152lNeOkU50y+Gp86/wCORDMw=` | CJG2 channel 3, screen read Oct 25 3:45 PM | Origin unknown; appears nowhere else in the repo or its history. Charlie is changing CJG2 to the published key (planned Oct 25 3:53 PM). |
 
+**Test log**
+- **Oct 25 3:55 PM, "Testing 5-6" from CJG2, sent right after Charlie changed the key in the app [V Malla].** Two rows at 15:55:35 (epoch 1792958135.78 and .87, same packet id 2014653383), topic `msh/US/2/e/CentralNJ/!9ea3e8d4`, gateway and sender both `!9ea3e8d4`, portnum 0 `UNKNOWN_APP`, payload length 0, message_type `e`. So **CJG2 -> cnjmesh1 uplink works, but Malla could not decrypt the packet.** No other gateway uploaded it (consistent with other nodes being unable to decode it too).
+- **The packet's channel-hash byte starts with `\xc`, and the old key gives 0xC9 while the published key gives 0x10 [I, computed from name+key].** So at 3:55:35 CJG2 was most likely still transmitting with the OLD key. Likely cause: the key change was not saved/applied on the node yet (node reboots after a channel change), or it was edited in a different slot. To confirm, print the first 16 bytes of `raw_service_envelope` for the row.
+- **CJG2's node id = `!9ea3e8d4` (decimal 2661542100)**, matching its hostname `esp32s3-A3E8D4`.
+- Two copies of one packet 0.1 s apart from one gateway: FYI, not yet explained (double publish or a second path).
+
 After the change: send a test message from CJG2, then look in Malla for it (decoded text, gateway = CJG2's node id). Record the result here. Meshtastic does not validate keys, so a different PSK silently makes a different channel with the same name.
 
 ## CJG2: "Central Jersey GW2 | cnjmesh.me (MQTT)" (read Oct 25 2026, 3:40-3:41 PM)
