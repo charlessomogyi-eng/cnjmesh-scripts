@@ -20,6 +20,15 @@ mesh/Pi documentation. Last updated: 2026-10-25.
 | Baofeng UV-5R (#1) | Baofeng UV-5R | Candidate backup voice HT | Condition unknown |
 | Baofeng UV-5R (#2) | Baofeng UV-5R | Candidate backup voice HT | Condition unknown |
 
+GMRS (not ham, separate from the ham pool above):
+
+| Radio | CHIRP model | Role | Status |
+|---|---|---|---|
+| Retevis RT76P x2 (FCC ID 2ASNSRT76, BL43 7.4V 1400 mAh battery) | Retevis RT76P | GMRS handhelds | Not yet tested or read. Serial prefix 2103 suggests ~March 2021 manufacture, so inspect the batteries for swelling before charging. |
+
+Do not load ham repeater lists (W2NJR etc.) into the GMRS radios. A ham license does not
+cover GMRS; transmitting on GMRS needs its own FCC GMRS license.
+
 Open question: one of the two 5RM units was reportedly replaced by the vendor after
 a fault. Which one was faulty is not yet known. Check for a serial/date label under the
 battery, then test read, charge hold and transmit. Do not trust the older unit as a voice
