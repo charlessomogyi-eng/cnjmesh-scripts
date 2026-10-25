@@ -6,6 +6,11 @@ Short list of **active, currently-true gotchas** across the whole project (mesh 
 
 ---
 
+## MQTT / Mosquitto (cnjmesh1)
+
+- **The committed `cnjmesh1/configs/mosquitto-cnjmesh1.conf` does NOT match the live file (confirmed Oct 25 2026, [V] live paste).** The repo copy still holds a `connection sjmesh` block *and* a trailing `connection sjmesh-bridge` with `topic msh/US/2/# out 0`. Neither exists live. **Restoring the repo copy onto cnjmesh1 would re-create the Aug 5 republish loop** (two connections to the same remote host defeats Mosquitto's loop protection; it ran at 68,763 packets/hr). Same stale stanza is in `docs/sjmesh-bridge-backup.md`. Always diff against live before restoring. Full topology and rules: `docs/mqtt-topology-and-landmines.md`.
+- **No outbound path to SJMesh exists.** Since the Aug 14 bridge→relay swap, `sjmesh-relay.service` is inbound only, so nothing CJG1/CJG2 upload reaches `mqtt.sjmesh.net`. This is why CNJ messages do not appear in the MeshBridge Discord relay — see `docs/centralnj-discord-relay-investigation.md`.
+
 ## APRS / TD-H9 / K2GIA stations
 
 - **K2GIA-7 (TD-H9, via KISSLink app): APRS-IS Companion connection had not been tested/verified as of Aug 23 morning.** Confirmed later same day that it DOES connect successfully when attempted (server `rotate.aprs2.net`, port `14580`, callsign `K2GIA-7`, passcode `16025`) — this was never actually a bug, just an unverified state that got misread once as "broken." Lesson: don't assume a disconnected status is a persistent problem without a repeat test — check current state fresh each time. Detail: `docs/aprs-bulletins-and-bridging-reference.md`, `docs/td-h9-app-field-reference.md`.
