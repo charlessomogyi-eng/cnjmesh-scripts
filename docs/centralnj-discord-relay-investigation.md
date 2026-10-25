@@ -28,6 +28,8 @@ Phone app (CentralNJ channel) compared with Discord #mesh-relay for the same mes
 | 2:53 PM | MeshChat Mobile `!e05567ac` | thanks / k | posted, "Unknown", 3 hops | |
 | 2:53 PM | SGA V4 `!1ba18c30` | Anytime! | posted, name shown, 4 hops | |
 
+**Test #1, 3:02 PM (Charlie):** sent "Testing 1-2" on CentralNJ from the Meshtastic app. The app showed "Delivered to mesh" (at least one node rebroadcast it). By 3:03 PM it had **not** appeared in #mesh-relay; the last Discord post was still SGA V4 "Anytime!" at 2:53. [V] Which of Charlie's nodes sent it was not recorded. This fits oddity 4 below: it reached the mesh near Kendall Park, but no SJMesh-connected gateway seems to have heard it. To confirm in the Malla lookup (step 3): did CJG1/CJG2 upload it to cnjmesh1? If yes, it reached *our* broker but never *SJMesh's*. [I]
+
 Reactions (🔢5, 🤝, 🤦) appear on the same messages in **both** Discord and the app. [V]
 
 ## The five oddities, with first guesses
@@ -82,7 +84,7 @@ No. Nothing here is likely to vanish before we come back:
    systemctl status sjmesh-relay --no-pager | head -5
    ```
    Both finish on their own. Expect: no `sjmesh` connection with `out` or `both`; relay active.
-3. **cnjmesh1, Malla lookup for the blank message** (before Nov 24). Look up `!e05567ac` (decimal `3763693484`) between 2:00 and 2:20 PM EDT Oct 25 (epoch `1792951200`-`1792952400`): which gateways uploaded it, `via_mqtt`, `hop_start`/`hop_limit`, and whether Malla decoded the text. Exact command to be written at that time against the live schema (`packet_history`, see session-log Aug 18).
+3. **cnjmesh1, Malla lookup for the blank message and Test #1** (before Nov 24). Also find Charlie's "Testing 1-2" (3:02 PM EDT, epoch ~`1792954920`) and list which gateways uploaded it. Look up `!e05567ac` (decimal `3763693484`) between 2:00 and 2:20 PM EDT Oct 25 (epoch `1792951200`-`1792952400`): which gateways uploaded it, `via_mqtt`, `hop_start`/`hop_limit`, and whether Malla decoded the text. Exact command to be written at that time against the live schema (`packet_history`, see session-log Aug 18).
 4. **Ask Compy** (it's his bot), one message: what broker and topics MeshBridge reads; whether it is one-way or two-way (reactions); whether it skips MQTT-origin or its own roof bot on purpose; the blank post on bad UTF-8; "Unknown" names. Offer the 2:13 PM example.
 5. **Decide what CNJ actually wants.** If the goal is "CNJ weather alerts and CentralNJ traffic reliably show in a Discord", options are: (a) leave it to Compy's bot and accept gaps; (b) have CentralNJ gateways also uplink to `mqtt.sjmesh.net`; (c) CNJ runs its own CentralNJ → Discord relay from cnjmesh1's broker, which already gets CJG1/CJG2 traffic directly. Pick after steps 1-4.
 
