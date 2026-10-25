@@ -10,13 +10,14 @@ Tags: [V] = seen directly in the screenshots or the repo. [S] = someone said it.
 1. **No path from CNJ's broker to SJMesh's broker since Aug 14** (`sjmesh-relay` is inbound-only). CNJ messages reach the MeshBridge Discord only if an SJMesh gateway happens to hear them over RF. [V config, I conclusion]
 2. **CJG2's 3:08 PM test is missing from Malla**, so CJG2's uplink may not be working. CJG2's settings (read Oct 25 3:41 PM) look correct, so the cause is still open; see `docs/meshtastic-gateway-mqtt-settings.md`. [V absence, I cause]
 3. **Live `relay.py` lacks the `!db51bb30` block that the repo copy has.** That node may be flooding. One-line check in `known-issues.md`. [V diff]
-4. **CJG2's CentralNJ PSK (`kpKQLD...`) is not the key published on cnjmesh.me (`f+WQoP...`).** If that screen was CJG2's, CJG2 is effectively on a different channel, which would explain red flag 2. Compare against KPN6's key. [V strings, I meaning]
+4. **CJG2's CentralNJ PSK (`kpKQLD...`) is not the published key (`f+WQoP...`); KPN6's is (confirmed 3:46 PM).** CJG2 is effectively on a different channel, which very likely explains red flag 2 (Malla can't decode it, and CJG2 can't read others' CentralNJ traffic). Fix = set CJG2's CentralNJ PSK to the published one, then re-test. Ask Charlie whether the key ever changed. [V strings, I meaning]
+5. **KPN6's MQTT is ON**, although the repo says it was turned off on purpose (Aug 9/18, no Wi-Fi). Ask what changed. [V]
 
 **FYI (not problems)**
 - Messages still go out over RF. "Delivered to mesh" means a nearby node rebroadcast it, and KPN6's 3:02 message was picked up by a gateway 5 hops away. People in RF range of the mesh get it; the gap is the SJMesh-broker / Discord audience.
 - SJMesh → CNJ works (their messages show in the app).
 - "Unknown" names, the blank post and the missing Rak Roof Bot replies are MeshBridge's own behavior, not ours.
-- KPN6 uploads to MQTT today (likely via the phone's MQTT proxy) although the repo says its MQTT is off.
+- KPN6 uploads to MQTT today (MQTT on, client proxy off), although the repo says it was turned off by decision on Aug 9/18.
 - LongFast is inbound-only on liamcottle: no flood risk. oktomqtt is retired on cnjmesh1 (Aug 2); on cnjmesh2 it is stopped but still defined in compose.
 
 **Plan**
@@ -130,7 +131,7 @@ Expected healthy picture [I]: CJG1/CJG2 have MQTT on, server `10.0.0.181`, Centr
 | 15:02:47 | `!69841fe0` | `!b03be2ac` | `msh/US/NJ/2/e/CentralNJ/!b03be2ac` | 7 / 2 |
 
 - `!69841fe0` is **KPN6** (its MAC `90:70:69:84:1F:E0` is in `cnjmesh1-operations.md`). That is the 3:02 "Testing 1-2". [V]
-- KPN6 uploaded its own message, so its MQTT uplink is working today even though the repo says it has no Wi-Fi and its MQTT was "intentionally disabled" (Aug 18). Likely explanation: the **phone app's MQTT proxy** (node uses the phone's connection while connected over Bluetooth), pointed at `10.0.0.181` as on Aug 9. [I, unchecked] This only works while the phone is connected.
+- KPN6 uploaded its own message, so its MQTT uplink is working today even though the repo says it has no Wi-Fi and its MQTT was "intentionally disabled" (Aug 18). My earlier guess (phone MQTT proxy) is ruled out: KPN6's client proxy is OFF (3:47 PM screens), so it reaches `10.0.0.181` itself. See `docs/meshtastic-gateway-mqtt-settings.md`.
 - 16 seconds later a different gateway, `!b03be2ac`, uploaded the same message after **5 hops** (7 → 2). It came in on an `NJ` topic, so it reached our broker through a bridge or relay, not from our own gateways. [I]
 - **No row for "Testing 3-4" (CJG2, 3:08 PM).** Nothing from CJG2 at all in this window.
 

@@ -42,12 +42,48 @@ Hostname `esp32s3-A3E8D4`, 10.0.0.234 per `cnjmesh1-operations.md`.
 - Map reporting on with consent off: probably no map reports are being sent. Harmless, noted.
 
 ### Verdict so far
-**Updated 3:45 PM:** the CentralNJ PSK differs from the published one (see above), which is now the leading suspect. Before that: nothing looked misconfigured. CentralNJ uplink is on and the address is the right broker, so the toggles alone do **not** explain why the 3:08 PM "Testing 3-4" (sent from CJG2) is missing from Malla. Next checks: tap **Test connection** on the MQTT screen, and run the broader Malla query (all packets 3:07:30-3:09:30 PM plus per-gateway counts) from the relay investigation doc.
+**Updated 3:45 PM:** the CentralNJ PSK differs from the published one (see above), which is now the leading suspect. **Confirmed 3:46 PM against KPN6: KPN6 uses the published key, so CJG2 is the one that differs.** Aug 18 notes say CJG1/CJG2 uploaded CentralNJ traffic back then, so something may have changed on CJG2 since (a key change?). Before that: nothing looked misconfigured. CentralNJ uplink is on and the address is the right broker, so the toggles alone do **not** explain why the 3:08 PM "Testing 3-4" (sent from CJG2) is missing from Malla. Next checks: tap **Test connection** on the MQTT screen, and run the broader Malla query (all packets 3:07:30-3:09:30 PM plus per-gateway counts) from the relay investigation doc.
 
 Not captured yet for CJG2: LoRa settings (region, preset, "OK to MQTT"), Network (Wi-Fi), and the LongFast and SJMesh channel detail screens.
 
-## KPN6 (roof node, MAC 90:70:69:84:1F:E0, node `!69841fe0`)
-Pending: Charlie is sending screenshots.
+## KPN6 (roof node, MAC 90:70:69:84:1F:E0, node `!69841fe0`) (read Oct 25 2026, 3:46-3:47 PM)
+
+**MQTT module** [V]
+| Setting | Value |
+|---|---|
+| MQTT enabled | **on** |
+| Address | `10.0.0.181` |
+| Username / password | `meshdev` / hidden (10 characters) |
+| Encryption enabled | **off** (CJG2: on) |
+| JSON output | on |
+| TLS | off |
+| Root topic | `msh/US` |
+| MQTT client proxy | **off** |
+| Map reporting | on, consent "I agree" **on**, position precision about ±1.8 mi, publish every 3 hours |
+
+**Radio** [V]: 906.875 MHz, slot 20 (auto), same as CJG2.
+
+**Channels** [V icons]
+| # | Name | Icons shown | Key |
+|---|---|---|---|
+| 0 (primary) | LongFast | position pin, uplink | default (orange lock) |
+| 1 | KPTESTING | uplink | custom |
+| 2 | KPCOMMS | none | custom |
+| 3 | CentralNJ | uplink + downlink | custom |
+| 4 | CNJ-MQTT | uplink | custom |
+| 5 | SJMesh | uplink + downlink | custom |
+| 6 | CNJTest | uplink | custom |
+| 7 | CentNJ-MQTT | uplink | custom |
+
+**CentralNJ detail (3:46 PM) [V]:** Uplink on, Downlink on, **Position on, Precise location on**. **PSK `f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=` = the key published on cnjmesh.me.** So KPN6 is on the published key and **CJG2 is the odd one out** (`kpKQLD...`).
+
+### What this means
+- **Icon reading holds:** KPCOMMS shows no icons (both off), KPTESTING/CNJ-MQTT/CNJTest/CentNJ-MQTT show uplink only, and CentralNJ's two icons matched two "on" toggles on both nodes. LongFast uplink-only on **both** nodes is therefore very likely right (downlink off). Not toggled-checked for LongFast itself. [I]
+- **Contradiction with the repo:** Aug 9 and Aug 18 entries say KPN6's MQTT was **turned off on purpose** (no Wi-Fi by design, "pure RF, no internet uplink"). Today it is **on**, client proxy is off, and Malla shows KPN6 uploading its own 3:02 PM message as its own gateway. So KPN6 now reaches `10.0.0.181` by itself (Wi-Fi?), and my earlier "phone proxy" guess is wrong. Open: when and why it was turned on, and whether Wi-Fi is now enabled. [V settings, V Malla row]
+- **KPN6 is also a downlink transmitter** for CentralNJ and SJMesh (like CJG2): anything arriving for those channels on cnjmesh1's broker can be sent out over its RF.
+- **Encryption enabled is off** on KPN6 and on on CJG2. On newer firmware the effect of this setting may differ; KPN6's 3:02 message still arrived on an encrypted-style `/e/` topic. Worth remembering as a difference, not a known problem. [I]
+- **Privacy FYI:** KPN6 shares **precise** position on CentralNJ. That key is published on the website and CentralNJ is bridged to the public broker, so the exact roof position is effectively public. Charlie's call.
+- The four legacy/test channels (KPTESTING, CNJ-MQTT, CNJTest, CentNJ-MQTT) upload to cnjmesh1 but only `CentralNJ` is bridged out, so they stay local.
 
 ## CJG1 (`!0aca423c`, "Central Jersey GW1 | cnj")
 Not read. The node stays online but Charlie's management connection to it keeps dropping.
