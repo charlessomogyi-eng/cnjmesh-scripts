@@ -1,5 +1,8 @@
 # CNJ Mesh — Open To-Dos
 
+### [OPEN — not urgent, opened Oct 25 2026] CentralNJ → Discord "MeshBridge" relay (#mesh-relay) looks off — Meshtastic only
+Not ours (Charlie thinks he gave Compy the webhook). Seen Oct 25: senders show "Unknown", one message posted blank (bad UTF-8 in the sender's text), Rak Roof Bot (KD2QED) MQTT replies never reach Discord, everything labelled "SJMesh" including CNJ's own weather alert, reactions mirrored both places. Full write-up, broker/topic primer and 5-step plan: **`docs/centralnj-discord-relay-investigation.md`**. Nothing needs capturing now; do the Malla lookup (step 3) before **Nov 24 2026** (30-day retention).
+
 ### [NEXT UP — Sep 3, 2026] SJMesh nodes missing from Meshview node graph — root cause found, fix not yet applied
 **Root cause identified Sep 2/3:** when `sjmesh-relay.service` (standalone Python relay) permanently replaced the native Mosquitto `sjmesh` bridge on Aug 14, the SJMesh **channel** topic did not get carried over. The native bridge had `topic msh/US/2/e/SJMesh/# both 0` — added deliberately on Aug 9 after tracking down why KPN6 test messages weren't reaching SJMesh's community. The relay's `SUBSCRIBE_TOPICS` only has the two CentralNJ patterns (`msh/US/2/e/CentralNJ/#`, `msh/US/NJ/2/e/CentralNJ/#`). **This was an omission during the swap, NOT a deliberate anti-flood decision** — important distinction, since the flood/dedup work (Aug 4-15) was about three specific loop nodes on CentralNJ topics, unrelated to the SJMesh channel.
 
