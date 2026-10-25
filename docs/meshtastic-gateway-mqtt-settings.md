@@ -2,6 +2,17 @@
 
 One section per node, each from Charlie's app screenshots. Tags: [V] seen on screen, [I] inference (not tested). Why this exists: the Oct 25 2026 CentralNJ → Discord investigation (`docs/centralnj-discord-relay-investigation.md`). Broker side is in `docs/mqtt-topology-and-landmines.md`.
 
+## CentralNJ channel key registry (both keys kept on purpose, Oct 25 2026)
+
+Keys are public by design here, so they are recorded in full. Charlie asked to keep both so he can ask for them later.
+
+| Label | PSK (base64, 32 bytes) | Where seen | Status |
+|---|---|---|---|
+| **Published key** | `f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=` | cnjmesh.me (index and getting-started pages, copied verbatim from the repo copy); KPN6 channel 3 (3:46 PM) | **The key to use.** Charlie says the CentralNJ key has not changed since day one. |
+| **CJG2's key** | `kpKQLDIsINsKGdeC+p152lNeOkU50y+Gp86/wCORDMw=` | CJG2 channel 3, screen read Oct 25 3:45 PM | Origin unknown; appears nowhere else in the repo or its history. Charlie is changing CJG2 to the published key (planned Oct 25 3:53 PM). |
+
+After the change: send a test message from CJG2, then look in Malla for it (decoded text, gateway = CJG2's node id). Record the result here. Meshtastic does not validate keys, so a different PSK silently makes a different channel with the same name.
+
 ## CJG2: "Central Jersey GW2 | cnjmesh.me (MQTT)" (read Oct 25 2026, 3:40-3:41 PM)
 
 Hostname `esp32s3-A3E8D4`, 10.0.0.234 per `cnjmesh1-operations.md`.
