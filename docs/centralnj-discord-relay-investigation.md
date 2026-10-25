@@ -4,9 +4,9 @@
 
 Tags: [V] = seen directly in the screenshots or the repo. [S] = someone said it. [I] = Claude's inference, not checked.
 
-## UPDATE Oct 25, 4:33 PM: CJG2's key is fixed and its message now reaches Discord
+## UPDATE Oct 25, 4:33 PM: CJG2 had the wrong copy of the CentralNJ channel key; fixed, and its message now reaches Discord
 
-CJG2 was on the wrong CentralNJ key (`kpKQLD...`); the change only stuck on the third try (Save, then **Send** on the Channels screen, then reboot). Test "Testing 9-10" sent at 4:31 PM from CJG2 got a bot reply on RF and appeared in #mesh-relay as `Unknown · !9ea3e8d4 · SJMesh`, tagged **direct** with a cloud icon [V screenshots]. Red flags 2 and 4 below are therefore **resolved** (Malla confirmation of the 4:31 row still pending). **Red flag 1 is not disproved:** "direct" means the gateway that uploaded it heard CJG2 over RF with no hops, so an SJMesh-side gateway near CJG2 probably uplinked it [I]. KPN6's 3:02 test, with the correct key, still never reached Discord. Next A/B test: send from KPN6 again; if it is missing again, RF reach is the difference, not the key.
+CJG2's stored copy of the CentralNJ channel key was a different value (`kpKQLD...`), so it was effectively on a different channel with the same name. (The key belongs to the channel; every node needs the same copy.) the change only stuck on the third try (Save, then **Send** on the Channels screen, then reboot). Test "Testing 9-10" sent at 4:31 PM from CJG2 got a bot reply on RF and appeared in #mesh-relay as `Unknown · !9ea3e8d4 · SJMesh`, tagged **direct** with a cloud icon [V screenshots]. Red flags 2 and 4 below are therefore **resolved** (Malla confirmation of the 4:31 row still pending). **Red flag 1 is not disproved:** "direct" means the gateway that uploaded it heard CJG2 over RF with no hops, so an SJMesh-side gateway near CJG2 probably uplinked it [I]. KPN6's 3:02 test, with the correct key, still never reached Discord. Next A/B test: send from KPN6 again; if it is missing again, RF reach is the difference, not the key.
 
 ## TL;DR (Oct 25, 3:40 PM): read this first, the rest is evidence
 
