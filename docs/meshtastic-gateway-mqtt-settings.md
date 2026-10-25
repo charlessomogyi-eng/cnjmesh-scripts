@@ -28,7 +28,9 @@ Hostname `esp32s3-A3E8D4`, 10.0.0.234 per `cnjmesh1-operations.md`.
 | 1 | CentralNJ | uplink + downlink | custom (green lock) |
 | 2 | SJMesh | uplink + downlink | custom (green lock) |
 
-Caveat: I am reading "icon shown" as "enabled". The screen does not clearly show off states. Tap into each channel to confirm the uplink/downlink toggles.
+**CentralNJ detail screen (3:45 PM) [V]:** MQTT Uplink **on**, MQTT Downlink **on**, Position **off**. This confirms that for CentralNJ, "two cloud icons" = both toggles on. LongFast and SJMesh rows still need the same check (LongFast shows only the up cloud; I read downlink as off, unconfirmed).
+
+**CentralNJ PSK on this node [V]:** `kpKQLDIsINsKGdeC+p152lNeOkU50y+Gp86/wCORDMw=`. **The key published on cnjmesh.me is different:** `f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=` (`website/cnjmesh-me/index.html` and `getting-started.html`). Same channel name, different key = a different channel as far as the radios are concerned. If this screen was CJG2's, then CJG2's CentralNJ is not on the published key. That could explain the missing 3:08 PM test (Malla would store it as undecodable, not as a text message, and my text-only query would not have shown it) and means CJG2 may not be relaying or uploading other people's CentralNJ traffic. Unconfirmed: whether this dialog was CJG2's, and which key KPN6 uses.
 
 ### What this means [I]
 - CJG2 publishes to cnjmesh1's local broker as `msh/US/2/e/<channel>/!<its id>` for all three channels, plus `msh/US/2/json/...` because JSON is on.
@@ -40,9 +42,9 @@ Caveat: I am reading "icon shown" as "enabled". The screen does not clearly show
 - Map reporting on with consent off: probably no map reports are being sent. Harmless, noted.
 
 ### Verdict so far
-Nothing here looks misconfigured. CentralNJ uplink is on and the address is the right broker, so the settings alone do **not** explain why the 3:08 PM "Testing 3-4" (sent from CJG2) is missing from Malla. Next checks: tap **Test connection** on the MQTT screen, and run the broader Malla query (all packets 3:07:30-3:09:30 PM plus per-gateway counts) from the relay investigation doc.
+**Updated 3:45 PM:** the CentralNJ PSK differs from the published one (see above), which is now the leading suspect. Before that: nothing looked misconfigured. CentralNJ uplink is on and the address is the right broker, so the toggles alone do **not** explain why the 3:08 PM "Testing 3-4" (sent from CJG2) is missing from Malla. Next checks: tap **Test connection** on the MQTT screen, and run the broader Malla query (all packets 3:07:30-3:09:30 PM plus per-gateway counts) from the relay investigation doc.
 
-Not captured yet for CJG2: LoRa settings (region, preset, "OK to MQTT"), Network (Wi-Fi), and the CentralNJ channel detail screen.
+Not captured yet for CJG2: LoRa settings (region, preset, "OK to MQTT"), Network (Wi-Fi), and the LongFast and SJMesh channel detail screens.
 
 ## KPN6 (roof node, MAC 90:70:69:84:1F:E0, node `!69841fe0`)
 Pending: Charlie is sending screenshots.
