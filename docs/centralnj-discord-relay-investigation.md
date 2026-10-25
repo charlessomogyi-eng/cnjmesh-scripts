@@ -4,13 +4,17 @@
 
 Tags: [V] = seen directly in the screenshots or the repo. [S] = someone said it. [I] = Claude's inference, not checked.
 
+## UPDATE Oct 25, 4:33 PM: CJG2's key is fixed and its message now reaches Discord
+
+CJG2 was on the wrong CentralNJ key (`kpKQLD...`); the change only stuck on the third try (Save, then **Send** on the Channels screen, then reboot). Test "Testing 9-10" sent at 4:31 PM from CJG2 got a bot reply on RF and appeared in #mesh-relay as `Unknown · !9ea3e8d4 · SJMesh`, tagged **direct** with a cloud icon [V screenshots]. Red flags 2 and 4 below are therefore **resolved** (Malla confirmation of the 4:31 row still pending). **Red flag 1 is not disproved:** "direct" means the gateway that uploaded it heard CJG2 over RF with no hops, so an SJMesh-side gateway near CJG2 probably uplinked it [I]. KPN6's 3:02 test, with the correct key, still never reached Discord. Next A/B test: send from KPN6 again; if it is missing again, RF reach is the difference, not the key.
+
 ## TL;DR (Oct 25, 3:40 PM): read this first, the rest is evidence
 
 **Red flags**
 1. **No path from CNJ's broker to SJMesh's broker since Aug 14** (`sjmesh-relay` is inbound-only). CNJ messages reach the MeshBridge Discord only if an SJMesh gateway happens to hear them over RF. [V config, I conclusion]
-2. **CJG2's 3:08 PM test is missing from Malla**, so CJG2's uplink may not be working. CJG2's settings (read Oct 25 3:41 PM) look correct, so the cause is still open; see `docs/meshtastic-gateway-mqtt-settings.md`. [V absence, I cause]
+2. **[RESOLVED 4:33 PM, cause = wrong key, see update above]** **CJG2's 3:08 PM test is missing from Malla**, so CJG2's uplink may not be working. CJG2's settings (read Oct 25 3:41 PM) look correct, so the cause is still open; see `docs/meshtastic-gateway-mqtt-settings.md`. [V absence, I cause]
 3. **Live `relay.py` lacks the `!db51bb30` block that the repo copy has.** That node may be flooding. One-line check in `known-issues.md`. [V diff]
-4. **CJG2's CentralNJ PSK (`kpKQLD...`) is not the published key (`f+WQoP...`); KPN6's is (confirmed 3:46 PM).** CJG2 is effectively on a different channel, which very likely explains red flag 2 (Malla can't decode it, and CJG2 can't read others' CentralNJ traffic). Fix = set CJG2's CentralNJ PSK to the published one, then re-test. Ask Charlie whether the key ever changed. [V strings, I meaning]
+4. **[FIXED 4:20 PM, applied after a reboot, confirmed by the 4:31 test]** **CJG2's CentralNJ PSK (`kpKQLD...`) was not the published key (`f+WQoP...`); KPN6's is (confirmed 3:46 PM).** CJG2 is effectively on a different channel, which very likely explains red flag 2 (Malla can't decode it, and CJG2 can't read others' CentralNJ traffic). Fix = set CJG2's CentralNJ PSK to the published one, then re-test. Ask Charlie whether the key ever changed. [V strings, I meaning]
 5. **KPN6's MQTT is ON**, although the repo says it was turned off on purpose (Aug 9/18, no Wi-Fi). Ask what changed. [V]
 
 **FYI (not problems)**
