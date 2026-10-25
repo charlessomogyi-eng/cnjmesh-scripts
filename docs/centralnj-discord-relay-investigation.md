@@ -30,7 +30,7 @@ Phone app (CentralNJ channel) compared with Discord #mesh-relay for the same mes
 
 **Test #1, 3:02 PM (Charlie):** sent "Testing 1-2" on CentralNJ from the Meshtastic app. The app showed "Delivered to mesh" (at least one node rebroadcast it). By 3:03 PM it had **not** appeared in #mesh-relay; the last Discord post was still SGA V4 "Anytime!" at 2:53. [V] Sent from **KPN6** (Charlie, 3:07 PM). This fits oddity 4 below: it reached the mesh near Kendall Park, but no SJMesh-connected gateway seems to have heard it. To confirm in the Malla lookup (step 3): did CJG1/CJG2 upload it to cnjmesh1? If yes, it reached *our* broker but never *SJMesh's*. [I]
 
-**Test #2, 3:08 PM (Charlie):** sent "Testing 3-4" on CentralNJ **from CJG2 itself** (Central Jersey Gateway 2). The app showed "Delivered to mesh". By 3:11 PM it had **not** appeared in #mesh-relay. [V] Charlie is fairly confident CJG2's MQTT is set up correctly, because it is one of the gateways that feeds cnjmesh1's broker and Malla. [S] That makes this the cleanest test so far: the sender is our own uplinking gateway, so the message should be on cnjmesh1 within seconds, yet SJMesh's broker never got it. Strong support for the missing-outbound-path explanation. Confirm in the Malla lookup that "Testing 3-4" is there (epoch ~`1792955280`). [I]
+**Test #2, 3:08 PM (Charlie):** sent "Testing 3-4" on CentralNJ **from CJG2 itself** (Central Jersey Gateway 2). The app showed "Delivered to mesh". By 3:11 PM it had **not** appeared in #mesh-relay. [V] Charlie is fairly confident CJG2's MQTT is set up correctly, because it is one of the gateways that feeds cnjmesh1's broker and Malla. [S] I expected it to be on cnjmesh1 within seconds. **The Malla check (below) found it is NOT there**, so Test #2 does not support the outbound-path theory; it points at a second problem upstream (CJG2's own uplink). Open.
 
 CJG1 was not tested: the node itself stays online, but Charlie's management connection to it (to change settings) keeps dropping. [S]
 
@@ -96,6 +96,25 @@ For **KPN6**, **CJG1** and **CJG2**, write down:
 4. Same for the **primary channel** (where NodeInfo goes) if we want names to show up downstream.
 
 Expected healthy picture [I]: CJG1/CJG2 have MQTT on, server `10.0.0.181`, CentralNJ uplink on. KPN6 can stay MQTT-off. Even if all of that is correct, nothing reaches SJMesh's broker until the outbound path above exists, so a correct config alone will **not** make Test #1 show up in Discord.
+
+## Findings Oct 25, 3:14 PM: Mosquitto config and Malla lookup (Charlie ran both on cnjmesh1) [V]
+
+**`mosquitto.conf` bridges (credentials omitted):** `meshtastic_public` → `mqtt.meshtastic.org:1883`, **out** only, `msh/US/2/e/CentralNJ/#` and `msh/US/2/json/CentralNJ/#` (clientid `cnjmesh1-CJG2-bridge`); `oceancounty` and `liamcottle` are **in** only (CentralNJ, NJ, plus LongFast on liamcottle); `meshomatic` → MeshCore out. **There is no `sjmesh` connection**, and `sjmesh-relay` is `active`. So the outbound gap to SJMesh is confirmed. Our broker pushes CentralNJ out only to the public Meshtastic broker, and not the `msh/US/NJ/...` topics.
+
+**Malla, text messages 3:00-3:10 PM (all of them):**
+
+| Time | From | Uploaded by (gateway) | Topic | hop_start / hop_limit |
+|---|---|---|---|---|
+| 15:02:31 | `!69841fe0` | `!69841fe0` | `msh/US/2/e/CentralNJ/!69841fe0` | 7 / 7 |
+| 15:02:31 | `!69841fe0` | `!69841fe0` | same | 7 / 0 |
+| 15:02:47 | `!69841fe0` | `!b03be2ac` | `msh/US/NJ/2/e/CentralNJ/!b03be2ac` | 7 / 2 |
+
+- `!69841fe0` is **KPN6** (its MAC `90:70:69:84:1F:E0` is in `cnjmesh1-operations.md`). That is the 3:02 "Testing 1-2". [V]
+- KPN6 uploaded its own message, so its MQTT uplink is working today even though the repo says it has no Wi-Fi and its MQTT was "intentionally disabled" (Aug 18). Likely explanation: the **phone app's MQTT proxy** (node uses the phone's connection while connected over Bluetooth), pointed at `10.0.0.181` as on Aug 9. [I, unchecked] This only works while the phone is connected.
+- 16 seconds later a different gateway, `!b03be2ac`, uploaded the same message after **5 hops** (7 → 2). It came in on an `NJ` topic, so it reached our broker through a bridge or relay, not from our own gateways. [I]
+- **No row for "Testing 3-4" (CJG2, 3:08 PM).** Nothing from CJG2 at all in this window.
+
+**What this changes:** Test #1 (KPN6) is consistent with "reached our broker, never reached SJMesh's". Test #2 is not explained by that: the message never showed up on our own broker as a text message. Possible reasons, none checked: CJG2 isn't uploading right now; it uploads under another gateway ID or topic; the row is stored with a different portnum; or CJG2 doesn't uplink messages sent from a phone connected to it. **Next query:** list *all* packets and the per-gateway counts around 3:08 PM (see the chat that follows) to find CJG2's node ID and see whether it uploads anything.
 
 ## Do we need to capture anything now?
 
