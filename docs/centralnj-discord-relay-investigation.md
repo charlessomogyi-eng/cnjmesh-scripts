@@ -28,7 +28,7 @@ Phone app (CentralNJ channel) compared with Discord #mesh-relay for the same mes
 | 2:53 PM | MeshChat Mobile `!e05567ac` | thanks / k | posted, "Unknown", 3 hops | |
 | 2:53 PM | SGA V4 `!1ba18c30` | Anytime! | posted, name shown, 4 hops | |
 
-**Test #1, 3:02 PM (Charlie):** sent "Testing 1-2" on CentralNJ from the Meshtastic app. The app showed "Delivered to mesh" (at least one node rebroadcast it). By 3:03 PM it had **not** appeared in #mesh-relay; the last Discord post was still SGA V4 "Anytime!" at 2:53. [V] Which of Charlie's nodes sent it was not recorded. This fits oddity 4 below: it reached the mesh near Kendall Park, but no SJMesh-connected gateway seems to have heard it. To confirm in the Malla lookup (step 3): did CJG1/CJG2 upload it to cnjmesh1? If yes, it reached *our* broker but never *SJMesh's*. [I]
+**Test #1, 3:02 PM (Charlie):** sent "Testing 1-2" on CentralNJ from the Meshtastic app. The app showed "Delivered to mesh" (at least one node rebroadcast it). By 3:03 PM it had **not** appeared in #mesh-relay; the last Discord post was still SGA V4 "Anytime!" at 2:53. [V] Sent from **KPN6** (Charlie, 3:07 PM). This fits oddity 4 below: it reached the mesh near Kendall Park, but no SJMesh-connected gateway seems to have heard it. To confirm in the Malla lookup (step 3): did CJG1/CJG2 upload it to cnjmesh1? If yes, it reached *our* broker but never *SJMesh's*. [I]
 
 Reactions (🔢5, 🤝, 🤦) appear on the same messages in **both** Discord and the app. [V]
 
@@ -80,6 +80,18 @@ So since Aug 14, **nothing CJG1/CJG2 upload goes to SJMesh's broker**. That's a 
 Also from the Aug 9 entry: Badwolf shared the SJMesh channel key in Discord, so Badwolf likely runs the SJMesh broker. Compy (KD2QED) runs the bots (Rak Roof Bot, likely MeshBridge). [I]
 
 **Likely fix (design only, not built):** add an outbound path cnjmesh1 → `mqtt.sjmesh.net` that sends **only packets our own gateways uploaded** (topics ending in CJG1/CJG2's `!id`) on CentralNJ (and maybe SJMesh). It must not echo back anything the inbound relay pulled from SJMesh; that echo is exactly what caused the Aug 5 loop. Simplest is probably a second small function in `sjmesh-relay.py` (local → SJMesh, gateway-ID allowlist) and the inbound side skipping our own gateway IDs. Check with Badwolf that he's OK with us publishing to his broker again. Prove it with a repeat of Test #1.
+
+### Config checklist: "is my side set up right for MQTT?" (Meshtastic app, per node)
+
+Repo history on KPN6 conflicts: Aug 9 says its MQTT module was enabled (server `10.0.0.181`); Aug 18 says it is **intentionally disabled**, so it only reaches MQTT through CJG1/CJG2 hearing it over RF. Check which is true today.
+
+For **KPN6**, **CJG1** and **CJG2**, write down:
+1. Settings → Modules → **MQTT**: enabled? server address (expect `10.0.0.181` for anything that should feed cnjmesh1), username, root topic (`msh/US` or `msh/US/NJ`), "encryption enabled" (should stay on), "JSON" (normally off).
+2. Settings → Network: is Wi-Fi on (a node needs internet/LAN to reach a broker)?
+3. Channels → **CentralNJ**: **Uplink enabled** and **Downlink enabled** switches. Uplink = "send what I hear on this channel to MQTT". Downlink = "transmit what MQTT sends me on this channel over the air".
+4. Same for the **primary channel** (where NodeInfo goes) if we want names to show up downstream.
+
+Expected healthy picture [I]: CJG1/CJG2 have MQTT on, server `10.0.0.181`, CentralNJ uplink on. KPN6 can stay MQTT-off. Even if all of that is correct, nothing reaches SJMesh's broker until the outbound path above exists, so a correct config alone will **not** make Test #1 show up in Discord.
 
 ## Do we need to capture anything now?
 
