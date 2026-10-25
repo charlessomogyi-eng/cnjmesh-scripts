@@ -4,6 +4,25 @@
 
 Tags: [V] = seen directly in the screenshots or the repo. [S] = someone said it. [I] = Claude's inference, not checked.
 
+## TL;DR (Oct 25, 3:40 PM): read this first, the rest is evidence
+
+**Red flags**
+1. **No path from CNJ's broker to SJMesh's broker since Aug 14** (`sjmesh-relay` is inbound-only). CNJ messages reach the MeshBridge Discord only if an SJMesh gateway happens to hear them over RF. [V config, I conclusion]
+2. **CJG2's 3:08 PM test is missing from Malla**, so CJG2's uplink may not be working. Unverified: need CJG2's settings. [V absence, I cause]
+3. **Live `relay.py` lacks the `!db51bb30` block that the repo copy has.** That node may be flooding. One-line check in `known-issues.md`. [V diff]
+
+**FYI (not problems)**
+- Messages still go out over RF. "Delivered to mesh" means a nearby node rebroadcast it, and KPN6's 3:02 message was picked up by a gateway 5 hops away. People in RF range of the mesh get it; the gap is the SJMesh-broker / Discord audience.
+- SJMesh → CNJ works (their messages show in the app).
+- "Unknown" names, the blank post and the missing Rak Roof Bot replies are MeshBridge's own behavior, not ours.
+- KPN6 uploads to MQTT today (likely via the phone's MQTT proxy) although the repo says its MQTT is off.
+- LongFast is inbound-only on liamcottle: no flood risk. oktomqtt is retired on cnjmesh1 (Aug 2); on cnjmesh2 it is stopped but still defined in compose.
+
+**Plan**
+1. Read CJG2 and KPN6 MQTT and channel settings (what to look at is in the checklist below).
+2. Lowest-risk fix: ask the MeshBridge operator to add our broker (`mqtt.cnjmesh.me`) as a read-only source. Nothing changes on our side, so no loop or flood risk.
+3. Fallback: loop-safe outbound path in `relay.py` (design in `docs/mqtt-topology-and-landmines.md` §5), after asking Badwolf.
+
 ## What this is
 
 - A Discord bot/webhook named **MeshBridge** (shows the "APP" tag) posts Meshtastic **CentralNJ** channel messages into a Discord channel **#mesh-relay** (59-64 online). [V]
