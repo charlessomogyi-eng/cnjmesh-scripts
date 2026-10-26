@@ -1,5 +1,11 @@
 # CNJ Mesh — Open To-Dos
 
+### [TOMORROW — Mon Oct 26 2026, Charlie called it a day at 8:00 PM Oct 25] Pick-up list
+1. **Confirm the website deploy is live** (Oct 25 5:13 PM: files replaced and checked locally in `deploy-6ad2dda281ca133c8853db44`; Charlie had not yet said the drag-and-drop finished). Check cnjmesh.me in a private window (header "Central & South New Jersey Mesh", no News link), then re-sync the repo copy from the downloaded zip if asked.
+2. **malla2.cnjmesh.me Gateway Diversity went 2 → 3 on Oct 25 (screenshot 7:58 PM).** Possibly the CJG2 key fix (CJG2 `!9ea3e8d4` now decodable). Check with the per-gateway first/last-seen query on cnjmesh2 (read-only, in the Oct 25 chat; DB `/app/data/meshtastic_history.db`, group by `gateway_id` over the last 24 h). If `!9ea3e8d4` first appears after 4:20 PM, that is the answer.
+3. **Malla maps CARTO watermark** (open Oct 18 item further down): check image age/digest on cnjmesh2 and cnjmesh1 (`docker image inspect ghcr.io/zenitram/malla:latest --format 'created {{.Created}} id {{.Id}}'`), then do the careful Malla update, cnjmesh2 first. Same pass as the CVE-2026-43980 item.
+4. Then the SJMesh connectivity todo below, plus the other open points from `docs/centralnj-channel-key-mismatch-2026-10-25.md`.
+
 ### [OPEN — opened Oct 25 2026 4:46 PM, Charlie] Troubleshoot connectivity to SJMesh (restore a CNJ → SJMesh broker path)
 **Charlie's context [S]:** we used to have connectivity with SJMesh, until we built the "pseudo" bridge with the exclusions (the inbound-only `sjmesh-relay` with its `BLOCKED_TOPICS`, replacing the native Mosquitto bridge on Aug 14 after the Aug 4/5/12 floods and loops). **Today's state [V config]:** SJMesh → CNJ works inbound; there is **no path from cnjmesh1 to `mqtt.sjmesh.net`** (the `#connection sjmesh` block is commented out). CNJ messages reach SJMesh's broker, and so the Discord MeshBridge, only when an SJMesh-side gateway happens to hear them over RF (Oct 25 tests: KPN6's via `!a6965300` at 3 hops on a marginal link; CJG2's tagged "direct").
 **Do not:** un-comment `#connection sjmesh` while `sjmesh-relay` runs (re-creates the Aug 5 loop); open a second connection to `mqtt.sjmesh.net`; enable LongFast downlink; retry broker ACLs (Aug 14 dead end).
