@@ -73,7 +73,8 @@ Design constraints, from the history above:
 - Do **not** add a second connection to `mqtt.sjmesh.net` — `sjmesh-relay.service` already holds an inbound client session to that host. A new outbound Mosquitto bridge alongside it is structurally the Aug 5 bug. [I, but directly implied by §3]
 - Safest shape: extend `relay.py` with a second, outbound direction that publishes **only packets whose topic ends in our own gateway IDs** (CJG1/CJG2), and have the inbound side skip those same IDs so nothing can echo. Code-level filtering is the pattern that already works here.
 - Scope to CentralNJ (and `msh/US/2/e/SJMesh/#` only if the separate Sep 3 todo is also being closed).
-- Ask Badwolf first — we would be publishing to his broker again.
+- No permission gate: `mqtt.sjmesh.net` uses the published community login (it is on cnjmesh.me), the old bridge published to it for months, and `sjmesh-relay` already holds a session there. Nobody asked us to stop (the Aug 12 contact with the SJMesh operator only confirmed the flood was on our side). A courtesy heads-up after it works is enough. [Corrected Oct 26 2026: this line used to say "Ask Badwolf first"; that was caution, not a request from anyone.]
+- **Built Oct 26 2026 (`cnjmesh1/sjmesh-relay/relay.py`, off by default, `OUTBOUND_ENABLED=1` turns it on):** outbound forwards only our gateways' topics (CJG2 `!9ea3e8d4`, KPN6 `!69841fe0`, CJG1 `!0aca423c`), never retained; inbound drops those same topics, so SJMesh's echo of our own publish cannot re-enter the local broker; 120/min cap; kill switch = remove the variable and restart. Offline loop test: `cnjmesh1/sjmesh-relay/test_relay_logic.py` (200 packets give exactly 200 outbound, 0 republished locally). The echo from SJMesh's broker is also the proof that it accepted the publish (logged as "echoed our packet").
 - Verify: repeat the Oct 25 test, then check packet rate and Malla row growth for an hour.
 
 ---
