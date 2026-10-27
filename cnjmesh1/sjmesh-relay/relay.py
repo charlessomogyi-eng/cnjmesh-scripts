@@ -216,6 +216,18 @@ def main():
 
     threading.Thread(target=heartbeat_loop, daemon=True).start()
 
+    def stats_loop():
+        """One summary line every 10 minutes (totals since start), so traffic
+        volume and the echo/outbound ratio can be checked without grepping."""
+        while True:
+            time.sleep(600)
+            log.info("Stats since start: outbound=%d echoed=%d dropped_by_cap=%d "
+                     "relayed_in=%d blocked_in=%d",
+                     relay.outbound_count, relay.echo_count, relay.outbound_dropped,
+                     relay.relayed_count, relay.blocked_count)
+
+    threading.Thread(target=stats_loop, daemon=True).start()
+
     remote_client.loop_forever()
 
 
