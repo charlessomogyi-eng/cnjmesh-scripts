@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Graywolf health watchdog every 5 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=graywolf-health-watchdog.service
+
+[Install]
+WantedBy=timers.target

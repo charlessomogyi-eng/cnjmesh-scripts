@@ -1,0 +1,10 @@
+[Unit]
+Description=Graywolf (K2GIA-1) health watchdog: sound card, PTT errors, beacons
+After=network.target graywolf.service
+
+[Service]
+Type=oneshot
+# Webhook: leave REPLACE_ME to use DISCORD_WEBHOOK_INTERNET from /opt/graywolf-discord/.env
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+Environment=NODE_LABEL=cnjmesh1
+ExecStart=/usr/bin/python3 /opt/graywolf-health-watchdog/watchdog.py
