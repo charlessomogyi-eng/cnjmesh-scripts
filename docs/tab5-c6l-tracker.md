@@ -13,8 +13,8 @@ installing, because several of these projects move weekly.
 
 | Item | Status | Notes |
 |---|---|---|
-| M5Stack Tab5 | Shipped, in the mail (as of 2026-10-22) | **Kit with battery** (K145, includes NP-F550), confirmed by owner 2026-10-22. See power notes. |
-| M5Stack Unit C6L (U202) | Shipped, in the mail | Ships with two SMA whips (868 MHz LoRa + 2.4 GHz). |
+| M5Stack Tab5 | **Arrived 2026-10-28**, still factory sealed in photo | **Kit with battery** (K145, includes NP-F550), confirmed by owner 2026-10-22. See power notes. |
+| M5Stack Unit C6L (U202) | **Arrived 2026-10-28**, unboxed in photo | Ships with two SMA whips (868 MHz LoRa + 2.4 GHz). |
 | Tab5 Keyboard (A164) | Ordered, expected a few weeks out | 70-key, plugs into Tab5 Ext.Port1. |
 | Nooelec **NESDR SMArt v5** | On hand | Confirmed from owner's photos 2026-10-22 (FCC ID 2A8GD-SMArt-V5, "v5" printed on case, SMA input). Listed as accepted for FT8 in OrcSDR v0.4.0-beta.1. |
 | Antennas on hand | Muzi whip, Alfa 915 MHz (~6-7 in), SMA pigtails | Alfa connector type and gender not yet checked. |
@@ -326,3 +326,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-22: Owner says the C6L is his mobile node (either protocol); KPN6 is the main fixed Meshtastic node; EHN gateway is only being evaluated. Section 9b updated.
 - 2026-10-22: Q4 resolved: C6L starts on Meshtastic (mobile node).
 - 2026-10-22: Added Launcher (bmorcelli) note after Charlie shared a YouTube Short about Tab5 updates.
+- 2026-10-28: Tab5 Kit (sealed, box shows NP-F550 2000 mAh included) and C6L arrived; a StickS3 NTAG215 NFC card came with the order. Keyboard not yet.
