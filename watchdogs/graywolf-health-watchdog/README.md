@@ -60,6 +60,14 @@ Turn it on:
 
     sudo systemctl enable --now graywolf-health-watchdog.timer
 
+## Where alerts go (cnjmesh1, set Oct 29 2026)
+A systemd drop-in sets the webhook for a private Discord channel (`cnj-infrastructure-alerts`),
+so the committed unit file keeps `REPLACE_ME`. The URL is never committed. To change it:
+
+    sudo mkdir -p /etc/systemd/system/graywolf-health-watchdog.service.d
+    printf '[Service]\nEnvironment=CNJ_DISCORD_WEBHOOK=%s\n' 'PASTE_URL' | sudo tee /etc/systemd/system/graywolf-health-watchdog.service.d/webhook.conf >/dev/null
+    sudo systemctl daemon-reload
+
 ## Tests
 `python3 test_watchdog.py` (offline, no Pi needed; finishes on its own).
 
