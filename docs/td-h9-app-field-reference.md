@@ -2,6 +2,8 @@
 
 Quick-lookup reference for the two working TD-H9 BLE messaging apps (both by Kelvin Hill / VA3KJH), meant for use in the field when mobile with the TD-H9 (K2GIA-7) and no time to dig through the full manual. Covers every screen/field actually seen in setup and use. See `td-h9-odmaster-aprs-messaging-bug.md` for the backstory on why these apps exist (ODmaster's Send Message bug) and how access was obtained (Google Play closed testing via Kelvin's tester list).
 
+**Screen-by-screen reference with screenshots (KISSLink v0.5.3, Oct 28 2026):** `docs/kisslink-screens-and-loopback-test-2026-10-28.md`.
+
 **Known-good values for K2GIA-7, for quick copy/paste in the field:**
 - Callsign: `K2GIA`, SSID: `7`
 - Digipeater path: `WIDE1-1,WIDE2-1`
