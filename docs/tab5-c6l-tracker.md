@@ -316,7 +316,7 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 
 | Date | What | Result |
 |---|---|---|
-| | | |
+| 2026-10-28 | Tab5 first boot on battery (factory test screen) | OK: display works (screen reports LCD IC ST7121), battery 7.69 V, Wi-Fi/C6 status icon shown, RTC not set (shows 2132). Not yet flashed. |
 
 ## 11. Changelog
 
@@ -328,3 +328,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-22: Added Launcher (bmorcelli) note after Charlie shared a YouTube Short about Tab5 updates.
 - 2026-10-28: Tab5 Kit (sealed, box shows NP-F550 2000 mAh included) and C6L arrived; a StickS3 NTAG215 NFC card came with the order. Keyboard not yet.
 - 2026-10-28: Photos of the unsealed Tab5 (front, back, NP-F550 battery out of its bay). Back diagram shows ST7121 display. Not yet powered on.
+- 2026-10-28: Tab5 first boot OK (factory test screen).
