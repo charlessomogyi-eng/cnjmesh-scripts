@@ -16,6 +16,8 @@ Quick-lookup reference for the two working TD-H9 BLE messaging apps (both by Kel
 Package: `com.bughunter.kisslink`. Full-featured, radio-agnostic (works with TD-H9 and RT-950). Seven tabs: Control, Log, Settings, APRS, Msgs, IS, Map. Full manual (v0.5.0) also in this repo's context if deeper detail is ever needed — this doc is the fast-path version.
 
 ### Settings tab
+**GOTCHA (Oct 28 2026, KISSLink v0.5.3): the Beacon Identity fields were back at defaults** (Source callsign `NOCALL`, SSID `0`, digipeater path empty), so the first test message went out From: NOCALL (seen in the #aprs-rf-nj Discord relay). After setting `K2GIA` / `7` / `WIDE1-1,WIDE2-1` and tapping Save Settings, the next test showed From: K2GIA-7. **Always check Source callsign, SSID and path before sending, especially after an app update.** The Msgs tab path box can also show a different value (it showed `WIDE1-1, WIDE2-2`); tap Use Saved Path.
+
 | Field | What to set | Notes |
 |---|---|---|
 | BLE device filter | `H9` (optional) | Narrows scan list; blank shows all nearby BLE devices, which gets noisy (mesh nodes, earbuds, etc. all show up) |
