@@ -137,7 +137,7 @@ Three layers, no known gaps as of this writing:
 | meshcorehub.cnjmesh.me | MeshCore Hub — node map |
 | corescope.cnjmesh.me | CoreScope — packet map |
 | grafana.cnjmesh.me | Grafana dashboards |
-| malla.cnjmesh.me | Malla mesh map |
+| malla.cnjmesh.me | Malla mesh map (public, no login since Oct 28 2026; only graywolf.cnjmesh.me still sits behind Cloudflare Access) |
 
 ---
 

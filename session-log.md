@@ -2843,3 +2843,9 @@ Charlie pushed back on being sent to contact people ("most people can reach MQTT
 - Built `watchdogs/graywolf-health-watchdog/` (alert once per incident, rate-limited soft USB reset and single Graywolf restart, 15 offline tests). **Not yet installed** at the time of writing; install steps in its README.
 - Documented KISSLink v0.5.3 with screenshots: `docs/kisslink-screens-and-loopback-test-2026-10-28.md`. Key finding: the app's identity fields (Settings callsign/SSID/path and the IS tab callsign/passcode) were back at defaults (`NOCALL`), so messages went out as NOCALL until fixed.
 - Other Oct 27-28 items: cloudflared 2026.10.2+ upgrade todo (Cloudflare eMudhra advisory), remove the Cloudflare Google login from malla.cnjmesh.me (decided Oct 26), MQTT Explorer session still to do.
+
+## Oct 28 2026 (late evening): cloudflared upgraded, malla made public
+- [V] cloudflared upgraded to 2026.10.5 on cnjmesh2 (dpkg package, .deb from GitHub releases) and cnjmesh1 (manual binary at /usr/local/bin, swapped); both registered 4 tunnel connections. Backups: `/root/cloudflared.bak-2026.2.0` (cnjmesh2), `/usr/local/bin/cloudflared.bak-2026.1.2` (cnjmesh1). cnjmesh3 not yet checked.
+- [V] Cloudflare account that owns cnjmesh.me is the att.net email login, not Google (a Google sign-in opens a different, empty account).
+- [V] Deleted the Zero Trust Access application "CNJ Mesh Malla Dashboard"; malla.cnjmesh.me loads without a login (tested by Charlie on his phone); graywolf.cnjmesh.me still asks for the email code. The login was Access email one-time-code, not Google.
+- Still open: MQTT Explorer session; install graywolf-health-watchdog on cnjmesh1; About-page note on what Malla collects.
