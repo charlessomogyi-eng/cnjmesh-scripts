@@ -9,6 +9,7 @@ mesh/Pi documentation. Last updated: 2026-10-25.
 - `codeplugs/` - channel lists as CHIRP CSV files (one per radio, plus shared lists)
 - `images/` - untouched CHIRP `.img` backups, read from each radio **before** any upload
 - `W2NJR.md` - notes on the W2NJR linked repeater system and what changed
+- `local-repeaters.md` - other local repeaters and nets (K2GE Sayreville, Middlesex Chat Group Net, CJTN)
 
 ## Radio inventory
 
@@ -61,6 +62,9 @@ Never upload to a radio before its original image is backed up.
 - `codeplugs/W2NJR_analog_CHIRP.csv` - all 15 analog W2NJR system repeaters, built from
   w2njr.net on 2026-10-24. Tone 141.3 Hz on every machine (TX tone set). Includes
   the two W2LI Murray Hill repeaters (linked for nets only) and the W2FCC Springfield UHF.
+
+- `codeplugs/K2GE_CHIRP.csv` - K2GE Sayreville VHF (146.760 -, 156.7) and UHF (443.200 +5, 141.3),
+  for the Middlesex County Chat Group Net. Paste into the same radios as the W2NJR list.
 
 ## HF digital modes (reference, no radio yet)
 
