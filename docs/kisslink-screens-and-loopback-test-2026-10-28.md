@@ -79,7 +79,7 @@ The header shows the app name and version, with a subtitle that changes per tab 
 | App time | Msg | How | Result |
 |---|---|---|---|
 | 20:05:29 | #001 | RF, WIDE1-1,WIDE2-1, **sent as NOCALL** (settings at defaults) | `ACKNOWLEDGED`, 1 attempt; ACK from K2GIA-1 at 20:05:33, "via RF, path direct", addressed to NOCALL. Discord #aprs-rf-nj showed "RF Direct ... From: NOCALL To: K2GIA-1 ... Via: WIDE1-1 WIDE2-1" and a second copy "Via: APRS-IS" [V] ([screenshot](images/kisslink-2026-10-28/06-discord-aprs-rf-nj-from-nocall.jpg)). |
-| 20:10:43 | #002 | RF, after saving `K2GIA`/`7` | Discord #aprs-rf-nj: "RF Direct ... **From: K2GIA-7** To: K2GIA-1" plus a second copy via APRS-IS [V] ([screenshot](images/kisslink-2026-10-28/07-discord-aprs-rf-nj-from-k2gia-7.jpg)). In the app the card is `CANCELLED`, 2 tx attempts, **no ACK recorded** [V]. |
+| 20:10:43 | #002 | RF, after saving `K2GIA`/`7` | Discord #aprs-rf-nj: "RF Direct ... **From: K2GIA-7** To: K2GIA-1" plus a second copy via APRS-IS [V] ([screenshot](images/kisslink-2026-10-28/07-discord-aprs-rf-nj-from-k2gia-7.jpg)). In the app the card is `CANCELLED`, 2 tx attempts, no ACK recorded [V]; **Charlie pressed Cancel Pending before an ACK arrived [S, Oct 28 8:36 PM]**, so this is expected, not a fault. |
 | 20:15:10 | #003 | APRS-IS (after fixing the IS tab callsign/passcode and connecting) | `ACKNOWLEDGED`, 1 attempt; ACK "via APRS-IS, path TCPIP*,QAC,T2PANAMA" in the same second [V]. Discord **#aprs-internet-nj**: "Internet Message ... From: K2GIA-7 To: K2GIA-1 ... Via: APRS-IS" at 8:15 PM [V] ([screenshot](images/kisslink-2026-10-28/11-discord-aprs-internet-nj-from-k2gia-7.jpg)). |
 
 What it proves: K2GIA-1 hears the TD-H9 over RF (direct), K2GIA-1's transmitter reached the TD-H9 for #001's ACK, and K2GIA-1's iGate receives APRS-IS messages addressed to it and answers over APRS-IS.
@@ -93,6 +93,6 @@ What it proves: K2GIA-1 hears the TD-H9 over RF (direct), K2GIA-1's transmitter 
 6. One app at a time holds the TD-H9's BLE link. [per field guide]
 
 ## Open items
-- #002 shows no ACK in the app although Graywolf received it (Discord proves that). Unknown whether Charlie cancelled it before the ACK, the ACK was not heard by the TD-H9, or the app missed it. Worth one clean retest over RF with nothing cancelled. [I]
+- ~~#002 shows no ACK~~ Explained: Charlie pressed Cancel Pending. A clean RF retest with nothing cancelled would still show whether the ACK comes back for K2GIA-7 (it did for #001 as NOCALL).
 - Why the identity fields reset (app update vs cleared settings) is unknown. [I]
 - Not yet tested in this session: the APRS and MAP tabs, the LOG tab, and the KISS TNC dashboard counters.
