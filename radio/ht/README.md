@@ -66,6 +66,8 @@ Never upload to a radio before its original image is backed up.
 - `codeplugs/K2GE_CHIRP.csv` - K2GE Sayreville VHF (146.760 -, 156.7) and UHF (443.200 +5, 141.3),
   for the Middlesex County Chat Group Net. Paste into the same radios as the W2NJR list.
 
+- `codeplugs/W2ZQ_CHIRP.csv` - W2ZQ DVRA club repeater, West Trenton 146.670 -, PL 131.8.
+
 ## HF digital modes (reference, no radio yet)
 
 Interest in FT8, JS8 and JTTY on 20 m (General class data segment covers all three).

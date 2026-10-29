@@ -24,3 +24,20 @@ CHIRP import file: `codeplugs/K2GE_CHIRP.csv`
 - **Central Jersey Traffic Net (CJTN)** - daily at 8:00 PM local on K2GE, an NTS-style
   radiogram net (Section Traffic Manager WB2FTX, Net Manager KB2VRO). Good practice for
   the ARES/traffic goal.
+
+## W2ZQ - Delaware Valley Radio Association, Mercer County (Trenton-Mercer) Airport
+
+Added 2026-10-29. Charlie's own ham club; he already hears it on his HT from Kendall Park.
+Clubhouse is at the Mercer County Airport, SE corner of I-295 exit 75 and Bear Tavern Road,
+West Trenton. About 17.5 miles SW of home (bearing ~233 deg).
+
+| Band | Output (MHz) | Offset | PL | Notes |
+|---|---|---|---|---|
+| VHF | 146.670 | -0.6 MHz | 131.8 Hz | Analog FM and Yaesu System Fusion (C4FM), auto mode select. Weather and emergency power equipped. Open to licensed hams. |
+| UHF | 442.650 | +5 MHz | none listed | C4FM digital only (Yaesu System Fusion). Open. An analog HT will not decode it. |
+
+- Pepper Net nightly at 10:00 PM on 146.670 (per the club site; RepeaterBook says 22:00 UTC, which would be 6 PM, so trust the club). Analog users set PL 131.8 and the club asks C4FM users to stay off during the net.
+- Sources: w2zq.com/public-repeater-access and RepeaterBook (West Trenton, ID 92); both agree on 146.670, -, 131.8.
+- Not the same as the Mercer County Emergency Radio Club (W2MER, 147.105 +, tone 123.0), a different group in Lawrenceville.
+
+CHIRP import file: `codeplugs/W2ZQ_CHIRP.csv` (VHF only; the UHF machine is C4FM-only).

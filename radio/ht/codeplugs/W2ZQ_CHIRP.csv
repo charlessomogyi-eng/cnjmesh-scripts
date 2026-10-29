@@ -1,0 +1,2 @@
+Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment
+1,W2ZQ2,146.670000,-,0.600000,Tone,131.8,131.8,023,NN,023,Tone->Tone,FM,5.00,,,W2ZQ DVRA West Trenton (Mercer Airport) - analog+C4FM AMS - Pepper Net 10PM nightly
