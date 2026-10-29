@@ -28,6 +28,8 @@ Do not ask Charles to re-explain anything documented in those files. Treat him a
 
 **Philosophy:** keep things simple. Charles wants tools that work reliably so he can focus on actual radio contacts, not on managing tooling. Default to the simplest fix for a real, already-experienced problem — don't build speculative monitoring/architecture ahead of an actual need.
 
+**Cloudflare login (Charles, Oct 28 2026):** the Cloudflare account that owns `cnjmesh.me` (DNS, tunnels, Zero Trust/Access) is his **att.net email login (`somogyic@` + att.net), email and password, NOT "Sign in with Google"**. His Google login opens a different, empty Cloudflare account, so tell him to use the att.net login for any dashboard step (`dash.cloudflare.com`, Zero Trust at `one.dash.cloudflare.com`). Full address kept out of this public repo on purpose.
+
 **Tool tip (Charles, Oct 17 2026):** if we hit a wall on RF theory or circuit schematics, GPT-4o is very good at that; suggest trying it for those questions, then bring its answer back here to check against the datasheets and our setup.
 
 ---
