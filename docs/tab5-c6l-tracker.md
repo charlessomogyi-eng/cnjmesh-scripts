@@ -42,7 +42,7 @@ installing, because several of these projects move weekly.
 - [ ] V5 tips from the OrcSDR FT8 notes: tighten the SMA antenna connection firmly, and use manual gain if auto-gain clips.
 
 ### On arrival
-- [ ] Check the sticker on the back of the Tab5 for the display driver revision (ST7121 expected for a late-2026 unit, **unverified**).
+- [x] Display driver revision: back-panel diagram in Charlie's Oct 28 photo is labeled ST7121 (1280x720), matching the newest revision. [S: read from a photo]
 - [ ] Boot the factory firmware first and confirm the screen, touch, battery and charging work.
 - [ ] Install OrcSDR (section 4). Test FM first, then the other dashboards.
 - [ ] Flash the C6L (section 5). Attach antennas **before** powering it.
@@ -327,3 +327,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-22: Q4 resolved: C6L starts on Meshtastic (mobile node).
 - 2026-10-22: Added Launcher (bmorcelli) note after Charlie shared a YouTube Short about Tab5 updates.
 - 2026-10-28: Tab5 Kit (sealed, box shows NP-F550 2000 mAh included) and C6L arrived; a StickS3 NTAG215 NFC card came with the order. Keyboard not yet.
+- 2026-10-28: Photos of the unsealed Tab5 (front, back, NP-F550 battery out of its bay). Back diagram shows ST7121 display. Not yet powered on.
