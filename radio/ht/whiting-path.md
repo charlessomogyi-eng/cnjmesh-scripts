@@ -5,15 +5,17 @@ Started 2026-10-29. Goal: find repeaters that let Charlie (Kendall Park) talk wi
 Straight-line distance: ~34 mi (32-35 depending on where in Whiting), bearing ~163 deg (SSE).
 Midpoint is near Millstone/Allentown. No listed repeater sits in the middle of the path.
 
-Distances are from town-center coordinates (approximate). Repeater data is from RadioReference,
+Distances are from town-center coordinates (approximate). W2NJR heights (500 ft, 909 ft, etc.) are AMSL (above mean sea level), NOT height above ground;
+real antenna height above surrounding terrain is lower. Repeater data is from RadioReference,
 which can be stale or incomplete; verify before programming. Radio horizon for an HT at 5 ft:
-about 19 mi to a 180 ft antenna, 30 mi to 500 ft, 40 mi to 909 ft (line of sight only; trees
-and terrain cost more, UHF more than VHF).
+about 19 mi to a 180 ft antenna, 30 mi to 500 ft, 40 mi to 909 ft IF those were heights above
+ground. Since they are AMSL, treat these as upper bounds (Tinton Falls is realistically ~25-28 mi).
+Line of sight only; trees and terrain cost more, UHF more than VHF.
 
 | Repeater | Output / offset / PL | To home | To Whiting | Notes |
 |---|---|---|---|---|
-| W2NJR Tinton Falls (NEW, 500 ft, 50 W) | 449.525 -5, 141.3 | ~26 mi | ~28 mi | Best "middle" candidate: nearly equidistant, horizon ~30 mi. Marginal but plausible. Linked system. |
-| W2NJR Martinsville (909 ft, 100 W) | 147.285 +0.6, 141.3 | ~12 mi | ~46 mi | Home-end machine. Linked. |
+| W2NJR Tinton Falls (NEW, 500 ft AMSL, 50 W) | 449.525 -5, 141.3 | ~26 mi | ~28 mi | Best "middle" candidate: nearly equidistant, horizon roughly 25-28 mi. Marginal; may fall just short for one end. Linked system. |
+| W2NJR Martinsville (909 ft AMSL, 100 W) | 147.285 +0.6, 141.3 | ~12 mi | ~46 mi | Home-end machine. Linked. |
 | W2NJR Toms River / Brick / Wall / Manahawkin | see W2NJR.md | 32-53 mi | 9-21 mi | Whiting-end machines. Linked, so reach Martinsville. |
 | WA2RES Ocean County ARES, Manchester | 145.17 -0.6, 131.8 | ~34 mi | ~1 mi | In Whiting's township. ARES machine; do not tie it up. |
 | W3BXW Lakehurst | 447.225 -5, 131.8 | ~31 mi | ~5 mi | Whiting end |
