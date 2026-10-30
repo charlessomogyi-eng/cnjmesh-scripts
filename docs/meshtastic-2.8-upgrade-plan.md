@@ -24,7 +24,7 @@ Only Meshtastic is in scope. **MeshCore is untouched by 2.8:** CoreScope, MeshCo
 
 | Node | Hardware | Node ID | Where / how it connects | Notes |
 |---|---|---|---|---|
-| **CJG1** | Heltec V4 | `!0aca423c` | 10.0.0.18, Wi-Fi. Uploads to **cnjmesh2** (anonymous). TCP 4403 is used by `meshing-around` (`mesh_bot.service`, cnjmesh1). | Carries the 7 AM report and NWS alerts on CentralNJ via the bot. Wi-Fi flapping history (Sep). Firmware [?] |
+| **CJG1** | Heltec V4 | `!0aca423c` | 10.0.0.18, Wi-Fi. Uploads to **cnjmesh2** (anonymous). TCP 4403 is used by `meshing-around` (`mesh_bot.service`, cnjmesh1). | Carries the 7 AM report and NWS alerts on CentralNJ via the bot. Wi-Fi flapping history (Sep). Firmware **2.7.26.54e0d8d** [V, bot telemetry Oct 30 7:43 PM] |
 | **CJG2** | Heltec V3 | `!9ea3e8d4` | 10.0.0.234, Wi-Fi. Uploads to **cnjmesh1**. | Encryption on, JSON on, channels LongFast (uplink), CentralNJ and SJMesh (up+down). Firmware **2.7.26.54e0d8d** [V, app Oct 30 6:58 PM, updated from 2.7.24.472b14c by Charlie] |
 | **KPN6** | ESP32-S3 (exact board not recorded) [?] | `!69841fe0` | Roof node, USB to cnjmesh1 (`/dev/ttyACM1`, by-id `usb-Espressif_USB_JTAG_serial_debug_unit_90:70:69:84:1F:E0-if00`). MQTT on, client proxy off. | Encryption off (publishes decoded), JSON on, map reporting with consent on, precise position on CentralNJ. **2.7.25.104df5f** [V, app Oct 30], on Wi-Fi at **10.0.0.202** [V], on external power at 4.35 V (app shows a plug icon and no battery percent; Charlie says it also has a battery). Has Wi-Fi (Charlie, Oct 30: he recently changed this; older notes saying otherwise are out of date), so it can be reached over the network: record its IP. |
 
@@ -194,7 +194,7 @@ Same steps for each node; the order is in section 5. Every command block names i
 
 | Node | Firmware now | Date checked | Old ID | New ID | Upgrade date | Relay list updated | Notes |
 |---|---|---|---|---|---|---|---|
-| CJG1 | [?] | | `!0aca423c` | | | | |
+| CJG1 | 2.7.26.54e0d8d (before: not read; July record says 2.7.24.472b14c) | Oct 30 | `!0aca423c` | | Oct 30 (2.7.26, Web Flasher, USB) | | Bot reconnected on its own at 7:32 PM. Settings captured in docs/cjg1-settings-2026-10-30.md. App-over-Wi-Fi flaps; under test. |
 | CJG2 | 2.7.26.54e0d8d (was 2.7.24.472b14c) | Oct 30 | `!9ea3e8d4` | | Oct 30 (2.7.26, Web Flasher, USB) | | Reset button press while on laptop USB gave blank screen; recovered after unplugging. MQTT/key/noise-floor re-check pending. |
 | KPN6 | 2.7.25.104df5f | Oct 30 | `!69841fe0` | | | | |
 | Bench | | | | | | | |

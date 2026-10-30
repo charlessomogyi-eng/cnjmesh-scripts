@@ -2,7 +2,7 @@
 
 CJG1 = "Central Jersey GW1 | cnjmesh.me (MQTT)", Heltec V4, node `!0aca423c`, 10.0.0.18. Feeds **cnjmesh2** (anonymous). Also the TCP target (port 4403) for meshing-around on cnjmesh1. Settings had never been recorded before this date.
 
-Source: [V] Charlie's screenshots of the Meshtastic web client (client.meshtastic.org, Settings, Radio Config) on Oct 30 2026, 7:03-7:05 PM ET, laptop over USB. Read-only; nothing was saved or changed. Firmware version: not yet read.
+Source: [V] Charlie's screenshots of the Meshtastic web client (client.meshtastic.org, Settings, Radio Config) on Oct 30 2026, 7:03-7:05 PM ET, laptop over USB. Read-only; nothing was saved or changed. Firmware: updated by Charlie to **2.7.26.54e0d8d** the same evening (see Update record below).
 
 ## Radio Config, LoRa tab [V screenshots]
 
@@ -64,3 +64,13 @@ Nothing here conflicts with what the repo records for CJG1 (feeds cnjmesh2, anon
 
 ## Still to capture
 Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (role, name, uplink, downlink, location; CentralNJ key against the published one), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
+
+## Update record (Oct 30 2026, evening)
+
+- Charlie flashed CJG1 (Heltec V4) with the Web Flasher over USB, update option, stable 2.7.26. Before the flash the version was **not read**; the repo's July 13 entry says it was `2.7.24.472b14c` at that time [I, probably unchanged].
+- **Version after flash: 2.7.26.54e0d8d [V, meshing-around's own telemetry line on cnjmesh1, 7:33 PM and 7:43 PM, `Firmware:2.7.26.54e0d8d`].** Uptime 11 min at 7:43:53 PM, so it booted about 7:32 PM.
+- **meshing-around recovered by itself [V, `journalctl -u mesh_bot.service`]:** at 7:31:25 PM "timed out waiting for an acknowledgment", 7:31:45 PM broken pipe, 7:32:00 PM "Retrying Interface1 TCP on hostname: 10.0.0.18", 7:32:01 PM "Interface1 Opened!", then normal telemetry at 7:33:43 and 7:43:53 PM (totalNodes 250, Online 18). The 7 AM schedule is intact (next run Oct 31 07:00). No restart of `mesh_bot.service` was needed.
+- Not yet re-checked after the flash: channels, MQTT settings, region/preset (should be unchanged; no full erase was used).
+
+## App connectivity symptom (Oct 30 7:36-7:44 PM) [S, Charlie]
+Over Network (10.0.0.18) the Android app connects for about 3 seconds, drops, waits a long time, connects again for 3 seconds, repeating. He says this happens only for the app. Hypothesis: the firmware allows one TCP client at a time (firmware issues 3618 and 7582 describe a force-close of the previous connection and clients fighting), and meshing-around holds a permanent TCP connection to 10.0.0.18:4403. Weak counter-evidence: the bot's log shows no reconnect events between 7:32 and 7:44 PM and its 7:43:53 PM poll succeeded, though the bot only notices a lost socket when it next sends. Decisive test (not yet run): stop `mesh_bot.service` on cnjmesh1, connect the app, then start the bot again.
