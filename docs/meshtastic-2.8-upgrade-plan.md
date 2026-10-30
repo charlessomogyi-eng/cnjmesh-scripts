@@ -26,7 +26,7 @@ Only Meshtastic is in scope. **MeshCore is untouched by 2.8:** CoreScope, MeshCo
 |---|---|---|---|---|
 | **CJG1** | Heltec V4 | `!0aca423c` | 10.0.0.18, Wi-Fi. Uploads to **cnjmesh2** (anonymous). TCP 4403 is used by `meshing-around` (`mesh_bot.service`, cnjmesh1). | Carries the 7 AM report and NWS alerts on CentralNJ via the bot. Wi-Fi flapping history (Sep). Firmware [?] |
 | **CJG2** | Heltec V3 | `!9ea3e8d4` | 10.0.0.234, Wi-Fi. Uploads to **cnjmesh1**. | Encryption on, JSON on, channels LongFast (uplink), CentralNJ and SJMesh (up+down). Firmware [?] |
-| **KPN6** | ESP32-S3 (exact board not recorded) [?] | `!69841fe0` | Roof node, USB to cnjmesh1 (`/dev/ttyACM1`, by-id `usb-Espressif_USB_JTAG_serial_debug_unit_90:70:69:84:1F:E0-if00`). MQTT on, client proxy off. | Encryption off (publishes decoded), JSON on, map reporting with consent on, precise position on CentralNJ. **2.7.25** since Aug 28. Open question: the repo says it has no Wi-Fi by design, yet it uploads by itself. |
+| **KPN6** | ESP32-S3 (exact board not recorded) [?] | `!69841fe0` | Roof node, USB to cnjmesh1 (`/dev/ttyACM1`, by-id `usb-Espressif_USB_JTAG_serial_debug_unit_90:70:69:84:1F:E0-if00`). MQTT on, client proxy off. | Encryption off (publishes decoded), JSON on, map reporting with consent on, precise position on CentralNJ. **2.7.25** since Aug 28. Has Wi-Fi (Charlie, Oct 30; older notes saying otherwise were wrong), so it can be reached over the network: record its IP. |
 
 Retired from Meshtastic (not in scope): KPN2 (now MeshCore KPC2), KPN1 (now MeshCore KPR3). A spare Heltec V4 is mentioned in the Aug session log and todos (APRStastic idea) [?: confirm it still exists; it would be the bench node].
 
