@@ -36,5 +36,9 @@ Channel tabs, in order: **Primary, CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentN
 
 **SJMesh channel ADDED by Charlie Oct 30 7:15-7:17 PM** [V screenshots before and after save]: slot Ch 6, Role SECONDARY, Name `SJMesh`, 128-bit key `0DXa/9pTEZURzZ9sWEHOWg==` (from the Aug 9 session log, shared by the SJMesh admin in Discord; not yet compared with CJG2's or KPN6's copy), Uplink on, Downlink off, Location within 15 miles. Reopened after the save and it persisted. Purpose: "to have", since CJG1 is hard to reach. Effect: SJMesh packets heard by CJG1 now upload to cnjmesh2 only (it carries no SJMesh bridge, so they stay local, visible in cnjmesh2's Malla); nothing reaches SJMesh's broker from here. CJG1 had no SJMesh channel before this.
 
+## Device Config, Position (partial) [V screenshot 7:18 PM]
+
+GPS Mode NOT_PRESENT. **Fixed Position on.** Latitude is entered as `40.4` (one decimal place, so it looks rounded or truncated); longitude has six decimals. The exact coordinates are deliberately not written in this public repo. Top of the page (broadcast interval, smart position, etc.) and the bottom (GPS update interval, position flags) not captured yet.
+
 ## Still to capture
 Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (role, name, uplink, downlink, location; CentralNJ key against the published one), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
