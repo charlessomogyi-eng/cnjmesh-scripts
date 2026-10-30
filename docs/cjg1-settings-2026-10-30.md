@@ -76,3 +76,18 @@ Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (rol
 Over Network (10.0.0.18) the Android app connects for about 3 seconds, drops, waits a long time, connects again for 3 seconds, repeating. He says this happens only for the app. Hypothesis: the firmware allows one TCP client at a time (firmware issues 3618 and 7582 describe a force-close of the previous connection and clients fighting), and meshing-around holds a permanent TCP connection to 10.0.0.18:4403. Weak counter-evidence: the bot's log shows no reconnect events between 7:32 and 7:44 PM and its 7:43:53 PM poll succeeded, though the bot only notices a lost socket when it next sends. Decisive test (not yet run): stop `mesh_bot.service` on cnjmesh1, connect the app, then start the bot again.
 
 **RESULT 7:48 PM [V, app screenshot]: with `mesh_bot.service` stopped on cnjmesh1, the Android app connected to CJG1 over Network (10.0.0.18) and held.** Shows firmware 2.7.26.54e0d8d, Long Range - Fast, United States, PWR 4.32 V. So the "app Wi-Fi flapping" on CJG1 was the app and meshing-around fighting over the node's single TCP connection (port 4403), not Wi-Fi [strong evidence, since the only change was stopping the bot; the mechanism from firmware issues 3618 and 7582 is not a maintainer statement]. CJG2 and KPN6 never had it because nothing else holds a TCP connection to them. **Rule: to use the app over Network on CJG1, stop the bot first, and start it again afterwards.** Bluetooth or the laptop's web client over USB do not use that TCP connection (Wi-Fi/Bluetooth coexistence on this board not checked [?]).
+
+## Channel list after the flash [V, Android app Channels screen, Oct 30 7:49 PM]
+Freq 906.875 MHz, Slot 20 (Auto). Icons per channel (pin = position, cloud up = uplink, cloud down = downlink):
+
+| # | Name | Icons |
+|---|---|---|
+| 0 | LongFast (primary) | position pin, uplink, default key (orange lock) |
+| 1 | CentralNJ | uplink + downlink |
+| 2 | CNJTest | uplink |
+| 3 | KPCOMMS | none |
+| 4 | KPTESTING | uplink |
+| 5 | **CentNJ-MQTT** | **uplink + downlink** |
+| 6 | SJMesh | uplink |
+
+All settings from the web client survived the flash (the SJMesh channel and the LongFast/CentralNJ icons match what was set). **Watch: CentNJ-MQTT has downlink on, and cnjmesh2's bridge still pulls `msh/US/2/e/CentNJ-MQTT/#` and the NJ variant inbound from the public broker (cnjmesh2/config/mosquitto.conf). Charlie said on Aug 4 to drop that channel.** Anything on that channel from the public broker can therefore be transmitted by CJG1. Suggested cleanup, only with Charlie's OK: turn CentNJ-MQTT downlink off or remove the channel, and remove the two inbound lines from cnjmesh2's bridge.
