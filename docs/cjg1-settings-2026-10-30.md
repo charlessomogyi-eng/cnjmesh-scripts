@@ -38,7 +38,9 @@ Channel tabs, in order: **Primary, CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentN
 
 ## Device Config, Position (partial) [V screenshot 7:18 PM]
 
-GPS Mode NOT_PRESENT. **Fixed Position on.** Latitude is entered as `40.4` (one decimal place, so it looks rounded or truncated); longitude has six decimals. The exact coordinates are deliberately not written in this public repo. Top of the page (broadcast interval, smart position, etc.) and the bottom (GPS update interval, position flags) not captured yet.
+GPS Mode NOT_PRESENT. **Fixed Position on.** Latitude is entered as `40.4` (one decimal place, so it looks rounded or truncated); longitude has six decimals. The exact coordinates are deliberately not written in this public repo. **Intervals [V screenshot 7:24 PM]:** Broadcast Interval 3600 s (hourly), GPS Update Interval 120 s (irrelevant, no GPS), Smart Position Minimum Distance 100 m and Minimum Interval 300 s (greyed out, so smart broadcast is off). Someone told Charlie he might be broadcasting too often. Assessment: hourly is not aggressive for a fixed node (about 24 small packets a day). Arizona Mesh's recommended settings page suggests 43200 s (12 h) for stationary nodes, device metrics 3600 s, node info 43200 s, map report 21600 s [V, azmsh.net/docs/recommended-settings.html Oct 30]. I believe the firmware default is 900 s but did not confirm it today [?]. Hop limit 7 multiplies the cost of every broadcast more than the interval does. Optional later tweak: Broadcast Interval to 43200. Not during the firmware update. In 2.8, position and telemetry are turned off after the upgrade anyway.
+
+Still not captured: the top of the Position page (position flags) and the rest.
 
 ## Module Config, MQTT [V screenshots 7:20 PM]
 
