@@ -24,5 +24,13 @@ Source: [V] Charlie's screenshots of the Meshtastic web client (client.meshtasti
 | FEM/LNA Mode | [?] not captured yet | V4 has a front-end module. |
 | Serial HAL Only | [?] not captured yet | |
 
+## Channels tab [V screenshots, 7:08 PM]
+
+Channel tabs, in order: **Primary, CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT, Ch 6, Ch 7**. (Ch 6 and Ch 7 are empty slots.) **There is no SJMesh channel on CJG1**; CJG2 and KPN6 have one. Slot order differs from KPN6's table in docs/meshtastic-gateway-mqtt-settings.md.
+
+**Primary** [V]: Role PRIMARY. Name blank (so it is called LongFast under the Long Fast preset, consistent with Frequency Slot 0 giving slot 20). Pre-shared key shown as 4 dots with the **8 bit** option selected, which is the short default-key form (the same default key every LongFast node uses). **Uplink on, Downlink off** (correct for LongFast: never downlink other regions' traffic onto our RF). Location precision: "Within 1.8 miles".
+
+Other channels: not captured yet.
+
 ## Still to capture
-Channels tab (names, roles, uplink/downlink, key first and last characters only), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
+Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (role, name, uplink, downlink, location; CentralNJ key against the published one), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
