@@ -30,7 +30,9 @@ Channel tabs, in order: **Primary, CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentN
 
 **Primary** [V]: Role PRIMARY. Name blank (so it is called LongFast under the Long Fast preset, consistent with Frequency Slot 0 giving slot 20). Pre-shared key shown as 4 dots with the **8 bit** option selected, which is the short default-key form (the same default key every LongFast node uses). **Uplink on, Downlink off** (correct for LongFast: never downlink other regions' traffic onto our RF). Location precision: "Within 1.8 miles".
 
-Other channels: not captured yet.
+**CentralNJ** [V screenshots 7:09 PM]: Role SECONDARY. Name `CentralNJ`. Key length 256 bit; **key text was masked, so not yet compared to the published `f+WQoP...`** (this is the check that found CJG2's wrong key on Oct 25). **Uplink on, Downlink on.** Location precision: "Within 15 miles" (coarser than KPN6, which shares precise position on CentralNJ).
+
+Other channels: not captured yet (CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT).
 
 ## Still to capture
 Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (role, name, uplink, downlink, location; CentralNJ key against the published one), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
