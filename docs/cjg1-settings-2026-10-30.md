@@ -9,14 +9,14 @@ Source: [V] Charlie's screenshots of the Meshtastic web client (client.meshtasti
 | Setting | Value | Note |
 |---|---|---|
 | Region | US | |
-| Hop Limit | **7** | Default is 3, 7 is the maximum. No record that this was deliberate. CJG1 originates the 7 AM report and NWS alerts, so those floods go up to 7 hops. NYME-sh also runs 7 on some nodes (docs/nyme-sh-summary.md). Decide on purpose. |
+| Hop Limit | **7** | Default is 3, 7 is the maximum. No record that this was deliberate. CJG1 originates the 7 AM report and NWS alerts, so those floods go up to 7 hops. NYME-sh also runs 7 on some nodes (docs/nyme-sh-summary.md). **Decision Oct 30 7:07 PM [S, Charlie]: keep 7 for now.** |
 | Frequency Slot | 0 | Slot derived from the primary channel's name. Gives the normal Long Fast frequency only if channel 0 is named LongFast. Check on Channels tab. |
 | Ignore MQTT | off | Default. |
 | OK to MQTT | on | Needed for our uplink to be accepted. |
 | Use Preset | on | |
 | Modem Preset | Long Fast | Bandwidth 250 kHz, SF 11, CR 5 (greyed, derived from the preset). |
 | Transmit Enabled | on | |
-| Transmit Power | **30 dBm** | Meshtastic docs: 0 means "default max legal continuous power". A manual 30 is not the default. Not verified what firmware does with 30 on a V4. One MeshCore measurement says the V4 hardware cannot reach 30 dBm at 915 MHz regardless of setting (MeshCore issue 1708, different firmware). Candidate to set to 0 once reviewed; no record of who chose 30. |
+| Transmit Power | **30 dBm** | Meshtastic docs: 0 means "default max legal continuous power". A manual 30 is not the default. Not verified what firmware does with 30 on a V4. One MeshCore measurement says the V4 hardware cannot reach 30 dBm at 915 MHz regardless of setting (MeshCore issue 1708, different firmware). **Charlie Oct 30 7:07 PM [S]: leaving it; 30 is the maximum the setting allows and he says the node can only do 22 dBm.** The 22 dBm figure is unverified here: the V4 has a front-end amplifier and one MeshCore measurement shows about 27-28 dBm conducted at high settings. Revisit later (0 = firmware default). |
 | Override Duty Cycle | off | |
 | Frequency Offset | 0 Hz | |
 | Boosted RX Gain | on | |
