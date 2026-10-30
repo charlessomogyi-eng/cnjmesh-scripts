@@ -15,7 +15,7 @@ installing, because several of these projects move weekly.
 |---|---|---|
 | M5Stack Tab5 | **Arrived 2026-10-28**, still factory sealed in photo | **Kit with battery** (K145, includes NP-F550), confirmed by owner 2026-10-22. See power notes. |
 | M5Stack Unit C6L (U202) | **Arrived 2026-10-28**, unboxed in photo | Ships with two SMA whips (868 MHz LoRa + 2.4 GHz). |
-| Tab5 Keyboard (A164) | Ordered, expected a few weeks out | 70-key, plugs into Tab5 Ext.Port1. |
+| Tab5 Keyboard (A164) | **Arrived 2026-10-30** (sealed box in photo) | 70-key, plugs into Tab5 Ext.Port1. |
 | Nooelec **NESDR SMArt v5** | On hand | Confirmed from owner's photos 2026-10-22 (FCC ID 2A8GD-SMArt-V5, "v5" printed on case, SMA input). Listed as accepted for FT8 in OrcSDR v0.4.0-beta.1. |
 | Antennas on hand | Muzi whip, Alfa 915 MHz (~6-7 in), SMA pigtails | Alfa connector type and gender not yet checked. |
 
@@ -329,3 +329,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-28: Tab5 Kit (sealed, box shows NP-F550 2000 mAh included) and C6L arrived; a StickS3 NTAG215 NFC card came with the order. Keyboard not yet.
 - 2026-10-28: Photos of the unsealed Tab5 (front, back, NP-F550 battery out of its bay). Back diagram shows ST7121 display. Not yet powered on.
 - 2026-10-28: Tab5 first boot OK (factory test screen).
+- 2026-10-30: Tab5 Keyboard arrived, earlier than expected. Not yet attached.
