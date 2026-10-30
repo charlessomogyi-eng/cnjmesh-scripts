@@ -237,7 +237,11 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
   Primary validated devices are the LILYGO T-Deck and T-LoRa Pager. Code is stated to be 100% AI-generated under human guidance.
 - **PURR-OS-ESP32** ([repo](https://github.com/PastorCatto/PURR-OS-ESP32)): earlier release notes mentioned Tab5 and MeshCore plans, but the README now says development was reset. Not usable to rely on.
 - **OrcSDR LoRa monitor**: passive Meshtastic receive only. Could monitor the CNJ Mesh channel from the Tab5 with the Alfa 915 MHz antenna.
-- **C6L as the actual radio**: standalone node. The Tab5 and C6L do not connect directly. A Tab5 Bluetooth Meshtastic client was mentioned in the device-ui thread but I did not find its repo.
+- **C6L as the actual radio**: standalone Meshtastic node. CORRECTION Oct 30 (Charlie was right that the Tab5 can be its screen; earlier note said no software existed). Community projects found, all early and unverified on this hardware [S, read from repo pages]:
+  - [tpklge/Tab5-Meshtastic](https://github.com/tpklge/Tab5-Meshtastic) (fork of hardparking/Tab5-Meshtastic): Meshtastic client for the Tab5; the Tab5 is the touchscreen UI and the radio is external, over **BLE or Grove UART** (only RAK3172H named; C6L not mentioned). Node list, channel chat, channel editing, QR import. Direct messages and radio-config menus not implemented. Build with ESP-IDF 5.4.x; a prebuilt-style `tab5_meshtastic_v2.bin` can go in through a launcher OTA flow. License not stated.
+  - [Its-ze/tabforge-cyberdeck](https://github.com/Its-ze/tabforge-cyberdeck) (MIT): Tab5 "cyberdeck" for C6L Meshtastic and MeshCore; connects the C6L by **USB host** (also Grove UART RX preview). Early scaffold, ESP-IDF build, config on SD, OTA with rollback; says keep the C6L on official Meshtastic first and back up before switching to MeshCore.
+  - [m5stack/meshtastic-device-ui](https://github.com/m5stack/meshtastic-device-ui): M5Stack's fork of the Meshtastic UI library (not read in detail).
+  Open: does either work with the C6L over Grove UART (needs the Meshtastic serial module on the C6L) or BLE? Untested.
 
 ---
 
@@ -331,3 +335,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-28: Tab5 first boot OK (factory test screen).
 - 2026-10-30: Tab5 Keyboard arrived, earlier than expected. Not yet attached.
 - 2026-10-30: Owner idea: Tab5 + C6L as one mobile Meshtastic unit in the car. Findings: no known software links a Tab5 UI to a C6L radio (see section 6); Tab5 Kit has a 1/4-20 tripod socket on one edge for mounting; Kit weighs about 218 g. Not decided.
+- 2026-10-30: Corrected section 6: Tab5-as-UI projects for an external Meshtastic radio exist (Tab5-Meshtastic, TabForge). Untested.
