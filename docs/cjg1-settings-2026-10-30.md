@@ -32,7 +32,9 @@ Channel tabs, in order: **Primary, CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentN
 
 **CentralNJ** [V screenshots 7:09 PM]: Role SECONDARY. Name `CentralNJ`. Key length 256 bit; **Key revealed 7:10 PM [V screenshot]: reads `f+WQoPgd06tk0n3K?2bUmNVGO7TcPkxchPD6QqMkYRg=`, same length and every character matches the published key except one that the web client's font shows as I or l (published has lowercase l).** **Confirmed 7:10 PM [V, Charlie pasted the key from the copy button]: exactly equal to the published key (checked by string comparison against the repo copy). CJG1's CentralNJ key is correct.** **Uplink on, Downlink on.** Location precision: "Within 15 miles" (coarser than KPN6, which shares precise position on CentralNJ).
 
-Other channels: not captured yet (CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT).
+**Leftover channels** (CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT) [S, Charlie 7:11 PM]: left over from experimenting. Uplink/downlink state not captured. Candidate for later cleanup, not during a firmware update. Check that none has downlink on.
+
+**SJMesh channel ADDED by Charlie Oct 30 7:15-7:17 PM** [V screenshots before and after save]: slot Ch 6, Role SECONDARY, Name `SJMesh`, 128-bit key `0DXa/9pTEZURzZ9sWEHOWg==` (from the Aug 9 session log, shared by the SJMesh admin in Discord; not yet compared with CJG2's or KPN6's copy), Uplink on, Downlink off, Location within 15 miles. Reopened after the save and it persisted. Purpose: "to have", since CJG1 is hard to reach. Effect: SJMesh packets heard by CJG1 now upload to cnjmesh2 only (it carries no SJMesh bridge, so they stay local, visible in cnjmesh2's Malla); nothing reaches SJMesh's broker from here. CJG1 had no SJMesh channel before this.
 
 ## Still to capture
 Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (role, name, uplink, downlink, location; CentralNJ key against the published one), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
