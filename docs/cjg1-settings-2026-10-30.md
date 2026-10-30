@@ -40,5 +40,24 @@ Channel tabs, in order: **Primary, CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentN
 
 GPS Mode NOT_PRESENT. **Fixed Position on.** Latitude is entered as `40.4` (one decimal place, so it looks rounded or truncated); longitude has six decimals. The exact coordinates are deliberately not written in this public repo. Top of the page (broadcast interval, smart position, etc.) and the bottom (GPS update interval, position flags) not captured yet.
 
+## Module Config, MQTT [V screenshots 7:20 PM]
+
+| Setting | Value | Note |
+|---|---|---|
+| Enabled | on | |
+| MQTT Server Address | `10.0.0.91` | = cnjmesh2 (Pi Zero 2 W), per cnjmesh1-operations.md. |
+| MQTT Username | `meshdev` | cnjmesh2's Mosquitto has `allow_anonymous true`, so the login is ignored there. |
+| MQTT Password | set (masked, 10 characters, not recorded) | |
+| Encryption Enabled | **on** | Same as CJG2; KPN6 has it off. |
+| JSON Enabled | on | JSON is removed from 2.8 firmware builds (see 2.8 plan); harmless on 2.7. |
+| TLS Enabled | off | Local plain MQTT on port 1883. |
+| Root topic | `msh/US` | |
+| MQTT Client Proxy | off | CJG1 reaches the broker by its own Wi-Fi. |
+| Map Reporting | on | Reports go to cnjmesh2's broker. |
+| Map Report Publish Interval | 3600 s | KPN6 publishes every 3 hours. |
+| Approximate Location (map report precision) and consent toggle | [?] not captured yet | Below the fold. |
+
+Nothing here conflicts with what the repo records for CJG1 (feeds cnjmesh2, anonymous).
+
 ## Still to capture
 Channels tab detail for CentralNJ, CNJTest, KPCOMMS, KPTESTING, CentNJ-MQTT (role, name, uplink, downlink, location; CentralNJ key against the published one), Security tab (public key only; never the private key), Device Config (Device, Network, Position, Bluetooth), Module Config (MQTT, Telemetry, Serial), firmware version.
