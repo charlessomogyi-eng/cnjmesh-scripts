@@ -55,7 +55,8 @@ GPS Mode NOT_PRESENT. **Fixed Position on.** Latitude is entered as `40.4` (one 
 | MQTT Client Proxy | off | CJG1 reaches the broker by its own Wi-Fi. |
 | Map Reporting | on | Reports go to cnjmesh2's broker. |
 | Map Report Publish Interval | 3600 s | KPN6 publishes every 3 hours. |
-| Approximate Location (map report precision) and consent toggle | [?] not captured yet | Below the fold. |
+| Approximate Location (map report precision) | within 1.8 miles [V 7:21 PM] | Same as KPN6. |
+| Map-reporting consent ("I agree") toggle | [?] not shown by the web client's page | The page ends at Approximate Location. Check in the Android app if it matters. |
 
 Nothing here conflicts with what the repo records for CJG1 (feeds cnjmesh2, anonymous).
 
