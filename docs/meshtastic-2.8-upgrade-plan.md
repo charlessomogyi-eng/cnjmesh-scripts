@@ -50,6 +50,8 @@ Radio on all three [V Oct 25]: 906.875 MHz, slot 20 (auto), Long Fast. CentralNJ
 | Long names capped at 24 bytes; NodeInfo MAC shows `00:00:00:00:00:00` for others. | NoDak, MeshMonitor [S] | Cosmetic. CJG2's long name (`Central Jersey GW2 \| cnjmesh.me (MQTT)`) is over 24 bytes and will be cut; CJG1's (`Central Jersey GW1 \| cnj`) is exactly 24 characters. |
 | "Zero-hopping all MQTT downlinking" is on the 2.8.X later list. | 2.8 punchlist [S] | Could change how SJMesh and public traffic is retransmitted on our RF through CJG1/CJG2 downlink. Watch for it; effect unverified. |
 
+**Why the ID now comes from the key [S, added Oct 30]:** no single official explanation exists. The pieces: (1) the original request (firmware discussion #5007, Oct 2024) said a MAC-based ID causes key mismatches when a node is reset without its key backed up, and proposed tying the ID to the key; (2) Meshtastic's security page says deriving the node number from the key and signing broadcasts narrows identity-spoofing risk, and a signed first-contact NodeInfo must have `crc32(public key)` equal to the sender's node number. Maintainers disagreed in the thread ("likely to cause more issues"; stale NodeDB entries others cannot reconcile; later "in discussion for 2.8"). **Consequence: a new key means a new node number** (security page; docs PR #2732). A factory reset, full erase or key regeneration therefore changes a node's ID, which the old MAC-based ID did not. A normal firmware update should keep the key [I].
+
 2.8 status [S]: 2.8.1 is the newest tagged build (Alpha, Oct 1). A 2.8.2 exists as nightly. The punchlist (issue #10462) lists packet signing, regions and presets as "implemented but not yet tested", and gives no beta date. Recent bugs show the MQTT uplink path is still being fixed: issue #12115 (PKI direct messages from RF clients not uplinked to MQTT in 2.8.2, closed Oct 14 as fixed by #12110).
 
 ---
@@ -116,7 +118,7 @@ Flash the bench node with the Beta; set it **LongFast on the primary channel wit
 6. With JSON enabled in the node, confirm nothing appears on the json topic (expected).
 7. Telemetry and position are off by default; re-enable and confirm they show up in Malla.
 8. `meshing-around` (a test instance or a short supervised run) connects to the bench node over TCP 4403 and answers a command.
-9. **Recovery drill:** erase, reflash 2.7.26, restore settings. Does the node get its **old MAC-based ID back**? The identity page says downgrading does not restore the old number [S], but I have not seen what a full erase does [?]. This decides whether rollback is clean.
+9. **Key and ID behavior:** note the node ID, export config, erase and restore it, and check whether the ID comes back. This shows whether a config restore preserves the key. Then the **recovery drill:** erase, reflash 2.7.26, restore settings. Does the node get its **old MAC-based ID back**? The identity page says downgrading does not restore the old number [S], but I have not seen what a full erase does [?]. This decides whether rollback is clean.
 10. **Erase-and-restore on 2.8:** set the preset to LongFast explicitly and confirm it did not land on LongTurbo.
 
 ### Phase 2 — canary: KPN6 (1 week soak)
@@ -143,7 +145,7 @@ Same steps for each node; the order is in section 5. Every command block names i
 
 **Before (about 15 minutes)**
 1. Gate passed; soak criteria met for the previous node.
-2. Phone: settings screenshots done (0.2), current node ID noted.
+2. Phone: settings screenshots done (0.2), current node ID noted. **Back up the node's key too:** the ID follows the key, so a saved key is what lets a rebuilt node keep its identity. Whether the app's config export includes the private key is [?]; confirm on the bench (Phase 1) before relying on it, and never put an exported key in the repo.
 3. Choose the time: evening; not during an active NWS alert; CJG1 not within an hour of 7:00 AM.
 4. Know the rollback: reflash 2.7.26 with full erase and restore settings from the screenshots. Expect the node may keep a new ID [?].
 
