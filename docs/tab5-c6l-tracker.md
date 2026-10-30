@@ -330,3 +330,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-28: Photos of the unsealed Tab5 (front, back, NP-F550 battery out of its bay). Back diagram shows ST7121 display. Not yet powered on.
 - 2026-10-28: Tab5 first boot OK (factory test screen).
 - 2026-10-30: Tab5 Keyboard arrived, earlier than expected. Not yet attached.
+- 2026-10-30: Owner idea: Tab5 + C6L as one mobile Meshtastic unit in the car. Findings: no known software links a Tab5 UI to a C6L radio (see section 6); Tab5 Kit has a 1/4-20 tripod socket on one edge for mounting; Kit weighs about 218 g. Not decided.
