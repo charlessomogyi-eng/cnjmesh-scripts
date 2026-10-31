@@ -2858,3 +2858,4 @@ Charlie flashed CJG2 (Heltec V3) from 2.7.24.472b14c to 2.7.26.54e0d8d with the 
 
 ## 2026-10-30 (late evening) — Graywolf health watchdog fired
 At 11:05 PM the graywolf-health-watchdog posted to #cnj-infrastructure-alerts: K2GIA-1 problem found (PTT serial error, ptt_key EIO, radio likely not keying); automatic fix: restarted graywolf (ok); sound card and Graywolf looked healthy; PTT to be confirmed at the next beacon. [V, Charlie's Discord screenshot] Earlier the same evening Charlie had unplugged KPN6's USB cable from cnjmesh1 (about 9:05 PM) and moved around the garage; whether any physical change near cnjmesh1's USB devices coincided with 11:05 PM was not established. This was the first live alert from the Oct 29 watchdog.
+Follow-up 11:08 PM [V, --check on cnjmesh1]: card_present=True ptt_eio=0 audio_fail_recent=0 last_beacon_age=118s problems=none, so a beacon went out about 11:06 PM, after the 11:05 PM graywolf restart. The fix held.
