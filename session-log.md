@@ -2855,3 +2855,6 @@ Charlie checked that his gateways are not on 2.8 and was wary of the Long Turbo 
 
 ## 2026-10-30 (evening) — CJG2 updated to 2.7.26
 Charlie flashed CJG2 (Heltec V3) from 2.7.24.472b14c to 2.7.26.54e0d8d with the Meshtastic Web Flasher over USB. [V app Connection screenshot 6:58 PM: Long Range - Fast, United States, 10.0.0.234, 100% 4.19 V.] Pressing the board's reset button while it was still on the laptop's USB left a blank screen; unplugging from the laptop brought it back. Not yet re-checked: MQTT settings and Test connection, CentralNJ key, channel uplink/downlink, noise floor. CJG1 not touched yet (version and settings still unread).
+
+## 2026-10-30 (late evening) — Graywolf health watchdog fired
+At 11:05 PM the graywolf-health-watchdog posted to #cnj-infrastructure-alerts: K2GIA-1 problem found (PTT serial error, ptt_key EIO, radio likely not keying); automatic fix: restarted graywolf (ok); sound card and Graywolf looked healthy; PTT to be confirmed at the next beacon. [V, Charlie's Discord screenshot] Earlier the same evening Charlie had unplugged KPN6's USB cable from cnjmesh1 (about 9:05 PM) and moved around the garage; whether any physical change near cnjmesh1's USB devices coincided with 11:05 PM was not established. This was the first live alert from the Oct 29 watchdog.
