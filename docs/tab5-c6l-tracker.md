@@ -36,7 +36,7 @@ installing, because several of these projects move weekly.
       pigtails. Sources conflict on the C6L's own antenna connector (M5Stack's page and OpenELAB say RP-SMA,
       retailer listings say SMA with female pin), so check the gender with the hardware in hand.
 - [x] **Q4.** RESOLVED Oct 22 (Charlie): C6L starts on Meshtastic, as his mobile node. MeshCore can be revisited later (reflash is cheap).
-- [ ] Get a microSD card for the Tab5 (OrcSDR uses it for captures and data packs).
+- [x] microSD for the Tab5 (OrcSDR uses it for captures and data packs; also for Launcher): **two 32 GB cards ordered 2026-10-31** (one for the Tab5, one as a spare for the cnjmesh3 Pi). M5Stack's Tab5 microSD page says format FAT32; Windows only formats FAT32 natively up to 32 GB, so 32 GB was chosen. [I] reasoning, not a documented size limit.
 - [ ] Short USB-A extension cable for the dongle (recommended by the 9a3zi tab5-SDR project).
 - [ ] Decide on an HF antenna (long wire plus 9:1 unun is the usual start) and a 1090 MHz antenna for ADS-B.
 - [ ] V5 tips from the OrcSDR FT8 notes: tighten the SMA antenna connection firmly, and use manual gain if auto-gain clips.
@@ -327,6 +327,9 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 | Date | What | Result |
 |---|---|---|
 | 2026-10-28 | Tab5 first boot on battery (factory test screen) | OK: display works (screen reports LCD IC ST7121), battery 7.69 V, Wi-Fi/C6 status icon shown, RTC not set (shows 2132). Not yet flashed. |
+| 2026-10-31 | esptool 5.6.0 installed on Windows laptop; `flash-id` over USB-C | OK: ESP32-P4 rev v1.3, COM16, 16 MB flash, USB-Serial/JTAG. Needed the **regular** Python 3.13 (`py -3.13`): the default `py` was the free-threaded 3.13t, where cryptography/cffi fail to build. |
+| 2026-10-31 | SHA256 of `OrcSDR-Tab5-v0.5.0-beta.1.bin` in Downloads | OK: matches the release page (2ae609e1...f77bb1). |
+| 2026-10-31 | Full 16 MB flash backup of the factory state with esptool `read-flash` | OK: 16,777,216 bytes in 159 s, saved as `tab5-factory-backup.bin` in Downloads on the laptop. Restore path if needed: `esptool write-flash 0x0` of that file. **OrcSDR not flashed yet** (paused 12:45). |
 
 ## 11. Changelog
 
@@ -343,3 +346,6 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-30: Owner idea: Tab5 + C6L as one mobile Meshtastic unit in the car. Findings: no known software links a Tab5 UI to a C6L radio (see section 6); Tab5 Kit has a 1/4-20 tripod socket on one edge for mounting; Kit weighs about 218 g. Not decided.
 - 2026-10-30: Corrected section 6: Tab5-as-UI projects for an external Meshtastic radio exist (Tab5-Meshtastic, TabForge). Untested.
 - 2026-10-31: Added OrcSDR v0.5.0-beta.1 release status and C6/Launcher caveat.
+- 2026-10-31: **M5Burner share link JXFU4H is stale (v0.3.0-beta.2); do not use it for 0.5.0.** The OrcSDR wiki Getting-Started page also still describes v0.3.0-beta.1 (Windows installer, no 0.5.0 steps). Install route chosen instead: flash the SHA-verified `OrcSDR-Tab5-v0.5.0-beta.1.bin` (complete image for 0x0) with `py -3.13 -m esptool -p COM16 write-flash 0x0 <file>`, NESDR unplugged. Factory backup taken first (see test log).
+- 2026-10-31: Launcher + OrcSDR coexistence is **unconfirmed**: in OrcSDR discussion #64 a tester installed it through Launcher from SD and the maintainer asked whether it was app-only or a full flash; no answer. Plan: flash OrcSDR now to test the NESDR; try Launcher once the 32 GB card arrives (Launcher replaces OrcSDR at 0x0; OrcSDR would then be tried from the SD card). Goal: one Tab5 for OrcSDR plus a screen for the C6L (Tab5-Meshtastic, untested).
+- 2026-10-31: Two 32 GB microSD cards ordered.
