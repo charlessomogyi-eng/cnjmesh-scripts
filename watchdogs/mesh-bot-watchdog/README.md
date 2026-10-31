@@ -2,7 +2,7 @@
 
 Alerts Discord when `mesh_bot.service` (meshing-around, the Meshtastic bot that sends the
 7 AM CentralNJ report and NWS alerts through CJG1) is down, or when today's 07:00 job
-cannot be confirmed. Drafted Oct 30 2026. **Not yet deployed.** The older
+cannot be confirmed. Drafted Oct 30 2026. **Deployed on cnjmesh1 Oct 30 2026 8:41 PM; alert path not yet tested.** The older
 `meshcore-bot-watchdog` covers the MeshCore bot only.
 
 ## What it does
