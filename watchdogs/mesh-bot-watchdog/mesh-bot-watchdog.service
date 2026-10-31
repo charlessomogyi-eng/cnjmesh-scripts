@@ -1,0 +1,10 @@
+[Unit]
+Description=mesh_bot (meshing-around) watchdog: service up and 07:00 report ran
+After=network.target
+
+[Service]
+Type=oneshot
+# Webhook goes in a drop-in (see README.md); never commit the real URL.
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+Environment=NODE_LABEL=cnjmesh1
+ExecStart=/usr/bin/python3 /opt/mesh-bot-watchdog/watchdog.py

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run mesh_bot watchdog every 5 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=mesh-bot-watchdog.service
+
+[Install]
+WantedBy=timers.target
