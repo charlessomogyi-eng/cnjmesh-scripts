@@ -36,7 +36,7 @@ If you are an AI assistant, this file plus `todos.md` are the two short files to
 
 ## How to reach the Meshtastic gateway nodes (added Oct 30 2026)
 - **CJG1** `!0aca423c`, Heltec V4, 10.0.0.18 (DHCP reservation), firmware 2.7.26.54e0d8d. **meshing-around on cnjmesh1 owns its TCP port 4403, so the Android app cannot hold a Network connection while `mesh_bot.service` runs** (it connects for ~3 seconds and drops). Stop the bot first with the auto-restart command in `known-issues.md`, or use the laptop's web client over USB. All recorded settings: `docs/cjg1-settings-2026-10-30.md`.
-- **CJG2** `!9ea3e8d4`, Heltec V3, 10.0.0.234, firmware 2.7.26.54e0d8d. Nothing holds a connection to it; the app works normally.
+- **CJG2** `!9ea3e8d4`, Heltec V3, 10.0.0.234, firmware 2.7.26.54e0d8d. Nothing holds a connection to it; the app works normally. CJG1 and CJG2 both use Alfa 915 MHz antennas (about 3-5 dBi) hung outside a window, radios inside. KPN6's roof antenna is a 5.8-6 dBi collinear on about 20 ft of LMR400 with a grounded lightning arrestor. KPN6 and CJG1 are Heltec V4 (RSSI and noise floor read about 15 dB high versus a V3 because of the LNA); CJG2 is a V3.
 - **KPN6** `!69841fe0`, 10.0.0.202, firmware 2.7.25.104df5f, USB to cnjmesh1 `/dev/ttyACM1` plus Wi-Fi. The app works over Network.
 
 ---
