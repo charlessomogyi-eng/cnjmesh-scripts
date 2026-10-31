@@ -16,7 +16,7 @@ cannot be confirmed. Drafted Oct 30 2026. **Not yet deployed.** The older
 
 ## Check before enabling (read-only, finishes on its own)
 The 07:00 check assumes the bot logs its `Scheduled Tasks ... (last run: ...)` line often
-enough that one lands between 07:00 and 09:30. Run on cnjmesh1:
+enough that one lands between 07:00 and 09:30. **Verified Oct 30 2026 [V, Charlie's output]: the line appears every 20 minutes (17:00, 17:20, 17:40, 18:00, 18:20, 19:00, 19:40; the 18:40 and 19:20 slots were missing for an unknown reason), and today's showed `last run: 2026-10-30 07:00:06`. After a restart it shows `last run: [never]` (seen 20:23:03), which is why the watchdog scans the whole journal since 07:00 rather than only the newest line.** Run on cnjmesh1:
 
     journalctl -u mesh_bot.service --since today --no-pager -o cat | grep "last run" | tail -8
 
