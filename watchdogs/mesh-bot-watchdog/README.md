@@ -18,7 +18,7 @@ cannot be confirmed. Drafted Oct 30 2026. **Not yet deployed.** The older
 The 07:00 check assumes the bot logs its `Scheduled Tasks ... (last run: ...)` line often
 enough that one lands between 07:00 and 09:30. Run on cnjmesh1:
 
-    journalctl -u mesh_bot.service --since "today 00:00" --no-pager -o cat | grep "last run" | tail -8
+    journalctl -u mesh_bot.service --since today --no-pager -o cat | grep "last run" | tail -8
 
 Expect lines with `last run: 2026-MM-DD 07:00:0x` (today's date). Note how often they
 appear. If they are rarer than every ~hour, tell Claude and the deadline moves.
