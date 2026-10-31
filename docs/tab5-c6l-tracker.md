@@ -169,6 +169,12 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 - Developer builds: native ESP-IDF 5.5.4 only. PlatformIO and Arduino IDE are unsupported.
 - Report problems using the issue template (release, receiver, antenna, band, steps). Discussions is for setup questions.
 
+### OrcSDR release status as of 2026-10-31 [S: Charlie's copy of the GitHub releases page]
+- Latest stable-ish: **v0.5.0-beta.1** (about 5 days old): guided first-run wizard (Welcome, Network, Location, Offline Maps), OrcMaps offline maps, Dead Air dashboard, SSTV, ACARS, shortwave USB/LSB. Assets: `OrcSDR-Tab5-v0.5.0-beta.1.bin` (complete image for 0x0, 7.14 MB), a local M5Burner zip, an M5Burner upload bundle, SHA256SUMS.txt. **No Windows settings-safe installer listed for 0.5.0** (it existed for 0.3.0-beta.1/beta.2). The M5Burner path uses fresh settings, so the wizard runs; it does not format the SD card.
+- Nightly builds exist (pre-release, may have bugs); browser installer at theorc.dev/sdr/nightly (keeps settings unless Erase is ticked).
+- Receive-only. v0.4.0-beta.1 notes: FT8 decoded on a Nooelec NESDR SMArt V5 (40 m, 7.074 MHz, active MLA-30+ antenna, bias tee off) after tightening the antenna connection, so the V5 is accepted and can receive HF in that test.
+- C6 note (v0.3.0-beta.2 notes): C6 firmware 2.12.6 and 3.0.6 are both accepted; the 3.0.6 update is optional, and applying it **breaks M5Launcher's Wi-Fi/OTA**. If Launcher matters, do not apply the C6 update. Earlier advice here to always confirm the C6 update was wrong for Launcher users.
+
 ### Other Tab5 SDR projects
 - [9a3zi/tab5-SDR](https://github.com/9a3zi/tab5-SDR) (GPL-2.0+): the HF-focused one. AM/USB/LSB/CW, FT8, WSPR (with PSKReporter upload),
   RS41 radiosonde decoder, WFM/NFM. Uses the V4's built-in upconverter for HF. ESP-IDF 5.4+ build. **Battery must be connected.**
@@ -336,3 +342,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-30: Tab5 Keyboard arrived, earlier than expected. Not yet attached.
 - 2026-10-30: Owner idea: Tab5 + C6L as one mobile Meshtastic unit in the car. Findings: no known software links a Tab5 UI to a C6L radio (see section 6); Tab5 Kit has a 1/4-20 tripod socket on one edge for mounting; Kit weighs about 218 g. Not decided.
 - 2026-10-30: Corrected section 6: Tab5-as-UI projects for an external Meshtastic radio exist (Tab5-Meshtastic, TabForge). Untested.
+- 2026-10-31: Added OrcSDR v0.5.0-beta.1 release status and C6/Launcher caveat.
