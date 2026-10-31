@@ -91,3 +91,5 @@ Freq 906.875 MHz, Slot 20 (Auto). Icons per channel (pin = position, cloud up = 
 | 6 | SJMesh | uplink |
 
 All settings from the web client survived the flash (the SJMesh channel and the LongFast/CentralNJ icons match what was set). **Watch: CentNJ-MQTT has downlink on, and cnjmesh2's bridge still pulls `msh/US/2/e/CentNJ-MQTT/#` and the NJ variant inbound from the public broker (cnjmesh2/config/mosquitto.conf). Charlie said on Aug 4 to drop that channel.** Anything on that channel from the public broker can therefore be transmitted by CJG1. Suggested cleanup, only with Charlie's OK: turn CentNJ-MQTT downlink off or remove the channel, and remove the two inbound lines from cnjmesh2's bridge.
+
+**Change Oct 30 8:23 PM [S, Charlie]: CentNJ-MQTT downlink turned OFF on CJG1** (uplink left on). Bot restarted on cnjmesh1 at the same time (`sudo systemctl start mesh_bot.service`, no output).
