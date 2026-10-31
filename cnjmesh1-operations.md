@@ -34,6 +34,13 @@ If you are an AI assistant, this file plus `todos.md` are the two short files to
 
 ---
 
+## How to reach the Meshtastic gateway nodes (added Oct 30 2026)
+- **CJG1** `!0aca423c`, Heltec V4, 10.0.0.18 (DHCP reservation), firmware 2.7.26.54e0d8d. **meshing-around on cnjmesh1 owns its TCP port 4403, so the Android app cannot hold a Network connection while `mesh_bot.service` runs** (it connects for ~3 seconds and drops). Stop the bot first with the auto-restart command in `known-issues.md`, or use the laptop's web client over USB. All recorded settings: `docs/cjg1-settings-2026-10-30.md`.
+- **CJG2** `!9ea3e8d4`, Heltec V3, 10.0.0.234, firmware 2.7.26.54e0d8d. Nothing holds a connection to it; the app works normally.
+- **KPN6** `!69841fe0`, 10.0.0.202, firmware 2.7.25.104df5f, USB to cnjmesh1 `/dev/ttyACM1` plus Wi-Fi. The app works over Network.
+
+---
+
 ## USB Devices on cnjmesh1
 
 Run this to see what's connected:
@@ -123,7 +130,7 @@ K2GIA-9's serial output logs continuously to `/var/log/k2gia9-serial.log` (rotat
 Three layers, no known gaps as of this writing:
 
 1. **Fing (host-level)** — is a Pi reachable on the network at all. Configured for cnjmesh1, cnjmesh2, and cnjmesh3 under Fing's `Home` network (not the stale manual-scan networks like `C4Somogyi-24`, which don't alert). `Notify on State Change` enabled per-device; account-level email format set to "Single email for each event" (`Manage Account → Notifications → Network alerts`), so an offline Pi sends an immediate individual email, not a bundled digest.
-2. **Watchdogs → Discord (service-level)** — is a specific critical service actually alive, independent of host reachability. Alert-on-state-change only (no repeat spam). Seven active: `disk-temp-watchdog` (disk/CPU-temp/undervoltage, all 3 Pis), `ingest-rate-watchdog` (packet-flood/loop-node detection, cnjmesh1), `meshcore-bot-watchdog` (cnjmesh1), `sjmesh-relay-watchdog` (heartbeat-file based, cnjmesh1), `graywolf-watchdog` (alert-only, PTT risk, cnjmesh1), `graywolf-discord-watchdog` (auto-restart, cnjmesh1), `mesh-discord-shim-watchdog` (container-state + log-freshness, MeshCore-specific, cnjmesh1). See `watchdogs/` in this repo.
+2. **Watchdogs → Discord (service-level)** — is a specific critical service actually alive, independent of host reachability. Alert-on-state-change only (no repeat spam). Eight active: `mesh-bot-watchdog` (Meshtastic bot down 25+ min, or 07:00 report not confirmed by 09:30, cnjmesh1, deployed Oct 30 2026), `disk-temp-watchdog` (disk/CPU-temp/undervoltage, all 3 Pis), `ingest-rate-watchdog` (packet-flood/loop-node detection, cnjmesh1), `meshcore-bot-watchdog` (cnjmesh1), `sjmesh-relay-watchdog` (heartbeat-file based, cnjmesh1), `graywolf-watchdog` (alert-only, PTT risk, cnjmesh1), `graywolf-discord-watchdog` (auto-restart, cnjmesh1), `mesh-discord-shim-watchdog` (container-state + log-freshness, MeshCore-specific, cnjmesh1). See `watchdogs/` in this repo.
 3. **peer-check** — retired Sep 2, 2026. Pi-to-Pi LAN ping was structurally unreliable (a router reboot makes every Pi look down at once, indistinguishable from a real outage). Fully superseded by Fing for host-level detection.
 
 **Known gaps, not yet covered by any layer:** none as of Sep 2, 2026 — every service identified as unwatched (`graywolf-discord-bridge`, `graywolf.service`, `mesh-discord-shim`) now has a working, git-committed watchdog. `aprs_monitor.py`'s 48hr dead-air check is CLOSED/rejected (Sep 2, 2026) — APRS traffic volume isn't a reliable health signal, so this stays permanently disabled; `graywolf-watchdog` (service-up check) is sufficient. CoreScope's `local` source instability is unmonitored (root cause is known, see `todos.md` and session-log Aug 4 entry — no auto-heal built yet). See `todos.md` for current priority.
