@@ -95,3 +95,6 @@ All settings from the web client survived the flash (the SJMesh channel and the 
 **Change Oct 30 8:23 PM [S, Charlie]: CentNJ-MQTT downlink turned OFF on CJG1** (uplink left on). Bot restarted on cnjmesh1 at the same time (`sudo systemctl start mesh_bot.service`, no output).
 
 **Second half of the test, Oct 30 8:24 PM [S, Charlie]: the app flapping on CJG1 came back as soon as `mesh_bot.service` was started again.** With the bot stopped the app held (7:48 PM); with it running the app drops every few seconds. Bot status at 8:24 PM [V, `systemctl status`]: active (running) since 8:23:01 PM, receiving RF traffic through CJG1. The TCP-conflict explanation is now confirmed by an on/off test in both directions.
+
+## Noise floor [V, Android Signal Quality, Oct 30 10:56 PM]
+-89 dBm (uptime 3 h 24 m). An earlier log at 8:17 PM (uptime 46 m) read -120 dBm. CJG1 is a Heltec V4, whose RSSI/noise readings run about 15 dB higher than a V3's because of its LNA, so compare it with KPN6 (V4, -93 dBm), not with CJG2 (V3, -113 dBm). See todos.md item 10.
