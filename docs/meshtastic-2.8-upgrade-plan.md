@@ -26,7 +26,7 @@ Only Meshtastic is in scope. **MeshCore is untouched by 2.8:** CoreScope, MeshCo
 |---|---|---|---|---|
 | **CJG1** | Heltec V4 | `!0aca423c` | 10.0.0.18, Wi-Fi. Uploads to **cnjmesh2** (anonymous). TCP 4403 is used by `meshing-around` (`mesh_bot.service`, cnjmesh1). | Carries the 7 AM report and NWS alerts on CentralNJ via the bot. Wi-Fi flapping history (Sep). Firmware **2.7.26.54e0d8d** [V, bot telemetry Oct 30 7:43 PM] |
 | **CJG2** | Heltec V3 | `!9ea3e8d4` | 10.0.0.234, Wi-Fi. Uploads to **cnjmesh1**. | Encryption on, JSON on, channels LongFast (uplink), CentralNJ and SJMesh (up+down). Firmware **2.7.26.54e0d8d** [V, app Oct 30 6:58 PM, updated from 2.7.24.472b14c by Charlie] |
-| **KPN6** | ESP32-S3 (exact board not recorded) [?] | `!69841fe0` | Roof node, USB to cnjmesh1 (`/dev/ttyACM1`, by-id `usb-Espressif_USB_JTAG_serial_debug_unit_90:70:69:84:1F:E0-if00`). MQTT on, client proxy off. | Encryption off (publishes decoded), JSON on, map reporting with consent on, precise position on CentralNJ. **2.7.25.104df5f** [V, app Oct 30], on Wi-Fi at **10.0.0.202** [V], on external power at 4.35 V (app shows a plug icon and no battery percent; Charlie says it also has a battery). Has Wi-Fi (Charlie, Oct 30: he recently changed this; older notes saying otherwise are out of date), so it can be reached over the network: record its IP. |
+| **KPN6** | Heltec V4 [S, Charlie Oct 30 10:52 PM] | `!69841fe0` | Roof node, USB to cnjmesh1 (`/dev/ttyACM1`, by-id `usb-Espressif_USB_JTAG_serial_debug_unit_90:70:69:84:1F:E0-if00`). MQTT on, client proxy off. | Encryption off (publishes decoded), JSON on, map reporting with consent on, precise position on CentralNJ. **2.7.25.104df5f** [V, app Oct 30], on Wi-Fi at **10.0.0.202** [V], on external power at 4.35 V (app shows a plug icon and no battery percent; Charlie says it also has a battery). Has Wi-Fi (Charlie, Oct 30: he recently changed this; older notes saying otherwise are out of date), so it can be reached over the network: record its IP. |
 
 Retired from Meshtastic (not in scope): KPN2 (now MeshCore KPC2), KPN1 (now MeshCore KPR3). A spare Heltec V4 is mentioned in the Aug session log and todos (APRStastic idea) [?: confirm it still exists; it would be the bench node].
 
@@ -150,7 +150,7 @@ Same steps for each node; the order is in section 5. Every command block names i
 4. Know the rollback: reflash 2.7.26 with full erase and restore settings from the screenshots. Expect the node may keep a new ID [?].
 
 **Flash**
-5. Use the Web Flasher (`flasher.meshtastic.org`) in Chrome on the laptop; pick the exact board (CJG1 Heltec V4, CJG2 Heltec V3, KPN6 confirm the model) and the 2.8 Beta build.
+5. Use the Web Flasher (`flasher.meshtastic.org`) in Chrome on the laptop; pick the exact board (CJG1 Heltec V4, CJG2 Heltec V3, KPN6 Heltec V4) and the 2.8 Beta build.
 6. Choose **update**, not full erase, the first time. Expect the node to come back needing reconfiguration because the filesystem format changed.
 7. KPN6: it is plugged into cnjmesh1. For the laptop route, unplug, flash, and put it back in the **same port** (as on Aug 28). Afterward confirm the by-id path is unchanged: on **cnjmesh1**, `ls -l /dev/serial/by-id/ | grep Espressif` (finishes on its own).
 
