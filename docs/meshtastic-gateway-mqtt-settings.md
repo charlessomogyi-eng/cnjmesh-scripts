@@ -101,6 +101,8 @@ Not captured yet for CJG2: LoRa settings (region, preset, "OK to MQTT"), Network
 
 **CentralNJ detail (3:46 PM) [V]:** Uplink on, Downlink on, **Position on, Precise location on**. **PSK `f+WQoPgd06tk0n3Kl2bUmNVGO7TcPkxchPD6QqMkYRg=` = the key published on cnjmesh.me.** So KPN6 is on the published key and **CJG2 is the odd one out** (`kpKQLD...`).
 
+**KPTESTING and KPCOMMS detail (Nov 1 2026 11:32 AM) [V, Android app screenshots, Charlie confirmed the phone was connected to KPN6]:** KPTESTING (slot 1): 256-bit custom key, MQTT uplink **on**, downlink off, position off. KPCOMMS (slot 2): 256-bit custom key, uplink off, downlink off, position **on**, precise location **on**. This matches the icon table above. **The two keys are deliberately not recorded here:** this repo is public and these are private channels; Charlie holds them (pasted in the Tab5/C6L chat for use on KPNM). On a new node, set the key-length dropdown to 256 bit. (An earlier Nov 1 note in `docs/cjg1-settings-2026-10-30.md` attributed these screenshots to CJG1; that was a guess and has been removed.)
+
 ### What this means
 - **Icon reading holds:** KPCOMMS shows no icons (both off), KPTESTING/CNJ-MQTT/CNJTest/CentNJ-MQTT show uplink only, and CentralNJ's two icons matched two "on" toggles on both nodes. LongFast uplink-only on **both** nodes is therefore very likely right (downlink off). Not toggled-checked for LongFast itself. [I]
 - **RESOLVED Oct 30 2026 [S, Charlie]: KPN6 does have Wi-Fi**, so it reaches `10.0.0.181` by itself. Charlie says he recently changed this, so the Aug "no Wi-Fi" notes were right at the time and are now out of date. Still unrecorded: its IP address and the exact date Wi-Fi and MQTT were turned on.
