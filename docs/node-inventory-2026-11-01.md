@@ -12,6 +12,8 @@ Compiled from the repo (cnjmesh1-operations.md, docs/meshtastic-2.8-upgrade-plan
 
 Not Meshtastic but easy to confuse: K2GIA-10 (CA2RXU LoRa APRS iGate, 10.0.0.74) and K2GIA-9 (LoRa APRS tracker board).
 
+| KPNM | M5Stack Unit C6L (ESP32-C6 + SX1262) | n/a (ID ends b8c8) | Mobile node for the Tab5; USB-configured Nov 1, CentralNJ in slot 1, no MQTT, no GPS, no battery | 2.7.26.54e0d8d |
+
 ## Meshtastic (retired, still visible in the node list)
 
 | Name | What it was | What it is now |
