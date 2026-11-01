@@ -1,6 +1,6 @@
 # M5Stack Tab5 + Unit C6L — Tracker
 
-**Owner:** Charlie (K2GIA) · **Created:** 2026-10-22 · **Last researched:** 2026-10-22
+**Owner:** Charlie (K2GIA) · **Created:** 2026-10-22 · **Last researched:** 2026-10-31
 
 Living tracker for the M5Stack **Tab5** (ESP32-P4 tablet) and **Unit C6L** (ESP32-C6 + SX1262 LoRa node).
 Update the status board and checklist as things arrive and get tested. Facts below come from the linked
@@ -8,6 +8,34 @@ sources; anything I could not confirm is marked **(unverified)**. Re-check versi
 installing, because several of these projects move weekly.
 
 ---
+
+## 0. Pick up here (written Sat 2026-10-31, 11 PM ET)
+
+**Working style for this project (Charlie):** plain text, one step at a time, each shell command in its own code block saying which machine it runs on and whether it finishes on its own or needs Ctrl+C, no multiple-choice prompts, verify before suggesting, update and push this repo directly (never ask him to run git). He uses Windows PowerShell on his laptop; the Tab5 and C6L are on his bench; he uses the Android Meshtastic app but does **not** want to depend on a phone for the C6L.
+
+**Goal:** the Tab5 with its keyboard is the screen and keyboard for the C6L (his mobile Meshtastic node, on the CentralNJ channel), and also runs OrcSDR, switching between them with M5 Launcher. The C6L is mobile, so it does not need to run 24/7.
+
+**Where things stand**
+- Tab5: factory flash **backed up** to `tab5-factory-backup.bin` in the laptop's Downloads (16 MB, sections 10 and 11). esptool 5.6.0 works through `py -3.13` (the default `py` is a free-threaded Python that cannot install it). Tab5 shows as **COM16** over USB-C (the number can change). **OrcSDR is NOT flashed**: Charlie chose to wait for the microSD cards so Launcher goes on first.
+- `OrcSDR-Tab5-v0.5.0-beta.1.bin` is in Downloads and its SHA256 matched the release page. The M5Burner share link `JXFU4H` is stale (v0.3.0-beta.2); do not use it.
+- Two 32 GB microSD cards arrive **Monday 2026-11-02** (one for the Tab5, one spare for the cnjmesh3 Pi). Cards must be FAT32 with an MBR partition table for Launcher.
+- C6L: unboxed, both whips attached (the included LoRa whip is 868 MHz, wrong band for the US; swap for the Alfa 915 or a 915 stubby after a NanoVNA SWR check), Grove cable included, **USB-C port is on a long edge**. Not powered or flashed yet. No USB cable came in the box.
+- Tab5 Meshtastic app: audited tpklge/Tab5-Meshtastic at fcdfe23 (section 6b). Build workflow `.github/workflows/build-tab5-meshtastic.yml` is pushed but **has not been run**: Charlie must press Run workflow in the repo's Actions tab (the session's `gh` token is invalid, so Claude cannot trigger it or read the logs). The artifact lasts 3 days.
+
+**Next steps, in order**
+1. Charlie presses **Run workflow** (GitHub, cnjmesh-scripts, Actions, "Build Tab5-Meshtastic"). If it fails, he pastes the tail of the log and Claude fixes the workflow. If it passes, he downloads the artifact (`tab5_meshtastic_v2.bin` plus SHA256SUMS.txt) and Claude checks the size against Launcher's 1,638,400-byte app limit.
+2. **C6L first flash (independent of everything else):** antenna on first, USB-C data cable to the laptop, list serial ports with `Get-PnpDevice -PresentOnly | Where-Object { $_.Class -eq 'Ports' } | Format-Table FriendlyName, Status`, then follow section 5 (hold the side button about 3 s until the LED is red, Meshtastic web flasher in Chrome, M5Stack then Unit C6L, full erase, replug). Set region US, a name, the CentralNJ channel and key (from the laptop's Meshtastic web client over USB, no phone needed). For the Tab5 app over Bluetooth, note the C6L's Bluetooth PIN mode (the app's author used fixed PIN 123456).
+3. **Monday, cards arrive:** put Launcher on the Tab5 (full flash at 0x0 from Launcher's release; stock 2.8.0 may not detect the Tab5 keyboard, and issue #440 describes Wi-Fi/keyboard problems after running custom apps, "Fixed on Beta"). Then install the Tab5 Meshtastic `.bin` and OrcSDR from the SD card and see whether OrcSDR runs under Launcher (unconfirmed). If OrcSDR will not run under Launcher, fall back to flashing it with `py -3.13 -m esptool -p COM16 write-flash 0x0 "$env:USERPROFILE\Downloads\OrcSDR-Tab5-v0.5.0-beta.1.bin"` (NESDR unplugged, battery in; this overwrites Launcher) and restore the factory image from the backup with the same command if ever needed.
+4. Pair the Tab5 app with the C6L over Bluetooth and try a CentralNJ message from the keyboard. Known limits of that app: channel chat only (no direct messages, no radio configuration menus), no GPS on either device.
+5. Later and optional: Grove UART or USB-host links, a car mount (1/4-20 male stud, section 3 and the Oct 30 note), the NESDR test with FM first (OrcSDR), checking antenna connector gender (Q3).
+
+**Decisions made (Charlie)**
+- C6L = mobile node on Meshtastic; MeshCore can be tried later.
+- Wait for the microSD cards so Launcher is installed first, to avoid flashing OrcSDR twice.
+- Tab5 + keyboard is the screen; no phone dependency for the C6L.
+- Best-known link for the Tab5 app is Bluetooth (the author tested a Unit C6L that way). The C6L gets its own USB-C power (power bank or car); the Tab5's USB-A port does not power it with this app (section 6b power note).
+
+**Open questions:** does the build compile; does OrcSDR run under Launcher; does stock Launcher work with the Tab5 keyboard; does the C6L accept power through its Grove pin (undocumented); the Tab5 app's TX/RX polarity for the Grove route (the project says verify before use).
 
 ## 1. Status board
 
@@ -394,3 +422,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-31 (late): Added section 6b (Tab5 as Meshtastic screen over Grove, Launcher details, other Tab5 apps). Research only, nothing flashed.
 - 2026-10-31 (late): Charlie: the C6L (and hopefully the Tab5) is a **mobile** node, so it does not need to run 24/7. That makes Tab5-powered operation acceptable (C6L off when Tab5 off). Preferred rig to test: one USB-A to USB-C cable from the Tab5 USB-A host port to the C6L (power + data; only TabForge is known to use USB host, and OrcSDR needs that port for the NESDR, so they cannot share it without a hub). Still to test: whether each app keeps the USB-A / Grove 5 V rail on. Power the Tab5 from a car USB-C charger (it charges only while on). No GPS on either device; phone supplies position. Plan unchanged: C6L on plain Meshtastic with the phone first.
 - 2026-10-31 (late): Audited tpklge/Tab5-Meshtastic (section 6b), pinned fcdfe23, added a manual GitHub Actions build workflow. Charlie decided he wants the Tab5 + keyboard as the interface and not use a phone with the C6L.
+- 2026-10-31 (23:05): Added section 0 (pick-up-here summary with ordered next steps and decisions).
