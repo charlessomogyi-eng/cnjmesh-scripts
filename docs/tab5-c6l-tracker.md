@@ -251,6 +251,37 @@ earlier beta7 notes called V5 support experimental). V4 needed manual gain after
 
 ---
 
+## 6b. Tab5 as the Meshtastic screen for the C6L over Grove, plus Launcher (researched Oct 31 2026)
+
+Tags: [V] read on the page this session; [I] inference; [?] could not verify. Nothing here is tested.
+
+**Goal (Charlie, Oct 31):** two main Tab5 apps, OrcSDR and a Meshtastic GUI, switched with Launcher; the C6L stays a Meshtastic node and connects to the Tab5 with the 4-wire Grove cable.
+
+**Does the C6L keep running when the Tab5 is in another app?** [I] Yes: the C6L is its own computer (ESP32-C6 + SX1262, own firmware). The Tab5 app is only a client screen/keyboard. Power is the catch: the Tab5's Grove red wire is 5 V on a rail shared with the M-Bus and side header, switched by software (EXT5V_EN) [V, M5Stack Tab5 docs], so the C6L would go dark whenever the running app leaves that rail off. For real use power the C6L from its own USB-C (power bank). [?] Whether connecting the Grove red wire while the C6L is also on USB-C is safe (two 5 V sources) is not documented: do not do both until checked.
+
+**Grove pins:** Tab5 PORT.A: red 5V, black GND, yellow G53, white G54 (functions not labeled TX/RX) [V]. C6L Grove: yellow G5, white G4 [V, section 5]. A Grove cable is straight-through, so Tab5 TX/RX must land on the C6L's opposite pins: [I] if Tab5 TX = G53 then the C6L needs rxd=5 and txd=4. The Tab5-Meshtastic wiring doc (docs/RAK3172_GROVE.md) could not be read, so the Tab5's TX/RX assignment is [?].
+
+**Radio side [V, meshtastic.org Serial module docs]:** Serial module mode PROTO "exposes the Meshtastic Protobuf Client API on the serial port", the same protocol the phone apps and Python CLI use; set rxd/txd, baud, enabled. Docs example uses pogo pins 16/17; they do not confirm arbitrary pins work, whether the C6 Meshtastic build honors it, or whether PROTO coexists with the phone over Bluetooth [?]. [I] A Bluetooth client route for the Tab5 would compete with the phone for the C6L's single BLE connection; UART avoids that.
+
+**Tab5 Meshtastic GUI projects (all early, none tested):**
+- tpklge/Tab5-Meshtastic: BLE or Grove UART client; only the RAK3172H is named as tested (C6L not mentioned); node list, channel chat, channel editing, QR import, keyboard input. No direct messages, no general radio config menus. **No release binaries**: build with ESP-IDF v5.4.x, `build/tab5_meshtastic_v2.bin` is the file for Launcher OTA/app flow. Battery must be connected when flashing. [V]
+- Its-ze/tabforge-cyberdeck: C6L via **USB host** (Grove UART is only a passive RX counter), Meshtastic node status and messenger, MeshCore as a selectable C6L image; self-described scaffold, no releases, ESP-IDF build, Windows/PowerShell tooling. [V]
+- m5stack/meshtastic-device-ui: supports UART to an external radio but Tab5 is not a listed device. [V] M5Stack's Meshtastic guide covers only the C6L, not the Tab5. [V]
+- Trail Mate: page could not be read this session; earlier note (section 6) says Tab5 is a bring-up target only.
+- No Tab5 MeshCore client found.
+
+**Launcher [V, wiki + releases + issue #440]:**
+- Tab5 supported (2.6.5 to 2.8.0, latest Jul 31). Apps install from SD (or OTA/WUI) into their own OTA partitions and sit side by side; the boot screen shows a card per app. Only one runs at a time.
+- Wiki documents choosing the app at boot, not a way to exit a running app: [I] switching apps = reboot and pick again; exact Tab5 gesture [?].
+- SD card must be **FAT32 and MBR**. App-only `.bin` or merged images both accepted; Launcher can extract app and supported data partitions from merged files "when possible". Avoid images needing custom flashing steps.
+- OrcSDR under Launcher: unconfirmed (its image has a separate world-map data partition; see section 4). A fallback is a full flash.
+- **Issue #440 (open, "Fixed on Beta", no stable release named):** after a custom ESP-IDF app runs, Launcher may lose Wi-Fi (esp-hosted) and not detect the Tab5 keyboard; reflashing Launcher restores Wi-Fi temporarily. SD installs do not need Wi-Fi. A second reporter's unit had C6 firmware 2.12.6 and a host/co-processor version mismatch; OrcSDR's Wi-Fi worked on that same unit.
+- Launcher keeps the Grove 5 V rail powered from boot (for the keyboard).
+
+**Other Tab5 apps found (none flashed):** SDR: hardcoreerik/OrcSDR (main, releases), 9a3zi/tab5-SDR (HF, V4 upconverter), hardparking/systemrok tab5-sdr (FM/NFM), nullbeing/tab5sa (spectrum analyzer + WFM/NFM/AM, 24 to 1766 MHz, ESP-IDF 5.5, no releases). Non-RF: hey-its-brian/tab5-cyberdeck (DECK//OS, web flasher, full image at 0x0 so it would replace Launcher), M5TabOS. C6L side: siem84 MeshCore + Meshtastic DualBoot (pick on the OLED, one at a time) and MeshCore C6L UI; Tab5 not mentioned. All tagged [V] from project pages, maturity low (a few stars).
+
+**Open decisions:** who builds the Tab5 Meshtastic GUI (needs ESP-IDF 5.4.x; no prebuilt binary), confirm Tab5 UART pins, confirm C6L serial module works, decide C6L power source.
+
 ## 7. Other Tab5 projects (non-RF)
 
 - [loadout-tab5](https://github.com/katinadelgado74/loadout-tab5): firmware launcher that boots .bin files from the SD card with OTA rollback.
@@ -351,3 +382,4 @@ Tags: [V] read in this repo; [I] Claude's inference; nothing here is tested.
 - 2026-10-31: Two 32 GB microSD cards ordered.
 - 2026-10-31 (late): Decision (Charlie): hold the Tab5 flash until the 32 GB microSD cards arrive Monday 2026-11-02, so Launcher goes on first and OrcSDR is then tried from the card (avoids flashing OrcSDR and reinstalling). Launcher confirmed maintained for Tab5 [V, releases page]: 2.6.5 SDMMC driver, 2.6.7 USB mass storage, 2.6.8 Wi-Fi scan/AP fix, 2.8.0 (Jul 31) Tab5 keyboard support. OrcSDR-under-Launcher still unconfirmed. Factory backup and verified OrcSDR .bin already on the laptop.
 - 2026-10-31 (late): C6L photo: Grove cable (red/black/yellow/white, HY2.0-4P) came with the unit and is plugged in; no USB cable in the photo. USB-C port is on a long edge, found by Charlie. Antennas on both ports. Not powered or flashed yet.
+- 2026-10-31 (late): Added section 6b (Tab5 as Meshtastic screen over Grove, Launcher details, other Tab5 apps). Research only, nothing flashed.
