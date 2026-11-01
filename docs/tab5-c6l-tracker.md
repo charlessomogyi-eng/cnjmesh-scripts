@@ -328,6 +328,7 @@ Tags: [V] read on the page this session; [I] inference; [?] could not verify. No
 - [esp-cpp/tab5-emu](https://github.com/esp-cpp/tab5-emu) (game emulation), [Paqurin/tab5-apps](https://github.com/Paqurin/tab5-apps),
   [Jasionf/M5Stack-Tab5](https://github.com/Jasionf/M5Stack-Tab5) (UI demos).
 - GitHub topic: [m5stack-tab5](https://github.com/topics/m5stack-tab5).
+- **Added Oct 31 (fun, not part of the plan) [V, project pages]:** [M5MusicTab5](https://hackaday.io/project/206549-m5musictab5) (music studio: 8-track sequencer, SF2 synth, piano, MIDI recorder; browser flasher, MIT); [tobozo/M5Tab5-Game-and-Watch](https://github.com/tobozo/M5Tab5-Game-and-Watch) (31 Game & Watch titles, bring your own ROMs, source build only, GPL-3.0); [hey-its-brian/tab5-cyberdeck](https://github.com/hey-its-brian/tab5-cyberdeck) (DECK//OS: SSH terminal, notes, file portal, music; web flasher, full image at 0x0, would replace Launcher). Title only, unread: MU-Software/m5stack-tab5-ssh-client, GalusPeres/Tab5-HomeAssistant-Display. Browser-flasher apps write a full image and probably replace Launcher; whether Launcher can extract them from SD is unconfirmed.
 
 ---
 
