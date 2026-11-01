@@ -18,7 +18,7 @@ Not Meshtastic but easy to confuse: K2GIA-10 (CA2RXU LoRa APRS iGate, 10.0.0.74)
 |---|---|---|
 | KPN2 | LilyGo T-Deck Plus (`!4ecec314`, last heard Aug 7) | Flashed to MeshCore, now **KPC2** |
 | KPN1 | RAK4631 solar outdoor node | Flashed to MeshCore, now **KPR3** |
-| KPN7 | Heltec V4 used to test a Yagi (`!0ac9deb4`, last heard Jul 4) | Flashed to MeshCore [Charlie, Nov 1]. **Its MeshCore name is not recorded anywhere in the repo [?]** |
+| KPN7 | Heltec V4 used to test a Yagi (`!0ac9deb4`, last heard Jul 4) | Flashed to MeshCore, now **KPR2** [V: KPR2's USB serial `E8F60AC9DEB4` ends C9:DE:B4, matching node ID `!0ac9deb4`] |
 
 Old Meshtastic entries stay in the app and map until they age out; they do not mean the hardware is lost.
 
@@ -36,7 +36,11 @@ Old Meshtastic entries stay in the app and map until they age out; they do not m
 
 Radio for the 500 kHz set: 910.525 MHz, BW 500, SF10, CR5.
 
+## Physical labels (Heltec V4s, Charlie Nov 1)
+- Purple case: KPN6 (first V4 bought), Meshtastic, roof.
+- Green case x2: CJG1 (Meshtastic gateway; Charlie unsure if 1 or 2, repo says V4 = CJG1, V3 = CJG2) and KPR2 (MeshCore repeater, cnjmesh3, ex-KPN7).
+- Heltec V3s: CJG2 (Meshtastic), KPR1 and KPC1 (MeshCore).
+
 ## Open questions
-- Which MeshCore node is the old KPN7 Heltec V4? KPR2 is also a Heltec V4 but the repo has no link between the two.
 - KPR1 status (retired vs active).
 - Three Heltec V3 boards arriving by mail for Meshtastic (stated Nov 1). Planned names not set; KPN2 and KPN7 are free names.
