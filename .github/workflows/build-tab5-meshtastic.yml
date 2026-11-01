@@ -1,0 +1,76 @@
+name: Build Tab5-Meshtastic (pinned commit, manual)
+
+# Builds tpklge/Tab5-Meshtastic at ONE audited commit so the Tab5 app can be
+# installed through M5 Launcher. Run by hand: Actions tab -> this workflow ->
+# Run workflow. Nothing here runs on push.
+#
+# Why a pinned commit: the source was read on 2026-10-31 (network use is Wi-Fi,
+# SNTP pool.ntp.org and one ip-api.com location lookup the user triggers). If you
+# change TAB5ME_SHA, re-read the diff first.
+#
+# Licence note: the upstream chain (hardparking -> tpklge) is unclear about
+# redistribution, so the artifact is kept for 3 days and is for personal use only.
+
+on:
+  workflow_dispatch:
+
+env:
+  TAB5ME_REPO: tpklge/Tab5-Meshtastic
+  TAB5ME_SHA: fcdfe23a024b62949955d70c688b09286663656a
+  LAUNCHER_APP_LIMIT: "1638400"   # bytes; app partition Launcher gave the author's Tab5 (docs/LAUNCHER.md)
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:release-v5.4
+    steps:
+      - name: Check out pinned source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TAB5ME_REPO }}
+          ref: ${{ env.TAB5ME_SHA }}
+          path: src
+
+      - name: Build (ESP32-P4)
+        working-directory: src
+        shell: bash
+        run: |
+          git config --global --add safe.directory '*'
+          . "$IDF_PATH/export.sh"
+          idf.py --version
+          idf.py set-target esp32p4
+          idf.py build 2>&1 | tee ../build.log
+
+      - name: Size check and checksum
+        shell: bash
+        run: |
+          BIN=src/build/tab5_meshtastic_v2.bin
+          SIZE=$(stat -c %s "$BIN")
+          echo "tab5_meshtastic_v2.bin = ${SIZE} bytes (Launcher limit ${LAUNCHER_APP_LIMIT})"
+          mkdir -p out
+          cp "$BIN" out/tab5_meshtastic_v2.bin
+          (cd out && sha256sum tab5_meshtastic_v2.bin | tee SHA256SUMS.txt)
+          cp build.log out/build.log
+          {
+            echo "### Tab5-Meshtastic build"
+            echo "- Source: ${TAB5ME_REPO} @ ${TAB5ME_SHA}"
+            echo "- Binary size: ${SIZE} bytes (Launcher app partition limit: ${LAUNCHER_APP_LIMIT})"
+            if [ "$SIZE" -gt "$LAUNCHER_APP_LIMIT" ]; then
+              echo "- **Larger than the limit.** Launcher's Partition Manager would need to give the app more space."
+            else
+              echo "- Fits in the limit."
+            fi
+            echo "- SHA256: $(cut -d' ' -f1 out/SHA256SUMS.txt)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tab5-meshtastic-v2
+          path: out/
+          retention-days: 3
+          if-no-files-found: error
