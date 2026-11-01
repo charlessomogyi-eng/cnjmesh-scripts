@@ -100,3 +100,17 @@ All settings from the web client survived the flash (the SJMesh channel and the 
 -89 dBm (uptime 3 h 24 m). An earlier log at 8:17 PM (uptime 46 m) read -120 dBm. CJG1 is a Heltec V4, whose RSSI/noise readings run about 15 dB higher than a V3's because of its LNA, so compare it with KPN6 (V4, -93 dBm), not with CJG2 (V3, -113 dBm). See todos.md item 10.
 
 Correction Oct 30 10:58 PM [S, Charlie]: CJG1 and CJG2 both have their antennas hung outside under a window, with the radio inside. (An earlier version of this note called CJG1's antenna indoor.) On two outside antennas CJG2 (V3) reads -113 and CJG1 (V4) reads -89, a 24 dB gap, versus about 15 dB in Heltec's signal measurements, so the V4 offset explains most but not all of it.
+
+## Channel detail captured Nov 1 2026 (KPTESTING and KPCOMMS)
+
+Source: two Android app screenshots from Charlie (11:32 AM). The screenshots did not show which node the phone was connected to; slot numbers match CJG1's list above (KPCOMMS 3, KPTESTING 4) so this is probably CJG1 [?]. Radio shown: Freq 906.875 MHz, slot 20 (Auto), i.e. the default Long Fast channel.
+
+| Channel | Role/slot | PSK length | MQTT uplink | MQTT downlink | Position | Precise location |
+|---|---|---|---|---|---|---|
+| KPTESTING | slot 4 [?] | 256-bit (44 base64 chars) | **on** | off | off | n/a (position off) |
+| KPCOMMS | slot 3 [?] | 256-bit (44 base64 chars) | off | off | **on** | **on** |
+
+Notes:
+- KPCOMMS shares **precise** position and is not uploaded to MQTT. Fine while it stays off the broker; flag it if uplink is ever turned on.
+- **The two keys are deliberately NOT written in this file.** This repo is public (unauthenticated GitHub API returns 200), and these are private channels. Charlie pasted both keys in the Tab5/C6L chat on Nov 1 for use on KPNM and holds them himself; keep any durable copy in a private place (password manager), not here.
+- When adding either channel on another node, the key-length dropdown must be set to 256 bit or the field goes red.
