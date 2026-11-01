@@ -185,5 +185,69 @@ class HubSafety(unittest.TestCase):
             os.listdir, w._sysfs = orig_listdir, orig_sysfs
 
 
+UNKEY_EPROTO = "graywolf-modem: TransmitFrame: ptt_unkey: TIOCMGET: EPROTO: Protocol error"
+KEY_EPROTO = "graywolf-modem: TransmitFrame: ptt_key: TIOCMGET: EPROTO: Protocol error"
+
+
+class StuckTransmitter(unittest.TestCase):
+    """The Oct 31 2026 event: ptt_unkey failed and the radio stayed keyed."""
+
+    def test_unkey_error_is_its_own_problem(self):
+        f = w.analyze(events((NOW - 3000, READY), (NOW - 600, BEACON), (NOW - 598, UNKEY_EPROTO)), NOW)
+        self.assertEqual(f["ptt_unkey_error_count"], 1)
+        self.assertEqual(f["ptt_unkey_errno"], "EPROTO")
+        probs = w.problems_from(True, f, NOW)
+        self.assertIn("ptt-unkey-error", probs)
+        self.assertNotIn("ptt-error", probs)
+
+    def test_any_errno_on_ptt_key_counts_as_ptt_error(self):
+        f = w.analyze(events((NOW - 3000, READY), (NOW - 600, KEY_EPROTO)), NOW)
+        self.assertEqual(w.problems_from(True, f, NOW), ["ptt-error"])
+
+    def test_unkey_error_before_restart_is_history(self):
+        f = w.analyze(events((NOW - 5000, UNKEY_EPROTO), (NOW - 3000, READY), (NOW - 600, BEACON)), NOW)
+        self.assertEqual(w.problems_from(True, f, NOW), [])
+
+    def test_guard_match(self):
+        self.assertEqual(w.guard_match(UNKEY_EPROTO), "EPROTO")
+        self.assertEqual(w.guard_match("graywolf-modem: TransmitFrame: ptt_unkey: TIOCMGET: EIO: I/O error"), "EIO")
+        self.assertIsNone(w.guard_match("graywolf-modem: TransmitFrame: ptt_key: TIOCMGET: EIO: I/O error"))
+        self.assertIsNone(w.guard_match(BEACON))
+
+
+class EmergencyPath(Harness):
+    def setUp(self):
+        super().setUp()
+        self._saved = (w.stop_graywolf, w.find_digirig_hub, w.soft_reset_hub)
+
+    def tearDown(self):
+        w.stop_graywolf, w.find_digirig_hub, w.soft_reset_hub = self._saved
+
+    def test_periodic_check_stops_graywolf_once_and_never_restarts(self):
+        stops = []
+        w.stop_graywolf = lambda: stops.append(1) or True
+        w.find_digirig_hub = lambda: None
+        self.ev = events((NOW - 3000, READY), (NOW - 600, BEACON), (NOW - 598, UNKEY_EPROTO))
+        self.run_main()
+        self.assertEqual(len(stops), 1)
+        self.assertEqual(self.fixes, 0)                 # no automatic restart
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("stuck transmitting", self.sent[0])
+        self.assertIn("TX light", self.sent[0])
+        # graywolf is now stopped, so later runs stay quiet
+        w.service_active = lambda: False
+        self.run_main()
+        self.assertEqual(len(self.sent), 1)
+
+    def test_emergency_stop_resets_hub_when_found(self):
+        w.stop_graywolf = lambda: True
+        w.find_digirig_hub = lambda: "1-1.3"
+        resets = []
+        w.soft_reset_hub = lambda hub: resets.append(hub) or True
+        w.emergency_stop("cnjmesh1", "EPROTO", "test")
+        self.assertEqual(resets, ["1-1.3"])
+        self.assertIn("reset the Digirig USB hub 1-1.3", self.sent[0])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

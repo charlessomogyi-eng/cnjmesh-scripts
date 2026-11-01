@@ -1,0 +1,16 @@
+[Unit]
+Description=Graywolf PTT guard: stop graywolf and alert if the PTT release fails (stuck transmitter)
+After=graywolf.service
+
+[Service]
+Type=simple
+# Webhook: put the real URL in a drop-in (copy the one from graywolf-health-watchdog.service.d), never in the repo.
+# Leaving REPLACE_ME falls back to DISCORD_WEBHOOK_INTERNET from /opt/graywolf-discord/.env.
+Environment=CNJ_DISCORD_WEBHOOK=REPLACE_ME
+Environment=NODE_LABEL=cnjmesh1
+ExecStart=/usr/bin/python3 /opt/graywolf-health-watchdog/watchdog.py --guard
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

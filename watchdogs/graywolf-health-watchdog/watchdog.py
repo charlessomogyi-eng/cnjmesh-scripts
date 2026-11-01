@@ -31,9 +31,24 @@ Alerts (Discord), kept deliberately quiet:
     (set RECOVERY_NOTICE=0 to disable).
   - The same reason set is never announced twice within ALERT_COOLDOWN_SECONDS.
 
+Stuck-transmitter guard (added Oct 31 2026): a failed `ptt_unkey` means the
+release of the transmit key may never have reached the radio, and the radio
+stays keyed (it happened: red TX light non-stop after `ptt_unkey: TIOCMGET:
+EPROTO`). So a failed `ptt_unkey` is treated as an emergency, not a normal
+problem: graywolf is STOPPED at once (never restarted: a restart sends a beacon
+30 s later, which can repeat the fault), the Digirig's hub is soft-reset so its
+serial chip drops the key line, and a loud alert says to look at the radio.
+  - `--guard` runs forever (own systemd service, graywolf-ptt-guard.service),
+    follows the graywolf journal and reacts within about a second.
+  - The 5-minute timer run does the same if it ever finds an unkey error the
+    guard missed (belt and braces).
+Backstop outside software: set the radio's time-out timer (TOT) to its shortest option.
+
 Modes:
   python3 watchdog.py --check   read-only status print, no alerts, no fixes
   DRY_RUN=1 python3 watchdog.py   full logic, but prints instead of acting
+  python3 watchdog.py --guard   long-running stuck-transmitter guard (systemd service)
+  python3 watchdog.py --guard-selftest   dry-run the guard's matching and actions, touches nothing
 
 Deploy on cnjmesh1 only, run as root (systemctl restart + sysfs writes).
 Run via systemd timer, not a long-running daemon.
@@ -72,6 +87,12 @@ DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "REPLACE_ME")
 
 CARD_RE = re.compile(r"^card \d+: " + re.escape(AUDIO_CARD_NAME) + r" \[", re.M)
+# Graywolf logs e.g. "graywolf-modem: TransmitFrame: ptt_key: TIOCMGET: EIO: I/O error"
+# and "graywolf-modem: TransmitFrame: ptt_unkey: TIOCMGET: EPROTO: Protocol error".
+# Any errno name counts (EIO, EPROTO, ENODEV, ...). "ptt_key" does not match "ptt_unkey".
+PTT_KEY_ERR_RE = re.compile(r"ptt_key: [^\n]*?\b(E[A-Z0-9]{2,})\b")
+PTT_UNKEY_ERR_RE = re.compile(r"ptt_unkey: [^\n]*?\b(E[A-Z0-9]{2,})\b")
+GUARD_DEBOUNCE_SECONDS = 60
 PROC_CARD_RE = re.compile(r"\[\s*" + re.escape(AUDIO_CARD_NAME) + r"\s*\]")  # /proc/asound/cards
 
 
@@ -175,13 +196,20 @@ def analyze(events, now):
     for ts, msg in events:
         if 'msg="modem ready"' in msg or 'msg="starting component"' in msg:
             start_ts = max(start_ts, ts)
-    ptt_eio = [ts for ts, msg in events if ts >= start_ts and "ptt_key" in msg and "EIO" in msg]
+    ptt_eio = [ts for ts, msg in events if ts >= start_ts and PTT_KEY_ERR_RE.search(msg)]
+    unkey = []
+    for ts, msg in events:
+        m = PTT_UNKEY_ERR_RE.search(msg) if ts >= start_ts else None
+        if m:
+            unkey.append((ts, m.group(1)))
     audio_fail = [ts for ts, msg in events
                   if ts >= now - AUDIO_FAIL_WINDOW and "start_audio failed" in msg]
     beacons = [ts for ts, msg in events if 'msg="beacon sent"' in msg]
     return {
         "start_ts": start_ts,
         "ptt_eio_count": len(ptt_eio),
+        "ptt_unkey_error_count": len(unkey),
+        "ptt_unkey_errno": unkey[-1][1] if unkey else "",
         "audio_fail_recent": len(audio_fail),
         "last_beacon_ts": max(beacons) if beacons else 0.0,
     }
@@ -195,6 +223,8 @@ def problems_from(card_present, facts, now):
         problems.append("audio-start-failed")
     if facts["ptt_eio_count"] > 0:
         problems.append("ptt-error")
+    if facts.get("ptt_unkey_error_count", 0) > 0:
+        problems.append("ptt-unkey-error")
     if BEACON_CHECK:
         uptime = now - facts["start_ts"] if facts["start_ts"] else 10 ** 9
         age = now - facts["last_beacon_ts"] if facts["last_beacon_ts"] else 10 ** 9
@@ -298,6 +328,84 @@ def restart_graywolf():
     return rc == 0 and service_active()
 
 
+def stop_graywolf():
+    if DRY_RUN:
+        print("[dry-run] would run: systemctl stop graywolf")
+        return True
+    rc, _ = run(["systemctl", "stop", SERVICE], timeout=60)
+    return rc == 0
+
+
+def emergency_stop(host, errno_name, source):
+    """Stuck-transmitter safeguard: stop graywolf, reset the Digirig hub, alert loudly.
+
+    Never restarts graywolf: a restart sends a beacon within 30 s, which can repeat
+    the fault. A human restarts it after looking at the radio."""
+    actions = []
+    ok = stop_graywolf()
+    actions.append(f"stopped graywolf ({'ok' if ok else 'FAILED'})")
+    hub = find_digirig_hub()
+    if hub is None:
+        actions.append("could not locate the Digirig's USB hub, so no USB reset")
+    else:
+        ok2 = soft_reset_hub(hub)
+        actions.append(f"reset the Digirig USB hub {hub} ({'ok' if ok2 else 'failed'})")
+    send_discord(
+        f"\U0001F6A8 CNJMESH {host}: K2GIA-1 could not release PTT ({errno_name or 'error'}; {source}), "
+        f"so the radio may be stuck transmitting. Automatic action: {'; '.join(actions)}. "
+        f"Look at the radio now: if its red TX light is on, turn it off. Graywolf stays stopped "
+        f"(no automatic restart) until you run `sudo systemctl start graywolf`.")
+    return actions
+
+
+def guard_match(text):
+    """Return the errno name if this journal line is a failed ptt_unkey, else None."""
+    m = PTT_UNKEY_ERR_RE.search(text)
+    return m.group(1) if m else None
+
+
+def guard_loop():
+    """Long-running: follow the graywolf journal and react to a failed PTT release."""
+    host = get_hostname()
+    last = 0.0
+    print(f"{host}: ptt-guard watching {SERVICE} for failed PTT release", flush=True)
+    while True:
+        try:
+            proc = subprocess.Popen(
+                ["journalctl", "-u", SERVICE, "-f", "-n", "0", "-o", "cat", "--no-pager", "-q"],
+                stdout=subprocess.PIPE, text=True, bufsize=1)
+            for text in proc.stdout:
+                errno_name = guard_match(text)
+                if errno_name and time.time() - last >= GUARD_DEBOUNCE_SECONDS:
+                    last = time.time()
+                    emergency_stop(host, errno_name, "seen live by the ptt guard")
+            proc.wait()
+        except Exception as e:  # noqa: BLE001 - the guard must keep running
+            print(f"guard error: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+        time.sleep(2)
+
+
+def guard_selftest():
+    """Dry run: shows what the guard would match and do. Touches nothing."""
+    global DRY_RUN
+    DRY_RUN = True
+    samples = [
+        ("graywolf-modem: TransmitFrame: ptt_unkey: TIOCMGET: EPROTO: Protocol error", True),
+        ("graywolf-modem: TransmitFrame: ptt_unkey: TIOCMGET: EIO: I/O error", True),
+        ("graywolf-modem: TransmitFrame: ptt_key: TIOCMGET: EIO: I/O error", False),
+        ('level=INFO msg="beacon sent" component=beacon id=1', False),
+    ]
+    ok = True
+    for text, expect in samples:
+        got = guard_match(text)
+        good = bool(got) == expect
+        ok = ok and good
+        print(f"{'OK ' if good else 'BAD'} match={got!r:10} {text}")
+    print("--- what the guard would do on a failed ptt_unkey:")
+    emergency_stop(get_hostname(), "EPROTO", "self-test")
+    return 0 if ok else 1
+
+
 def fix_allowed(state, now):
     attempts = [t for t in state["fix_attempts"] if now - t < 24 * 3600]
     state["fix_attempts"] = attempts
@@ -336,6 +444,7 @@ def reasons_text(problems):
         "audio-card-missing": "Digirig sound card missing",
         "audio-start-failed": "Graywolf cannot open the audio device",
         "ptt-error": "PTT serial error (ptt_key EIO), radio likely not keying",
+        "ptt-unkey-error": "PTT release failed, the radio may have been left transmitting",
         "no-beacon": "no beacon sent in the last 50 minutes",
     }
     return "; ".join(names.get(p, p) for p in problems)
@@ -358,12 +467,19 @@ def main(argv=None):
     host = get_hostname()
     now = time.time()
 
+    if "--guard" in argv:
+        guard_loop()
+        return 0
+    if "--guard-selftest" in argv:
+        return guard_selftest()
+
     if not service_active():
         print(f"{host}: {SERVICE} is not active; graywolf-watchdog handles that. Nothing to do.")
         return 0
 
     present, facts, problems = evaluate(now)
     print(f"{host}: card_present={present} ptt_eio={facts['ptt_eio_count']} "
+          f"ptt_unkey_err={facts['ptt_unkey_error_count']} "
           f"audio_fail_recent={facts['audio_fail_recent']} "
           f"last_beacon_age={int(now - facts['last_beacon_ts']) if facts['last_beacon_ts'] else 'none'}s "
           f"problems={problems or 'none'}")
@@ -372,6 +488,14 @@ def main(argv=None):
 
     state = load_state()
     key = ",".join(sorted(problems))
+
+    if "ptt-unkey-error" in problems:
+        # Stuck-transmitter risk: stop and alert, never restart (see emergency_stop).
+        emergency_stop(host, facts.get("ptt_unkey_errno", ""), "found by the periodic check")
+        state["state"] = "degraded"
+        state["reasons"] = problems
+        save_state(state)
+        return 0
 
     if not problems:
         if state["state"] == "degraded" and RECOVERY_NOTICE:

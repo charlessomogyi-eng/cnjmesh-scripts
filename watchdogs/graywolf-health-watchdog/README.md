@@ -73,3 +73,21 @@ so the committed unit file keeps `REPLACE_ME`. The URL is never committed. To ch
 
 ## Turn off / undo
     sudo systemctl disable --now graywolf-health-watchdog.timer
+
+## Stuck-transmitter guard (added Oct 31 2026)
+
+Why: on Oct 31 2026 a transmit-triggered USB glitch made `ptt_unkey: TIOCMGET: EPROTO` fail, so the key release never reached the radio and the UV-5R M stayed keyed (red TX light) until Charlie powered it off. A failed `ptt_unkey` is now treated as an emergency:
+
+- `graywolf-ptt-guard.service` runs `watchdog.py --guard` (long-running), follows the graywolf journal and reacts within about a second: `systemctl stop graywolf`, soft-reset the Digirig's own hub (same guarded helper as the normal fix), and post a loud alert ("look at the radio, turn it off if the red TX light is on"). It never restarts graywolf; a human runs `sudo systemctl start graywolf` after looking.
+- The 5-minute timer run does the same if it ever finds an unkey error the guard missed.
+- Any errno on `ptt_key` (EIO, EPROTO, ...) now counts as the ordinary `ptt-error` problem; `--check` prints `ptt_unkey_err=`.
+- Backstop outside software: set the radio's TOT (time-out timer) to its shortest option (15 or 30 s). Classic UV-5R: TOT is menu 9 (15-600 s); some newer models list OFF and 15-180 s. Menu numbers vary by model, so scroll until the display shows TOT.
+
+Install on cnjmesh1 (after `git pull`):
+1. `sudo cp watchdog.py /opt/graywolf-health-watchdog/watchdog.py`
+2. `sudo cp graywolf-ptt-guard.service /etc/systemd/system/`
+3. Webhook drop-in: copy `/etc/systemd/system/graywolf-health-watchdog.service.d/webhook.conf` to `/etc/systemd/system/graywolf-ptt-guard.service.d/webhook.conf`.
+4. Dry-run check (touches nothing): `sudo python3 /opt/graywolf-health-watchdog/watchdog.py --guard-selftest`
+5. `sudo systemctl daemon-reload && sudo systemctl enable --now graywolf-ptt-guard.service`
+
+Offline tests: `python3 test_watchdog.py` (28 tests, finishes on its own).
