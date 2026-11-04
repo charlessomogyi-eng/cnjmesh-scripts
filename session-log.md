@@ -2894,3 +2894,6 @@ Corrected the 2.8 docs: Long Fast is the normal default; Long Turbo only when th
 
 ## 2026-11-04 (2:31 PM) — "Play list" started
 Charlie shared an APRSThursday post asking who maintains WLNK-1 (the Winlink APRS gateway), said to be down about 2 weeks, and asked for it to be logged as something to look into and play with. He also said he spends his days fixing infrastructure and wants to play with the hobby: learn APRS and how MQTT works. Added a "PLAY LIST" section at the top of `todos.md` (WLNK-1, APRS learning, MQTT learning, KPN9 Turbo listen, Tab5). Facts on WLNK-1 are from winlink.org/APRSLink; its operator is not named there and the outage is unverified (one Facebook post).
+
+## 2026-11-04 (4:55 PM) — MeshCore regions vs scopes (Discord thread)
+Charlie shared screenshots from the MeshCore public-map Discord. Explained that MeshMapper regions (map areas on meshmapper.net) are unrelated to MeshCore scopes (region tags on flood packets that repeaters on v1.10.0+ enforce). Logged as play-list item 6 in `todos.md`. No action taken; nothing on any node changed.
