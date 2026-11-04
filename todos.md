@@ -1,5 +1,17 @@
 # CNJ Mesh — Open To-Dos
 
+### [PLAN — make the repo private and prove Claude can still push (Charlie's preference, Nov 4 2026 3:04 PM)]
+
+Why it should work: write access comes from the account access attached to the session, not from the repo being public. [I, to be proven by step 4.] What depends on it being public [V, grep Nov 4]: the Pi's `git pull` (plain HTTPS, no login), `curl https://raw.githubusercontent.com/charlessomogyi-eng/cnjmesh-scripts/...` lines in `CLAUDE_CONTEXT.md`, `docs/backup-guide.md` (including the Windows puller download), `docs/SONNET-execution-brief.md`; also any public link to the repo (Discord posts). The website is not affected (hand deploy; no repo links in it). Already-published history stays exposed (forks and caches); treat anything committed while public as public.
+
+1. Charlie, cnjmesh1 (finishes on its own): `git -C ~/cnjmesh-scripts remote -v`. If the URL starts with `https://github.com/`, it has no login.
+2. Pi read-only key (needs Charlie's OK, changes only the Pi's git setup): make an ed25519 key with no passphrase in `~/.ssh/`, add its public half in GitHub repo Settings, Deploy keys, **write access left unticked**, point the clone's remote at the SSH address, and run `git pull` to prove it works while the repo is still public.
+3. Charlie: GitHub repo Settings, bottom, Change visibility, Make private.
+4. Claude: push a tiny test commit (one line in session-log.md) and confirm it landed. If the push fails: Charlie flips the repo back to public; nothing is lost; Claude diagnoses.
+5. Charlie: `git pull` on cnjmesh1; it should fetch the test commit.
+6. Claude: replace the raw-link instructions in the docs listed above with the private-repo way (git over the deploy key on the Pi; for the Windows puller, a different download route), and note that other chats must have the repo attached instead of curling raw URLs.
+Rollback at any point: make the repo public again.
+
 ### [PLAY LIST — hobby time, nothing here is broken (started Wed Nov 4 2026, Charlie)]
 
 Charlie, Nov 4 2:31 PM: he spends his days fixing infrastructure and rarely gets to just play with the hobby. He wants to learn and play with **APRS** and learn **how MQTT works**, and hopes the fixing is winding down. Items here are for learning and fun only. Rule: when picking the next task, offer one thing from this list alongside any repair item, and do not let a play item sit behind new non-urgent repairs.
