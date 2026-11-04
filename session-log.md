@@ -2891,3 +2891,6 @@ Charlie flashed a new Heltec V3 (named **KPN9**) with a 2.8 build and asked for 
 
 ## 2026-11-03 (9:44 PM) — KPN9 set up on Long Turbo, 48-hour listen
 Corrected the 2.8 docs: Long Fast is the normal default; Long Turbo only when the US region is first set on the device screen (official docs). (Correction at 9:44 PM: KPN9 is on Long Turbo, not Long Fast; I had misread Charlie.) Fixed position set at Kendall Park town level, Wi-Fi access on, left to listen 48 hours. Explainer and the draft website section updated to match (website still held, not live).
+
+## 2026-11-04 (2:31 PM) — "Play list" started
+Charlie shared an APRSThursday post asking who maintains WLNK-1 (the Winlink APRS gateway), said to be down about 2 weeks, and asked for it to be logged as something to look into and play with. He also said he spends his days fixing infrastructure and wants to play with the hobby: learn APRS and how MQTT works. Added a "PLAY LIST" section at the top of `todos.md` (WLNK-1, APRS learning, MQTT learning, KPN9 Turbo listen, Tab5). Facts on WLNK-1 are from winlink.org/APRSLink; its operator is not named there and the outage is unverified (one Facebook post).
