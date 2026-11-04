@@ -78,7 +78,8 @@ so the committed unit file keeps `REPLACE_ME`. The URL is never committed. To ch
 
 Why: on Oct 31 2026 a transmit-triggered USB glitch made `ptt_unkey: TIOCMGET: EPROTO` fail, so the key release never reached the radio and the UV-5R M stayed keyed (red TX light) until Charlie powered it off. A failed `ptt_unkey` is now treated as an emergency:
 
-- `graywolf-ptt-guard.service` runs `watchdog.py --guard` (long-running), follows the graywolf journal and reacts within about a second: `systemctl stop graywolf`, soft-reset the Digirig's own hub (same guarded helper as the normal fix), and post a loud alert ("look at the radio, turn it off if the red TX light is on"). It never restarts graywolf; a human runs `sudo systemctl start graywolf` after looking.
+- `graywolf-ptt-guard.service` runs `watchdog.py --guard` (long-running), follows the graywolf journal and reacts within about a second: `systemctl stop graywolf`, then pause `graywolf-watchdog.timer` and `graywolf-discord-watchdog.timer` (see below), soft-reset the Digirig's own hub (same guarded helper as the normal fix), and post a loud alert ("look at the radio, turn it off if the red TX light is on"). It never restarts graywolf. The alert carries ONE resume command for a human to run after looking at the radio: `sudo systemctl start graywolf.service graywolf-discord.service graywolf-watchdog.timer graywolf-discord-watchdog.timer`.
+- **Why it pauses the two older timers (Nov 3 2026):** `graywolf-discord.service` has `Requires=graywolf.service`, and `graywolf-discord-watchdog` restarts the bridge every 5 minutes if it is down, so after the guard's stop it would start graywolf (a transmitter) again within minutes. It did exactly that on Oct 31 at 21:48. `PAUSE_TIMERS` (space-separated, in the service environment) overrides the list. The paused timers also come back by themselves at reboot. If a pause fails the alert says so ("could NOT pause ...").
 - The 5-minute timer run does the same if it ever finds an unkey error the guard missed.
 - Any errno on `ptt_key` (EIO, EPROTO, ...) now counts as the ordinary `ptt-error` problem; `--check` prints `ptt_unkey_err=`.
 - Backstop outside software: set the radio's TOT (time-out timer) to its shortest option (15 or 30 s). Classic UV-5R: TOT is menu 9 (15-600 s); some newer models list OFF and 15-180 s. Menu numbers vary by model, so scroll until the display shows TOT.
@@ -90,4 +91,9 @@ Install on cnjmesh1 (after `git pull`):
 4. Dry-run check (touches nothing): `sudo python3 /opt/graywolf-health-watchdog/watchdog.py --guard-selftest`
 5. `sudo systemctl daemon-reload && sudo systemctl enable --now graywolf-ptt-guard.service`
 
-Offline tests: `python3 test_watchdog.py` (28 tests, finishes on its own).
+Already installed? Copy the new `watchdog.py` over the old one, then restart the guard so the long-running process loads it (each finishes on its own):
+
+    sudo cp watchdog.py /opt/graywolf-health-watchdog/watchdog.py
+    sudo systemctl restart graywolf-ptt-guard.service
+
+Offline tests: `python3 test_watchdog.py` (35 tests, finishes on its own).

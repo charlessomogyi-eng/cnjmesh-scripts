@@ -42,6 +42,11 @@ serial chip drops the key line, and a loud alert says to look at the radio.
     follows the graywolf journal and reacts within about a second.
   - The 5-minute timer run does the same if it ever finds an unkey error the
     guard missed (belt and braces).
+  - It also pauses graywolf-watchdog.timer and graywolf-discord-watchdog.timer
+    (PAUSE_TIMERS): the second restarts the Discord bridge, which Requires
+    graywolf, so it would start the transmitter again within 5 minutes (it did
+    on Oct 31 at 21:48). The alert gives ONE resume command that starts
+    graywolf, the bridge and both timers once a human has looked at the radio.
 Backstop outside software: set the radio's time-out timer (TOT) to its shortest option.
 
 Modes:
@@ -65,6 +70,12 @@ import urllib.request
 
 STATE_FILE = os.environ.get("STATE_FILE", "/opt/graywolf-health-watchdog/state.json")
 SERVICE = "graywolf"
+BRIDGE_SERVICE = "graywolf-discord.service"  # Requires=graywolf.service, so it goes down with it
+# Older timers that could undo an emergency stop: graywolf-discord-watchdog restarts the Discord
+# bridge every 5 min, and because the bridge Requires=graywolf, that restarts graywolf (a
+# transmitter) too (it undid the stop on Oct 31 at 21:48). The emergency stop pauses both.
+PAUSE_TIMERS = os.environ.get(
+    "PAUSE_TIMERS", "graywolf-watchdog.timer graywolf-discord-watchdog.timer").split()
 ENV_FILE_WEBHOOK = "/opt/graywolf-discord/.env"  # holds DISCORD_WEBHOOK_INTERNET (never committed)
 
 AUDIO_CARD_NAME = os.environ.get("AUDIO_CARD_NAME", "Device")
@@ -336,14 +347,45 @@ def stop_graywolf():
     return rc == 0
 
 
+def pause_timers():
+    """Stop the older watchdog timers so nothing restarts graywolf behind the stop.
+
+    Returns [(unit, ok)]. They also come back by themselves at reboot, or through
+    resume_command()."""
+    results = []
+    for unit in PAUSE_TIMERS:
+        if DRY_RUN:
+            print(f"[dry-run] would run: systemctl stop {unit}")
+            results.append((unit, True))
+            continue
+        rc, _ = run(["systemctl", "stop", unit], timeout=30)
+        results.append((unit, rc == 0))
+    return results
+
+
+def resume_command():
+    """The ONE command that undoes an emergency stop, for a human to run after looking at the radio.
+
+    Starts graywolf, the Discord bridge (stopped with it, because it Requires graywolf)
+    and the paused timers."""
+    return "sudo systemctl start " + " ".join([f"{SERVICE}.service", BRIDGE_SERVICE] + PAUSE_TIMERS)
+
+
 def emergency_stop(host, errno_name, source):
-    """Stuck-transmitter safeguard: stop graywolf, reset the Digirig hub, alert loudly.
+    """Stuck-transmitter safeguard: stop graywolf, pause the timers that could restart it,
+    reset the Digirig hub, alert loudly.
 
     Never restarts graywolf: a restart sends a beacon within 30 s, which can repeat
     the fault. A human restarts it after looking at the radio."""
     actions = []
     ok = stop_graywolf()
     actions.append(f"stopped graywolf ({'ok' if ok else 'FAILED'})")
+    paused = pause_timers()
+    failed = [u for u, ok_ in paused if not ok_]
+    if failed:
+        actions.append(f"could NOT pause {', '.join(failed)} (it may restart graywolf: stop it by hand)")
+    elif paused:
+        actions.append(f"paused {', '.join(u for u, _ in paused)} so nothing restarts graywolf behind the stop")
     hub = find_digirig_hub()
     if hub is None:
         actions.append("could not locate the Digirig's USB hub, so no USB reset")
@@ -354,7 +396,8 @@ def emergency_stop(host, errno_name, source):
         f"\U0001F6A8 CNJMESH {host}: K2GIA-1 could not release PTT ({errno_name or 'error'}; {source}), "
         f"so the radio may be stuck transmitting. Automatic action: {'; '.join(actions)}. "
         f"Look at the radio now: if its red TX light is on, turn it off. Graywolf stays stopped "
-        f"(no automatic restart) until you run `sudo systemctl start graywolf`.")
+        f"(no automatic restart). Once you have looked at the radio, this one command resumes "
+        f"everything: `{resume_command()}`")
     return actions
 
 

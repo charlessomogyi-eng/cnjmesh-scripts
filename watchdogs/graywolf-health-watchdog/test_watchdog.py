@@ -215,13 +215,21 @@ class StuckTransmitter(unittest.TestCase):
         self.assertIsNone(w.guard_match(BEACON))
 
 
+RESUME = ("sudo systemctl start graywolf.service graywolf-discord.service "
+          "graywolf-watchdog.timer graywolf-discord-watchdog.timer")
+
+
 class EmergencyPath(Harness):
     def setUp(self):
         super().setUp()
-        self._saved = (w.stop_graywolf, w.find_digirig_hub, w.soft_reset_hub)
+        self._saved = (w.stop_graywolf, w.find_digirig_hub, w.soft_reset_hub, w.pause_timers, w.run)
+        # Never touch real units, even if these tests are run on cnjmesh1 itself.
+        self.pauses = []
+        w.pause_timers = lambda: self.pauses.append(1) or [(u, True) for u in w.PAUSE_TIMERS]
+        w.run = lambda cmd, timeout=30: (1, "blocked by test")
 
     def tearDown(self):
-        w.stop_graywolf, w.find_digirig_hub, w.soft_reset_hub = self._saved
+        (w.stop_graywolf, w.find_digirig_hub, w.soft_reset_hub, w.pause_timers, w.run) = self._saved
 
     def test_periodic_check_stops_graywolf_once_and_never_restarts(self):
         stops = []
@@ -230,6 +238,7 @@ class EmergencyPath(Harness):
         self.ev = events((NOW - 3000, READY), (NOW - 600, BEACON), (NOW - 598, UNKEY_EPROTO))
         self.run_main()
         self.assertEqual(len(stops), 1)
+        self.assertEqual(len(self.pauses), 1)           # the older timers are paused too
         self.assertEqual(self.fixes, 0)                 # no automatic restart
         self.assertEqual(len(self.sent), 1)
         self.assertIn("stuck transmitting", self.sent[0])
@@ -247,6 +256,65 @@ class EmergencyPath(Harness):
         w.emergency_stop("cnjmesh1", "EPROTO", "test")
         self.assertEqual(resets, ["1-1.3"])
         self.assertIn("reset the Digirig USB hub 1-1.3", self.sent[0])
+
+    def test_alert_gives_exactly_one_resume_command(self):
+        w.stop_graywolf = lambda: True
+        w.find_digirig_hub = lambda: None
+        w.emergency_stop("cnjmesh1", "EPROTO", "test")
+        msg = self.sent[0]
+        self.assertEqual(msg.count("sudo systemctl start"), 1)
+        self.assertIn(f"`{RESUME}`", msg)
+        self.assertIn("paused graywolf-watchdog.timer, graywolf-discord-watchdog.timer", msg)
+        self.assertNotIn("systemctl restart", msg)
+
+    def test_order_is_stop_then_pause_then_hub_reset(self):
+        order = []
+        w.stop_graywolf = lambda: order.append("stop") or True
+        w.pause_timers = lambda: order.append("pause") or [(u, True) for u in w.PAUSE_TIMERS]
+        w.find_digirig_hub = lambda: "1-1.3"
+        w.soft_reset_hub = lambda hub: order.append("reset") or True
+        w.emergency_stop("cnjmesh1", "EPROTO", "test")
+        self.assertEqual(order, ["stop", "pause", "reset"])
+
+    def test_failed_pause_is_reported_loudly(self):
+        w.stop_graywolf = lambda: True
+        w.find_digirig_hub = lambda: None
+        w.pause_timers = lambda: [("graywolf-watchdog.timer", True), ("graywolf-discord-watchdog.timer", False)]
+        w.emergency_stop("cnjmesh1", "EPROTO", "test")
+        self.assertIn("could NOT pause graywolf-discord-watchdog.timer", self.sent[0])
+        self.assertIn("stop it by hand", self.sent[0])
+
+
+class PauseTimers(unittest.TestCase):
+    def setUp(self):
+        self._run, self._dry = w.run, w.DRY_RUN
+        self.calls = []
+
+    def tearDown(self):
+        w.run, w.DRY_RUN = self._run, self._dry
+
+    def test_stops_each_timer_with_systemctl_stop(self):
+        w.DRY_RUN = False
+        w.run = lambda cmd, timeout=30: self.calls.append(cmd) or (0, "")
+        res = w.pause_timers()
+        self.assertEqual(self.calls, [["systemctl", "stop", "graywolf-watchdog.timer"],
+                                      ["systemctl", "stop", "graywolf-discord-watchdog.timer"]])
+        self.assertEqual(res, [("graywolf-watchdog.timer", True), ("graywolf-discord-watchdog.timer", True)])
+
+    def test_failure_is_returned_not_raised(self):
+        w.DRY_RUN = False
+        w.run = lambda cmd, timeout=30: (5, "Unit not loaded.")
+        self.assertTrue(all(not ok for _, ok in w.pause_timers()))
+
+    def test_dry_run_touches_nothing(self):
+        w.DRY_RUN = True
+        w.run = lambda cmd, timeout=30: self.calls.append(cmd) or (0, "")
+        w.pause_timers()
+        self.assertEqual(self.calls, [])
+
+    def test_resume_command_is_one_line_with_all_four_units(self):
+        self.assertEqual(w.resume_command(), RESUME)
+        self.assertNotIn("\n", w.resume_command())
 
 
 if __name__ == "__main__":
