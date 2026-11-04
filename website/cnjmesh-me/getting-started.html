@@ -461,6 +461,7 @@ footer a:hover { color: var(--ink); }
     <div class="jump">
       <a href="#hardware">Hardware</a>
       <a href="#meshtastic">Meshtastic quick start</a>
+      <a href="#meshtastic-28">Meshtastic 2.8</a>
       <a href="#meshcore">MeshCore quick start</a>
       <a href="#advanced">Advanced config</a>
     </div>
@@ -504,6 +505,42 @@ footer a:hover { color: var(--ink); }
     </div>
 
     <p style="margin-top:24px"><a class="btn btn-ghost" href="https://discord.gg/AXmDzZuZ2m">Get help in the Meshtastic Discord</a></p>
+  </div>
+</section>
+
+<section id="meshtastic-28">
+  <div class="wrap prose wide">
+    <h2>Setting up on Meshtastic 2.8</h2>
+    <p>Meshtastic 2.8 changes a few things that matter on our network. As of early November 2026 the 2.8 builds are still labeled <strong>alpha</strong> and the newest stable release is 2.7.26, so if you want the least trouble, stay on 2.7.x for now. 2.7 and 2.8 nodes talk to each other fine. If you already have a 2.8 node or you are curious, here is what to know.</p>
+
+    <h3>1. Use Long Fast, not Long Turbo</h3>
+    <p>On a brand-new US node, 2.8 can pick the <strong>Long Turbo</strong> preset when you set the region from the device's own screen (or from the Android app's first-time setup). Our network runs <strong>Long Fast</strong>. The two presets use different bandwidth and a different frequency, so a Long Turbo node will hear nothing from us and we won't hear it. This is the number one "my new node sees nobody" cause.</p>
+    <div class="config-block">
+      <span class="key">region    :</span> <span class="val">US</span><br>
+      <span class="key">preset    :</span> <span class="val">Long Fast</span><br>
+      <span class="key">frequency :</span> <span class="val">906.875 MHz (slot 20, the default)</span>
+    </div>
+    <p>In the app, open <em>Radio configuration &rarr; LoRa</em>, set <em>Region</em> to <code>US</code>, and set the <em>Modem preset</em> to <code>Long Fast</code>. A node on Long Turbo shows 908.750 MHz and 500 kHz bandwidth; ours shows 906.875 MHz. Upgrading an existing 2.7 node to 2.8 keeps its current preset, so this mostly bites new or freshly erased nodes.</p>
+
+    <h3>2. Your node's ID now comes from its key</h3>
+    <p>Before 2.8, a node's number (the <code>!xxxxxxxx</code> ID) came from its radio's hardware address. In 2.8 it is calculated from the node's <strong>public key</strong>. Two things follow:</p>
+    <ul>
+      <li>The first time a node boots 2.8 it gets a <strong>new ID</strong>, and going back to 2.7 does not bring the old one back. Names and keys are unchanged. Maps and node lists may briefly show your old and new ID as two nodes.</li>
+      <li>A new key means a new ID. Erasing the node or regenerating its key changes its ID. Back up your configuration before you update or erase.</li>
+    </ul>
+
+    <h3>3. Other 2.8 changes worth knowing</h3>
+    <ul>
+      <li>Position and telemetry broadcasts are <strong>off by default</strong>, even after an upgrade. Turn them back on if you want to appear on the maps.</li>
+      <li>Long names are limited to 24 bytes.</li>
+      <li>The file system changed, so an upgrade may need you to re-enter settings. If a node boot-loops, do a full erase and flash, then restore your saved config.</li>
+      <li>"OK to MQTT" works the same: it must be on for your node to appear on Meshview and Malla.</li>
+    </ul>
+
+    <div class="callout">
+      <span class="tag">Stuck?</span>
+      Check the preset first (Long Fast, 906.875 MHz), then region (US). Ask in the <a href="https://discord.gg/AXmDzZuZ2m">Meshtastic Discord</a> and tell us your firmware version.
+    </div>
   </div>
 </section>
 
