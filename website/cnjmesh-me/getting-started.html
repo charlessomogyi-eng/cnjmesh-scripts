@@ -514,13 +514,13 @@ footer a:hover { color: var(--ink); }
     <p>Meshtastic 2.8 changes a few things that matter on our network. As of early November 2026 the 2.8 builds are still labeled <strong>alpha</strong> and the newest stable release is 2.7.26, so if you want the least trouble, stay on 2.7.x for now. 2.7 and 2.8 nodes talk to each other fine. If you already have a 2.8 node or you are curious, here is what to know.</p>
 
     <h3>1. Use Long Fast, not Long Turbo</h3>
-    <p>On a brand-new US node, 2.8 can pick the <strong>Long Turbo</strong> preset when you set the region from the device's own screen (or from the Android app's first-time setup). Our network runs <strong>Long Fast</strong>. The two presets use different bandwidth and a different frequency, so a Long Turbo node will hear nothing from us and we won't hear it. This is the number one "my new node sees nobody" cause.</p>
+    <p>In 2.8, if you set the region to US for the first time on the <strong>node's own screen</strong>, the node starts on the <strong>Long Turbo</strong> preset. Setting the region from the phone app or the command line leaves it on Long Fast. Our network runs <strong>Long Fast</strong>. The two presets use different bandwidth and a different frequency, so a Long Turbo node will hear nothing from us and we won't hear it. If your new node sees nobody, check the preset first.</p>
     <div class="config-block">
       <span class="key">region    :</span> <span class="val">US</span><br>
       <span class="key">preset    :</span> <span class="val">Long Fast</span><br>
       <span class="key">frequency :</span> <span class="val">906.875 MHz (slot 20, the default)</span>
     </div>
-    <p>In the app, open <em>Radio configuration &rarr; LoRa</em>, set <em>Region</em> to <code>US</code>, and set the <em>Modem preset</em> to <code>Long Fast</code>. A node on Long Turbo shows 908.750 MHz and 500 kHz bandwidth; ours shows 906.875 MHz. Upgrading an existing 2.7 node to 2.8 keeps its current preset, so this mostly bites new or freshly erased nodes.</p>
+    <p>In the app, open <em>Radio configuration &rarr; LoRa</em>, set <em>Region</em> to <code>US</code>, and set the <em>Modem preset</em> to <code>Long Fast</code>. A node on Long Turbo shows 908.750 MHz and 500 kHz bandwidth; ours shows 906.875 MHz. Upgrading an existing 2.7 node to 2.8 keeps its current preset, so this mostly bites new nodes set up from their own screen.</p>
 
     <h3>2. Your node's ID now comes from its key</h3>
     <p>Before 2.8, a node's number (the <code>!xxxxxxxx</code> ID) came from its radio's hardware address. In 2.8 it is calculated from the node's <strong>public key</strong>. Two things follow:</p>

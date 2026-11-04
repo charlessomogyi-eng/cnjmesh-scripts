@@ -9,7 +9,7 @@ Tags: [V] verified on a page I read · [S] single/secondary source · [?] not ve
 ## 1. Bottom line
 
 1. **2.8 is still not stable.** 2.8.0 was pulled (startup bug), then revoked (packet-signing flaw). 2.8.1 was Alpha. The newest tag I could read, v2.8.2.4c89b69 (Nov 2), is labeled **Alpha / Pre-release** on GitHub [V]. A later tag (v2.8.2.d5f1619, Nov 3) exists; its label is [?]. Latest **stable** is 2.7.26 [S, NoDak]. 2.7 and 2.8 nodes can talk to each other [S].
-2. **A fresh US node set up from its own screen defaults to Long Turbo, which cannot hear Long Fast.** CNJ Mesh is on Long Fast. A new KPN9 on the default will hear nothing from us until it is switched. The Meshtastic docs still say a factory reset gives LongFast [V], so the Turbo default is a setup-flow behavior, not a firmware-wide default [S].
+2. **Long Fast is still the normal default. Long Turbo applies in one setup path.** Meshtastic's 2.8 docs say a new node's preset is "Long Fast, or Long Turbo when the region is first set to US on the device screen"; setting the region "from a client or the CLI leaves it on Long Fast" [V: docs "Joining your local mesh" and blog "Finding your local mesh"]. The blog adds that two identical nodes set up the same day can end up almost 2 MHz apart. Turbo cannot hear Long Fast (different bandwidth and frequency), so a screen-set node on the default will not hear CNJ Mesh. Earlier sources (NoDak, Android PR #7244) said the Android app 2.8.3 also picks Turbo for fresh nodes; the official docs say clients leave Long Fast, so treat the Android claim as [?] until tested. Charlie's KPN9 came up on Long Fast (Nov 3).
 3. **The node ID now comes from the public key, not the MAC.** Charlie's "last few digits of the key" is close in spirit but not literally right: sources say the node number is `crc32(public_key)`, a checksum of the 32-byte key [S: MeshMonitor, meshflow-api #439, Camillia #60]. Which exact bytes become the `!xxxxxxxx` text, and how the default short name relates, I could not confirm [?]. Best check: read KPN9's ID and short name in the app and compare after a key regeneration.
 
 ---
@@ -34,12 +34,11 @@ US defaults [S, NoDak]: Long Fast = 906.875 MHz, slot 20 of 104. Long Turbo = **
 
 Costs and benefits [S]: doubling bandwidth costs about 3 dB of receive sensitivity (less range) and shortens airtime roughly 25 to 40 percent. Stated reason for the change: FCC Part 15.247's 500 kHz minimum for full-power operation in 902 to 928 MHz.
 
-**When the Turbo default hits** [S]:
-- New or freshly erased US node, region set from the **device screen**: Long Turbo.
-- Android app 2.8.3 first-time setup: same. iPhone app 2.7.25: not [S].
-- Meshtastic CLI setup: stays Long Fast.
-- Upgrade from 2.7: keeps the existing preset.
-- The Camillia ticket notes the screen change is menu-only and "a pinned userpref or a moved preset outranks it" [V on that page; the "cannot hear each other" analysis is the ticket's own and untested on hardware].
+**When the Turbo default hits** [V, official docs]:
+- Region set to US for the first time on the **device screen**: Long Turbo.
+- Region set from a phone app or the CLI: Long Fast. Factory reset: LongFast per the radio-settings page. Upgrade from 2.7: keeps the existing preset.
+- [?] Older sources said Android app 2.8.3 first-time setup picks Turbo; not confirmed by the official docs.
+- The Camillia ticket notes the screen change is menu-only and "a pinned userpref or a moved preset outranks it".
 
 **Check which preset a node is on:** device screen (Turbo shows 908.750 MHz / 500 kHz), or `meshtastic --get lora`.
 **Switch to Long Fast (what CNJ uses):** app: Radio configuration, LoRa, Region US, Modem preset Long Fast. CLI: `meshtastic --set lora.region US --set lora.modem_preset LONG_FAST`. LoRa changes apply without a reboot in 2.8 [S].
@@ -76,7 +75,7 @@ Tool impact [S]: history splits across old and new numbers, ghost entries appear
 
 ## 5. What this means for CNJ Mesh
 
-- **KPN9 (new V3, 2.8 build):** set it to US / Long Fast by hand. Until then it is on an island. Record its firmware tag, its new `!ID`, and whether it came up on Turbo. Keep it off the CentralNJ MQTT uplink and public bridging until we know what it publishes (the 2.8.2 MQTT path is still being fixed).
+- **KPN9 (new V3, 2.8 build):** came up on Long Fast (Nov 3), so it should hear CNJ Mesh. Charlie set a fixed position at Kendall Park town-center level (40.42, -74.56, not his house), enabled Wi-Fi access, and left it to sit for 48 hours (Nov 3 9:44 PM to about Nov 5 9:44 PM) to see which nodes it picks up. Record its firmware tag, its new `!ID`, and whether it came up on Turbo. Keep it off the CentralNJ MQTT uplink and public bridging until we know what it publishes (the 2.8.2 MQTT path is still being fixed).
 - **Gateways (CJG1, CJG2, KPN6) stay on 2.7.x.** The Oct 30 plan stands: wait for a **Beta**, two quiet weeks, Malla/Meshview/MeshMonitor ready, then bench, then one at a time. KPN9 can serve as an early bench node for Phase 1 if it stays off the bridged channels.
 - Hard-coded IDs that would break on a gateway upgrade: `sjmesh-relay` allowlist `!9ea3e8d4,!69841fe0,!0aca423c`, blocked flood nodes, Malla/Meshview history, JSON uplink topic. All in the upgrade plan.
 - Website: `getting-started.html` has a new "Setting up on Meshtastic 2.8" section in the repo (held for the weekend combined deploy; NOT live).
