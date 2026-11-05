@@ -2897,3 +2897,6 @@ Charlie shared an APRSThursday post asking who maintains WLNK-1 (the Winlink APR
 
 ## 2026-11-04 (4:55 PM) — MeshCore regions vs scopes (Discord thread)
 Charlie shared screenshots from the MeshCore public-map Discord. Explained that MeshMapper regions (map areas on meshmapper.net) are unrelated to MeshCore scopes (region tags on flood packets that repeaters on v1.10.0+ enforce). Logged as play-list item 6 in `todos.md`. No action taken; nothing on any node changed.
+
+## 2026-11-04 (8:55 PM) — decision: keep the health watchdog's one automatic Graywolf restart
+Charlie decided to keep it. Reasons recorded: it self-heals a Digirig that drops off USB (Oct 28 was deaf and mute for 9+ hours); the risk (a restart beacons about 30 s later and keys the radio) is covered by the PTT guard and the radio's 30 s TOT. Nothing changed on the Pi.
