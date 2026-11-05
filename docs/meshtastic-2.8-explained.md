@@ -8,7 +8,7 @@ Tags: [V] verified on a page I read · [S] single/secondary source · [?] not ve
 
 ## 1. Bottom line
 
-1. **2.8 is still not stable.** 2.8.0 was pulled (startup bug), then revoked (packet-signing flaw). 2.8.1 was Alpha. The newest tag I could read, v2.8.2.4c89b69 (Nov 2), is labeled **Alpha / Pre-release** on GitHub [V]. A later tag (v2.8.2.d5f1619, Nov 3) exists; its label is [?]. Latest **stable** is 2.7.26 [S, NoDak]. 2.7 and 2.8 nodes can talk to each other [S].
+1. **2.8 is still not stable.** 2.8.0 was pulled (startup bug), then revoked (packet-signing flaw). 2.8.1 was Alpha. The newest tag I could read, v2.8.2.4c89b69 (Nov 2), is labeled **Alpha / Pre-release** on GitHub [V]. The Nov 3 tag **v2.8.2.d5f1619 is also labeled Alpha** [V, release notes Charlie pasted Nov 4] and is a **re-release of 2.8.2 to fix a stack-exhaustion bug in environmental telemetry**, so it supersedes 4c89b69. This is the build on Charlie's new V3 bench nodes (KPN8 for sure; KPN9 to confirm). Latest **stable** is 2.7.26 [S, NoDak]. 2.7 and 2.8 nodes can talk to each other [S].
 2. **Long Fast is still the normal default. Long Turbo applies in one setup path.** Meshtastic's 2.8 docs say a new node's preset is "Long Fast, or Long Turbo when the region is first set to US on the device screen"; setting the region "from a client or the CLI leaves it on Long Fast" [V: docs "Joining your local mesh" and blog "Finding your local mesh"]. The blog adds that two identical nodes set up the same day can end up almost 2 MHz apart. Turbo cannot hear Long Fast (different bandwidth and frequency), so a screen-set node on the default will not hear CNJ Mesh. Earlier sources (NoDak, Android PR #7244) said the Android app 2.8.3 also picks Turbo for fresh nodes; the official docs say clients leave Long Fast, so treat the Android claim as [?] until tested. KPN9 is on **Long Turbo** (Charlie's choice, for testing).
 3. **The node ID now comes from the public key, not the MAC.** Charlie's "last few digits of the key" is close in spirit but not literally right: sources say the node number is `crc32(public_key)`, a checksum of the 32-byte key [S: MeshMonitor, meshflow-api #439, Camillia #60]. Which exact bytes become the `!xxxxxxxx` text, and how the default short name relates, I could not confirm [?]. Best check: read KPN9's ID and short name in the app and compare after a key regeneration.
 
@@ -68,7 +68,7 @@ Tool impact [S]: history splits across old and new numbers, ghost entries appear
 - New presets (above); Ham Mode with 2 m, 1.25 m and 70 cm regions; receive-only mode; automatic hop-limit reduction (traffic management) [S].
 - Pre-hop drop on by default: packets with `hop_start < hop_limit` are dropped before decryption; very old firmware that does not set hop info is not relayed [S: Camillia #60].
 - JSON library removed from firmware builds [S]. Removed: nRF52832 target, UA_868 region, ATAK unishox2 compression [S].
-- 2.8.2 (alpha) adds: MQTT gateways now uplink PKI DMs they relay but cannot decrypt (still end-to-end encrypted, #12110); smarter Listen Before Talk; new boards. Bug fixes include an ESP32 light-sleep crash and a Store & Forward crash [V].
+- 2.8.2 (alpha; re-released as d5f1619 on Nov 3 to fix an environmental-telemetry stack-exhaustion bug) adds: MQTT gateways now uplink PKI DMs they relay but cannot decrypt (still end-to-end encrypted, #12110); smarter Listen Before Talk; new boards. Bug fixes include an ESP32 light-sleep crash and a Store & Forward crash [V].
 - Android app 2.8.3 needs firmware 2.5.14 or newer [S].
 
 ---
