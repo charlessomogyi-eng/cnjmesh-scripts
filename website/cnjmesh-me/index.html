@@ -436,6 +436,19 @@ footer a:hover { color: var(--ink); }
 .watch-more a:hover { color: var(--red); text-decoration: none; }
 @media (prefers-reduced-motion: reduce) { .livewatch .live-dot { animation: none; } }
 
+/* status-notice:start */
+.is-down { border-color: var(--red) !important; }
+.link-btn.is-down { color: var(--red); }
+.down-note {
+  font-family: 'JetBrains Mono', monospace; font-size: .62rem; font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase; line-height: 1.3;
+  color: var(--red); border: 1px solid var(--red); padding: 2px 7px;
+  animation: down-pulse 2.4s ease-in-out infinite;
+}
+.btn-primary.is-down .down-note { color: #fff; border-color: #fff; }
+@keyframes down-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .down-note { animation: none; } }
+/* status-notice:end */
 </style>
 </head>
 <body>
@@ -465,7 +478,7 @@ footer a:hover { color: var(--ink); }
       </div>
       <div class="hero-stats">
         <div><b>2</b>protocols on air</div>
-        <div><b>7</b>live maps &amp; tools</div>
+        <div><b>8</b>live maps &amp; tools</div>
         <div><b>$0</b>monthly cost</div>
       </div>
     </div>
@@ -521,7 +534,7 @@ footer a:hover { color: var(--ink); }
       <a class="btn btn-primary btn-lg" href="https://meshview.cnjmesh.me/nodegraph">Meshtastic — live node map</a>
       <a class="btn btn-ghost btn-lg" href="https://corescope.cnjmesh.me/#/map">MeshCore — live map</a>
     </div>
-    <p class="watch-more"><a href="#maps">See all 7 maps &amp; tools ↓</a></p>
+    <p class="watch-more"><a href="#maps">See all 8 maps &amp; tools ↓</a></p>
   </div>
 </section>
 
@@ -694,5 +707,36 @@ footer a:hover { color: var(--ink); }
   });
 </script>
 
+<!-- status-notice:start -->
+<script>
+(function () {
+  var STATUS_URL = "https://status.cnjmesh.me/status.json";
+  var MAX_AGE_MS = 15 * 60 * 1000;
+  try {
+    fetch(STATUS_URL, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function (d) {
+        var t = d && Date.parse(d.generated);
+        if (!isFinite(t) || Math.abs(Date.now() - t) > MAX_AGE_MS) return;
+        if (!d.services || typeof d.services !== "object") return;
+        var links = document.querySelectorAll(".link-btn, .watch-btns a");
+        for (var i = 0; i < links.length; i++) {
+          var a = links[i], host;
+          try { host = new URL(a.href).hostname; } catch (e) { continue; }
+          var s = d.services[host];
+          if (!s || s.up !== false || a.querySelector(".down-note")) continue;
+          var note = document.createElement("span");
+          note.className = "down-note";
+          note.textContent = "Currently unavailable";
+          a.insertBefore(note, a.querySelector(".arrow") || null);
+          a.classList.add("is-down");
+          a.title = "Our status check could not reach this tool at " + d.generated;
+        }
+      })
+      .catch(function () {});
+  } catch (e) {}
+})();
+</script>
+<!-- status-notice:end -->
 </body>
 </html>
