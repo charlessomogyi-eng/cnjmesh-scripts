@@ -47,6 +47,12 @@ serial chip drops the key line, and a loud alert says to look at the radio.
     graywolf, so it would start the transmitter again within 5 minutes (it did
     on Oct 31 at 21:48). The alert gives ONE resume command that starts
     graywolf, the bridge and both timers once a human has looked at the radio.
+Guarded auto-recovery (added Nov 8 2026, guard only; the 5-minute check never does it): after the
+emergency stop the guard waits RECOVER_WAIT_SECONDS (180), confirms the Digirig's sound card is back,
+then starts graywolf, the bridge and the two timers ONCE and tells Discord. A repeat fault inside an
+hour, or a third in 24 h, keeps everything stopped with the one resume command (the Oct 31 restarts
+that beacon-and-faulted again are why this is capped). A human who resumes first is respected.
+AUTO_RECOVER=0 (drop-in) switches it off. Counters live in RECOVERY_FILE.
 Backstop outside software: set the radio's time-out timer (TOT) to its shortest option.
 
 Modes:
@@ -65,6 +71,7 @@ import re
 import socket
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 
@@ -104,6 +111,16 @@ CARD_RE = re.compile(r"^card \d+: " + re.escape(AUDIO_CARD_NAME) + r" \[", re.M)
 PTT_KEY_ERR_RE = re.compile(r"ptt_key: [^\n]*?\b(E[A-Z0-9]{2,})\b")
 PTT_UNKEY_ERR_RE = re.compile(r"ptt_unkey: [^\n]*?\b(E[A-Z0-9]{2,})\b")
 GUARD_DEBOUNCE_SECONDS = 60
+# Guarded auto-recovery (added Nov 8 2026). After the guard has stopped graywolf it waits, checks the
+# Digirig is back, and starts graywolf ONCE. Capped so a radio that keeps faulting is never keyed
+# in a loop: at most one automatic start per RECOVER_MIN_GAP and RECOVER_MAX_PER_DAY per 24 h,
+# counted across guard restarts (RECOVERY_FILE). Switch off with AUTO_RECOVER=0.
+AUTO_RECOVER = os.environ.get("AUTO_RECOVER", "1") == "1"
+RECOVER_WAIT_SECONDS = int(os.environ.get("RECOVER_WAIT_SECONDS", "180"))   # radio TOT is 30 s
+RECOVER_CARD_WAIT_SECONDS = int(os.environ.get("RECOVER_CARD_WAIT_SECONDS", "300"))
+RECOVER_MIN_GAP = 60 * 60
+RECOVER_MAX_PER_DAY = 2
+RECOVERY_FILE = os.environ.get("RECOVERY_FILE", "/opt/graywolf-health-watchdog/guard-recovery.json")
 PROC_CARD_RE = re.compile(r"\[\s*" + re.escape(AUDIO_CARD_NAME) + r"\s*\]")  # /proc/asound/cards
 
 
@@ -371,12 +388,14 @@ def resume_command():
     return "sudo systemctl start " + " ".join([f"{SERVICE}.service", BRIDGE_SERVICE] + PAUSE_TIMERS)
 
 
-def emergency_stop(host, errno_name, source):
+def emergency_stop(host, errno_name, source, recover_note=None):
     """Stuck-transmitter safeguard: stop graywolf, pause the timers that could restart it,
     reset the Digirig hub, alert loudly.
 
     Never restarts graywolf: a restart sends a beacon within 30 s, which can repeat
-    the fault. A human restarts it after looking at the radio."""
+    the fault. A human restarts it after looking at the radio, or (guard only, capped, see
+    recovery_allowed) recover_graywolf() starts it once after a wait. recover_note is the
+    sentence the alert uses to say which of the two applies."""
     actions = []
     ok = stop_graywolf()
     actions.append(f"stopped graywolf ({'ok' if ok else 'FAILED'})")
@@ -395,10 +414,107 @@ def emergency_stop(host, errno_name, source):
     send_discord(
         f"\U0001F6A8 CNJMESH {host}: K2GIA-1 could not release PTT ({errno_name or 'error'}; {source}), "
         f"so the radio may be stuck transmitting. Automatic action: {'; '.join(actions)}. "
-        f"Look at the radio now: if its red TX light is on, turn it off. Graywolf stays stopped "
-        f"(no automatic restart). Once you have looked at the radio, this one command resumes "
-        f"everything: `{resume_command()}`")
+        f"Look at the radio now: if its red TX light is on, turn it off. "
+        + (f"{recover_note} To resume right now, after looking at the radio: `{resume_command()}`"
+           if recover_note else
+           f"Graywolf stays stopped (no automatic restart). Once you have looked at the radio, "
+           f"this one command resumes everything: `{resume_command()}`"))
     return actions
+
+
+def load_recoveries(now):
+    """Epoch seconds of automatic starts in the last 24 h. Unreadable file = none."""
+    try:
+        with open(RECOVERY_FILE) as f:
+            return [t for t in json.load(f) if isinstance(t, (int, float)) and now - t < 24 * 3600]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def save_recoveries(times):
+    if DRY_RUN:
+        return
+    try:
+        os.makedirs(os.path.dirname(RECOVERY_FILE), exist_ok=True)
+        with open(RECOVERY_FILE, "w") as f:
+            json.dump(times, f)
+    except Exception as e:  # noqa: BLE001
+        print(f"could not save {RECOVERY_FILE}: {e}", file=sys.stderr, flush=True)
+
+
+def recovery_allowed(now):
+    """(ok, why-not). One automatic start per hour, two per day, and only if switched on."""
+    if not AUTO_RECOVER:
+        return False, "automatic restart is switched off (AUTO_RECOVER=0)"
+    times = load_recoveries(now)
+    if times and now - max(times) < RECOVER_MIN_GAP:
+        return False, "it was already restarted automatically less than an hour ago, so this is a repeat"
+    if len(times) >= RECOVER_MAX_PER_DAY:
+        return False, f"it was already restarted automatically {RECOVER_MAX_PER_DAY} times in 24 h"
+    return True, ""
+
+
+def recovery_note(now):
+    ok, why = recovery_allowed(now)
+    if ok:
+        return (f"Graywolf will be started again automatically in about {RECOVER_WAIT_SECONDS // 60} "
+                f"minutes if the Digirig is back (at most once an hour, {RECOVER_MAX_PER_DAY} a day; "
+                f"a repeat fault inside the hour keeps it stopped)."), True
+    return f"Graywolf stays stopped (no automatic restart: {why}).", False
+
+
+def recover_graywolf(host):
+    """Wait, check the Digirig is back, start graywolf once, tell Charlie. Never loops.
+
+    Runs in a thread started by the guard right after emergency_stop. If the fault comes back
+    the guard stops graywolf again and recovery_allowed() then refuses, so it stays stopped."""
+    if not DRY_RUN:
+        time.sleep(RECOVER_WAIT_SECONDS)
+    if service_active():
+        return "someone already started graywolf"  # a human got there first: do nothing
+    if not wait_for_card(RECOVER_CARD_WAIT_SECONDS):
+        send_discord(f"\u26A0\uFE0F CNJMESH {host}: K2GIA-1 is still stopped. The Digirig's sound card did "
+                     f"not come back after the USB reset, so no automatic restart. Check the Digirig USB "
+                     f"and radio, then: `{resume_command()}`")
+        return "digirig missing"
+    now = time.time()
+    ok, why = recovery_allowed(now)  # re-check: the counters may have changed while we waited
+    if not ok:
+        send_discord(f"\u26A0\uFE0F CNJMESH {host}: K2GIA-1 stays stopped ({why}). "
+                     f"After looking at the radio: `{resume_command()}`")
+        return "not allowed"
+    save_recoveries(load_recoveries(now) + [now])  # count it before starting, so a crash cannot loop
+    if DRY_RUN:
+        print("[dry-run] would run:", " ".join(["systemctl", "start"] + _recover_units()))
+        ok_start = True
+    else:
+        rc, _ = run(["systemctl", "start"] + _recover_units(), timeout=60)
+        time.sleep(8)
+        ok_start = rc == 0 and service_active()
+    if ok_start:
+        send_discord(f"\u2705 CNJMESH {host}: K2GIA-1 was started again automatically after the PTT fault "
+                     f"(Digirig back). The guard is still armed: if the fault repeats within the hour "
+                     f"graywolf is stopped again and stays stopped.")
+        return "started"
+    send_discord(f"\u26A0\uFE0F CNJMESH {host}: automatic restart of graywolf FAILED. After looking at "
+                 f"the radio: `{resume_command()}`")
+    return "start failed"
+
+
+def _recover_units():
+    return [f"{SERVICE}.service", BRIDGE_SERVICE] + PAUSE_TIMERS
+
+
+_recovery_thread = None
+
+
+def start_recovery_thread(host):
+    """Start recover_graywolf in the background unless one is already waiting."""
+    global _recovery_thread
+    if _recovery_thread is not None and _recovery_thread.is_alive():
+        return
+    _recovery_thread = threading.Thread(target=recover_graywolf, args=(host,), daemon=True)
+    _recovery_thread.start()
 
 
 def guard_match(text):
@@ -421,7 +537,10 @@ def guard_loop():
                 errno_name = guard_match(text)
                 if errno_name and time.time() - last >= GUARD_DEBOUNCE_SECONDS:
                     last = time.time()
-                    emergency_stop(host, errno_name, "seen live by the ptt guard")
+                    note, allowed = recovery_note(last)
+                    emergency_stop(host, errno_name, "seen live by the ptt guard", recover_note=note)
+                    if allowed:
+                        start_recovery_thread(host)
             proc.wait()
         except Exception as e:  # noqa: BLE001 - the guard must keep running
             print(f"guard error: {type(e).__name__}: {e}", file=sys.stderr, flush=True)

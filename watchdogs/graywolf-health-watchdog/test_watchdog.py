@@ -317,5 +317,105 @@ class PauseTimers(unittest.TestCase):
         self.assertNotIn("\n", w.resume_command())
 
 
+class GuardedRecovery(unittest.TestCase):
+    """Nov 8 2026: the guard restarts graywolf once, capped, instead of leaving it stopped."""
+
+    def setUp(self):
+        self._now = NOW
+        self.sent = []
+        self._send, self._time = w.send_discord, w.time.time
+        w.send_discord = lambda m: self.sent.append(m)
+        w.time.time = lambda: self._now
+        self._saved = (w.run, w.wait_for_card, w.service_active, w.RECOVERY_FILE, w.AUTO_RECOVER,
+                       w.RECOVER_WAIT_SECONDS, w.time.sleep, w.stop_graywolf, w.find_digirig_hub, w.pause_timers)
+        w.RECOVERY_FILE = os.path.join(tempfile.mkdtemp(), "rec.json")
+        w.AUTO_RECOVER = True
+        w.time.sleep = lambda s: None
+        self.cmds = []
+        w.run = lambda cmd, timeout=30: self.cmds.append(cmd) or (0, "")
+        w.wait_for_card = lambda seconds: self.card
+        self.active = [False, True]   # stopped when checked first, active after the start
+        w.service_active = lambda: self.active.pop(0) if self.active else True
+        self.card = True
+
+    def tearDown(self):
+        (w.run, w.wait_for_card, w.service_active, w.RECOVERY_FILE, w.AUTO_RECOVER,
+         w.RECOVER_WAIT_SECONDS, w.time.sleep, w.stop_graywolf, w.find_digirig_hub, w.pause_timers) = self._saved
+        w.send_discord, w.time.time = self._send, self._time
+
+    def test_first_fault_is_allowed_and_note_says_so(self):
+        note, ok = w.recovery_note(NOW)
+        self.assertTrue(ok)
+        self.assertIn("started again automatically", note)
+
+    def test_recovery_starts_all_four_units_once_and_counts_it(self):
+        self.assertEqual(w.recover_graywolf("cnjmesh1"), "started")
+        self.assertEqual(self.cmds, [["systemctl", "start", "graywolf.service", "graywolf-discord.service",
+                                      "graywolf-watchdog.timer", "graywolf-discord-watchdog.timer"]])
+        self.assertEqual(len(w.load_recoveries(self._now)), 1)
+        self.assertIn("started again automatically", self.sent[0])
+
+    def test_second_fault_within_the_hour_stays_stopped(self):
+        w.recover_graywolf("cnjmesh1")
+        ok, why = w.recovery_allowed(self._now + 600)
+        self.assertFalse(ok)
+        self.assertIn("less than an hour", why)
+        note, allowed = w.recovery_note(self._now + 600)
+        self.assertFalse(allowed)
+        self.assertIn("stays stopped", note)
+
+    def test_allowed_again_after_an_hour_but_capped_per_day(self):
+        w.save_recoveries([self._now - 7200, self._now - 3700])
+        ok, why = w.recovery_allowed(self._now)
+        self.assertFalse(ok)
+        self.assertIn("2 times in 24 h", why)
+        w.save_recoveries([self._now - 7200])
+        self.assertTrue(w.recovery_allowed(self._now)[0])
+        w.save_recoveries([self._now - 90000])  # older than 24 h is forgotten
+        self.assertEqual(w.load_recoveries(self._now), [])
+
+    def test_missing_digirig_means_no_start(self):
+        self.card = False
+        self.assertEqual(w.recover_graywolf("cnjmesh1"), "digirig missing")
+        self.assertEqual(self.cmds, [])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn(RESUME, self.sent[0])
+        self.assertEqual(w.load_recoveries(self._now), [])
+
+    def test_human_who_resumed_first_is_left_alone(self):
+        self.active = [True]
+        self.assertEqual(w.recover_graywolf("cnjmesh1"), "someone already started graywolf")
+        self.assertEqual(self.cmds, [])
+        self.assertEqual(self.sent, [])
+
+    def test_switched_off_never_restarts(self):
+        w.AUTO_RECOVER = False
+        ok, why = w.recovery_allowed(NOW)
+        self.assertFalse(ok)
+        self.assertIn("switched off", why)
+
+    def test_failed_start_is_reported(self):
+        w.run = lambda cmd, timeout=30: (1, "boom")
+        self.assertEqual(w.recover_graywolf("cnjmesh1"), "start failed")
+        self.assertIn("FAILED", self.sent[0])
+        self.assertIn(RESUME, self.sent[0])
+
+    def test_corrupt_counter_file_means_zero_not_a_crash(self):
+        with open(w.RECOVERY_FILE, "w") as f:
+            f.write("not json")
+        self.assertEqual(w.load_recoveries(NOW), [])
+
+    def test_alert_with_recover_note_still_has_exactly_one_resume_command(self):
+        w.stop_graywolf = lambda: True
+        w.find_digirig_hub = lambda: None
+        w.pause_timers = lambda: [(u, True) for u in w.PAUSE_TIMERS]
+        note, _ = w.recovery_note(self._now)
+        w.emergency_stop("cnjmesh1", "EPROTO", "test", recover_note=note)
+        msg = self.sent[0]
+        self.assertEqual(msg.count("sudo systemctl start"), 1)
+        self.assertIn("started again automatically", msg)
+        self.assertNotIn("no automatic restart)", msg.split("To resume")[0])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
