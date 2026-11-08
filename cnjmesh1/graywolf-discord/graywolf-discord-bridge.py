@@ -125,8 +125,39 @@ async def tail_journal(queue):
         if 'msg="aprs packet"' in decoded or 'msg="message sent on rf"' in decoded:
             await queue.put(decoded)
 
+PENDING_OUT_MAX_AGE = 3600  # an outgoing message that never gets a sent_at is dropped after an hour
+
+def select_ready(conn, last_id, pending):
+    """Pick the DB rows to post to Discord.
+
+    Incoming rows are posted as soon as they appear. Outgoing rows are posted only once Graywolf has
+    actually transmitted them (sent_at is filled in), not while they wait in the queue: on Nov 8 2026
+    a test message was queued at 18:16:29 but first sent at 18:18:04, and Discord showed it at 18:16.
+    Returns (rows_to_post, new_last_id, new_pending); pending maps id -> time first seen.
+    conn.row_factory must be sqlite3.Row (rows are read by column name and by index)."""
+    now = time.time()
+    ready = []
+    new_pending = dict(pending)
+    rows = conn.execute("SELECT * FROM messages WHERE direction IN ('in','out') AND is_ack=0 AND is_rej=0 AND id>? ORDER BY id ASC", (last_id,)).fetchall()
+    for row in rows:
+        last_id = row["id"]
+        if row["direction"] == "out" and not row["sent_at"]:
+            new_pending[row["id"]] = now
+        else:
+            ready.append(row)
+    if new_pending:
+        marks = ",".join("?" * len(new_pending))
+        for row in conn.execute(f"SELECT * FROM messages WHERE id IN ({marks}) ORDER BY id ASC", list(new_pending)).fetchall():
+            if row["sent_at"]:
+                ready.append(row); new_pending.pop(row["id"], None)
+        for mid, seen in list(new_pending.items()):
+            if now - seen > PENDING_OUT_MAX_AGE: new_pending.pop(mid, None)
+    ready.sort(key=lambda r: r["id"])
+    return ready, last_id, new_pending
+
 async def poll_db(db_queue):
     last_id = 0
+    pending = {}
     try:
         conn = sqlite3.connect(f"file:{GRAYWOLF_DB}?mode=ro", uri=True)
         row = conn.execute("SELECT MAX(id) FROM messages WHERE direction IN ('in','out') AND is_ack=0 AND is_rej=0").fetchone()
@@ -139,9 +170,10 @@ async def poll_db(db_queue):
         try:
             conn = sqlite3.connect(f"file:{GRAYWOLF_DB}?mode=ro", uri=True)
             conn.text_factory = lambda b: b.decode("utf-8", errors="replace")
-            rows = conn.execute("SELECT * FROM messages WHERE direction IN ('in','out') AND is_ack=0 AND is_rej=0 AND id>? ORDER BY id ASC",(last_id,)).fetchall()
+            conn.row_factory = sqlite3.Row
+            rows, last_id, pending = select_ready(conn, last_id, pending)
             conn.close()
-            for row in rows: last_id=row[0]; await db_queue.put(row)
+            for row in rows: await db_queue.put(row)
         except Exception as e: log.error("DB poll error: %s", e)
 
 async def run_bridge():
