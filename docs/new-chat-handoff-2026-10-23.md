@@ -27,7 +27,7 @@ Target MeshCore settings for every CNJ node: 910.525 MHz / 500 kHz BW / SF10 / C
 - **cnjmesh2** 10.0.0.91, Raspberry Pi Zero 2 W, Wi-Fi only, 59.6 GiB card (16.8% used), user somogyic, kernel 6.12.47+rpt-rpi. malla-web, malla-capture, Mosquitto (Docker), cloudflared (malla2.cnjmesh.me). Memory-tight (416 MB): never run backups/inventory casually here.
 - **cnjmesh3** 10.0.0.186, Raspberry Pi 3 Model B+, 29.1G card (5.3G used), user somog. Observer (RAK4631 companion, v1.16.0) and KPR2 (Heltec V4 repeater) radios; Docker containers `meshcore-packet-capture` (config `/opt/meshcore-packet-capture/config.d`, publishes to 4 brokers) and `meshcore-mqtt-bridge` (bind `~/meshcore-bridge-data`); `~/meshcore-mqtt-tilly` is Tilly's bridge fork. Only SSH listens.
 - Pis are never wired: they sit next to radios/antennas, and the house has no Ethernet drops. Do not propose wired fixes.
-- Radios/nodes: KPC1 (weather bot companion), KPC2 (Charlie's companion), KPR1 (Tilly bridge, still 62.5 kHz), KPR2, KPR3, Observer, KPN2 (T-Deck Plus), LoRa APRS nodes K2GIA-9/-10, TD-H9 (K2GIA-7), UV-5R M (K2GIA-1 roof antenna).
+- Radios/nodes: KPC1 (weather bot companion), KPC2 (Charlie's companion), KPR1 (Tilly bridge, still 62.5 kHz), KPR2, KPR3, Observer, KPN2 (T-Deck Plus), LoRa APRS nodes K2GIA-9/-10, TD-H9 (K2GIA-7), UV-5R M (K2GIA-1, whip antenna in the garage; corrected Nov 8, the roof antenna is reserved for the Icom 2730).
 - Discord channels: `#centralnj-mc-channel-relay` (mesh to Discord relay incl. bot forecasts/alerts), `#cnj-new-node-relay` (new node announcements), `#cnjmesh` (watchdog alerts).
 
 ---------------------------------------------------------------------
