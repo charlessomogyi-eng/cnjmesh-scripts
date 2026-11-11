@@ -60,3 +60,24 @@ again (finishes on its own; remember the 7 AM report depends on it):
 Wait about 30 minutes (the timer runs every 5 minutes), then:
 
     sudo systemctl start mesh_bot.service
+
+## Automatic recovery (added Nov 11 2026, drafted, not yet deployed)
+Found Nov 11: CJG1 stopped answering, the bot's Meshtastic interface became `None`, and the
+bot kept "running" while logging `Scheduler loop exception: 'NoneType' ...` every second.
+systemd never restarted it, so the 07:00 report silently could not run.
+
+When the bot is down for 25 minutes, or active but stuck in that error loop, the watchdog checks
+whether CJG1 answers on its TCP port (address from `hostname =` in
+`/opt/meshing-around/config.ini`, default 10.0.0.18, port 4403):
+- CJG1 answers: restart `mesh_bot.service`, wait, verify, post "restarted automatically".
+  Limits: not twice within an hour, at most 2 per 24 h. Over the limit it leaves the bot alone
+  and says so.
+- CJG1 does not answer: no restart (the bot would only quit again). One message says CJG1 is
+  not answering, with a reminder every 12 hours, and a message when it is back.
+
+Switches (alerts continue either way):
+- `AUTO_RECOVER=0` in the service drop-in turns recovery off.
+- `sudo touch /opt/mesh-bot-watchdog/paused` pauses it, for example while you use the CJG1 app
+  on purpose. `sudo rm /opt/mesh-bot-watchdog/paused` turns it back on.
+
+Offline tests (no Pi needed, finishes on its own): `python3 watchdogs/mesh-bot-watchdog/test_watchdog.py`

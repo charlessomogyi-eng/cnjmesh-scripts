@@ -23,6 +23,20 @@ What it checks (every run, read-only):
      "could not confirm" per day. This proves the scheduler fired, not that the
      radio transmitted it (no log line proving transmission has been verified).
 
+Guarded automatic recovery (added Nov 11 2026, switch off with AUTO_RECOVER=0):
+  Found Nov 11: CJG1 stopped answering, the bot's Meshtastic interface became None, and
+  the bot kept "running" while logging `Scheduler loop exception: 'NoneType' ...` every
+  second, so systemd never restarted it and the 07:00 report silently could not run.
+  Now, when the bot is down for DOWN_GRACE_SECONDS, or active but stuck in that error
+  loop, the watchdog first asks "does CJG1 answer on its TCP port?":
+     - CJG1 answers: restart mesh_bot.service (at most once per RECOVER_MIN_GAP and
+       RECOVER_MAX_PER_DAY per 24 h), wait, verify, and say so in Discord.
+     - CJG1 does not answer: do NOT restart (the bot would only quit again); ONE message
+       says the gateway is unreachable, with a reminder every GATEWAY_REMINDER_SECONDS.
+  A repeat inside the hour, or a third in 24 h, leaves the bot alone and says so.
+  `touch /opt/mesh-bot-watchdog/paused` disables recovery (alerts continue) for the
+  times Charlie uses the CJG1 app on purpose; remove the file to re-enable.
+
 Discord posts are retried on the next run if they fail: state is only updated
 after Discord accepts the message (the older meshcore-bot-watchdog swallowed failures).
 
@@ -54,6 +68,20 @@ DOWN_REMINDER_SECONDS = 12 * 60 * 60
 REPORT_TIME = "07:00:00"            # scheduler `time =` in meshing-around config.ini
 REPORT_DEADLINE = (9, 30)           # local time; check is silent before this
 
+# ---- guarded automatic recovery (Nov 11 2026)
+AUTO_RECOVER = os.environ.get("AUTO_RECOVER", "1") == "1"
+CONFIG_FILE = os.environ.get("MESH_BOT_CONFIG", "/opt/meshing-around/config.ini")
+GATEWAY_DEFAULT_HOST = "10.0.0.18"   # CJG1 (DHCP reservation)
+GATEWAY_PORT = 4403
+PAUSE_FILE = os.environ.get("PAUSE_FILE", "/opt/mesh-bot-watchdog/paused")
+ERR_LOOP_MIN = 20                    # matching lines in ERR_LOOP_WINDOW means the loop is on
+ERR_LOOP_WINDOW = "3 minutes ago"
+ERR_LOOP_RE = re.compile(r"Scheduler loop exception: 'NoneType'")
+RECOVER_MIN_GAP = 60 * 60
+RECOVER_MAX_PER_DAY = 2
+RECOVER_SETTLE_SECONDS = int(os.environ.get("RECOVER_SETTLE_SECONDS", "45"))
+GATEWAY_REMINDER_SECONDS = 12 * 60 * 60
+
 DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 CHECK_ONLY = "--check" in sys.argv
 
@@ -78,6 +106,9 @@ def default_state():
         "down_alerted_at": None,   # epoch seconds of the last DOWN message accepted by Discord
         "ok_day": "",              # YYYY-MM-DD for which today's 07:00 run was confirmed
         "missed_alerted_day": "",  # YYYY-MM-DD for which the "could not confirm" message went out
+        "recoveries": [],          # epoch seconds of automatic restarts in the last 24 h
+        "gw_down_alerted_at": None,  # epoch seconds of the last "gateway unreachable" message accepted
+        "limit_alerted_at": None,  # epoch seconds of the last "auto-recovery limit reached" message
     }
 
 
@@ -145,6 +176,113 @@ def todays_last_runs(today):
     return [m.group(2) for m in LAST_RUN_RE.finditer(out) if m.group(1) == today]
 
 
+def gateway_host():
+    """CJG1's address: GATEWAY_HOST env, else `hostname =` in the bot's config.ini, else the default."""
+    env = os.environ.get("GATEWAY_HOST")
+    if env:
+        return env
+    try:
+        with open(CONFIG_FILE) as f:
+            for line in f:
+                m = re.match(r"\s*hostname\s*=\s*([^\s#;]+)", line)
+                if m:
+                    return m.group(1).split(":")[0]
+    except Exception:  # noqa: BLE001
+        pass
+    return GATEWAY_DEFAULT_HOST
+
+
+def gateway_reachable(host=None, port=GATEWAY_PORT, timeout=4):
+    """True if a TCP connection to CJG1's API port opens. Opening and closing it is harmless."""
+    try:
+        with socket.create_connection((host or gateway_host(), port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def scheduler_error_loop():
+    """True if the bot is in the 'interface is None' error loop. None if the journal is unreadable."""
+    rc, out = run(["journalctl", "-u", SERVICE, "--since", ERR_LOOP_WINDOW, "--no-pager", "-o", "cat"], timeout=30)
+    if rc != 0:
+        return None
+    return sum(1 for ln in out.splitlines() if ERR_LOOP_RE.search(ln)) >= ERR_LOOP_MIN
+
+
+def prune_recoveries(state, now):
+    state["recoveries"] = [t for t in state.get("recoveries", []) if now - t < 24 * 60 * 60]
+    return state["recoveries"]
+
+
+def recovery_allowed(state, now):
+    """(ok, why-not)."""
+    if not AUTO_RECOVER:
+        return False, "automatic restart is switched off (AUTO_RECOVER=0)"
+    if os.path.exists(PAUSE_FILE):
+        return False, f"automatic restart is paused ({PAUSE_FILE} exists)"
+    times = prune_recoveries(state, now)
+    if times and now - max(times) < RECOVER_MIN_GAP:
+        return False, "it was already restarted automatically less than an hour ago, so this is a repeat"
+    if len(times) >= RECOVER_MAX_PER_DAY:
+        return False, f"it was already restarted automatically {RECOVER_MAX_PER_DAY} times in 24 h"
+    return True, ""
+
+
+def restart_service():
+    """Restart the bot and verify. Returns (ok, detail)."""
+    if CHECK_ONLY or DRY_RUN:
+        print(f"[{'check' if CHECK_ONLY else 'dry-run'}] would run: systemctl reset-failed + restart {SERVICE}")
+        return True, "dry run"
+    run(["systemctl", "reset-failed", SERVICE], timeout=15)
+    rc, out = run(["systemctl", "restart", SERVICE], timeout=60)
+    if rc != 0:
+        return False, f"systemctl restart failed: {out.strip()[:200]}"
+    time.sleep(RECOVER_SETTLE_SECONDS)
+    if service_active() is not True:
+        return False, "it stopped again within a minute"
+    if scheduler_error_loop():
+        return False, "it is running but the error loop came back"
+    return True, ""
+
+
+def try_recover(state, host, now, why_needed):
+    """Gateway check, caps, restart, message. Mutates state; returns True if the bot was restarted OK."""
+    gw = gateway_host()
+    if not gateway_reachable(gw):
+        last = state.get("gw_down_alerted_at")
+        if last is None or now - last >= GATEWAY_REMINDER_SECONDS:
+            msg = (f"\U0001F534 CNJMESH {host}: {SERVICE} {why_needed}, and CJG1 ({gw}:{GATEWAY_PORT}) is not "
+                   f"answering, so I did NOT restart the bot (it would only quit again). "
+                   f"Check that CJG1 is powered and on Wi-Fi. The 7 AM Meshtastic report and NWS alerts are "
+                   f"stopped until it is back.")
+            if send_discord(msg):
+                state["gw_down_alerted_at"] = now
+        return False
+    ok, why = recovery_allowed(state, now)
+    if not ok:
+        last = state.get("limit_alerted_at")
+        if last is None or now - last >= GATEWAY_REMINDER_SECONDS:
+            msg = (f"\U0001F534 CNJMESH {host}: {SERVICE} {why_needed}; CJG1 answers, but I did not restart it: "
+                   f"{why}. Needs you: `sudo systemctl restart {SERVICE}` and check `journalctl -u {SERVICE} -n 30`.")
+            if send_discord(msg):
+                state["limit_alerted_at"] = now
+        return False
+    if not (CHECK_ONLY or DRY_RUN):
+        state["recoveries"].append(now)
+        save_state(state)  # record the attempt before acting so a crash cannot loop
+    good, detail = restart_service()
+    if good:
+        send_discord(f"\u2705 CNJMESH {host}: {SERVICE} {why_needed}; CJG1 answers, so I restarted it automatically "
+                     f"and it is running cleanly. It will not auto-restart again for an hour.")
+        state["down_since"] = None
+        state["down_alerted_at"] = None
+        state["gw_down_alerted_at"] = None
+        return True
+    send_discord(f"\U0001F534 CNJMESH {host}: {SERVICE} {why_needed}; I restarted it automatically but {detail}. "
+                 f"Needs you: check `journalctl -u {SERVICE} -n 30`.")
+    return False
+
+
 def main():
     host = get_hostname()
     state = load_state()
@@ -158,12 +296,27 @@ def main():
         print(f"{host}: {SERVICE} check inconclusive (systemctl failed); skipping")
         return
 
+    # ---- 0. guarded automatic recovery (down past the grace period, or stuck in the error loop)
+    if not active and state["down_since"] is None:
+        state["down_since"] = now
+    if not active and now - state["down_since"] >= DOWN_GRACE_SECONDS:
+        if try_recover(state, host, now, "has been down"):
+            active = True
+    elif active and scheduler_error_loop():
+        if try_recover(state, host, now, "is running but stuck (its connection to CJG1 is gone)"):
+            active = True
+    if active and state.get("gw_down_alerted_at") is not None and gateway_reachable():
+        if send_discord(f"CNJMESH {host}: CJG1 is answering again"):
+            state["gw_down_alerted_at"] = None
+
     if not active:
         if state["down_since"] is None:
             state["down_since"] = now
         down_for = now - state["down_since"]
         last = state["down_alerted_at"]
         due = down_for >= DOWN_GRACE_SECONDS and (last is None or now - last >= DOWN_REMINDER_SECONDS)
+        if state.get("gw_down_alerted_at") is not None:
+            due = False  # the "CJG1 is not answering" message already explains it; don't double up
         if due:
             mins = int(down_for // 60)
             msg = (f"\U0001F534 CNJMESH {host}: {SERVICE} has been DOWN for about {mins} min. "
