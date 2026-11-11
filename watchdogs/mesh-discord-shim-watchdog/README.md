@@ -52,8 +52,6 @@ cleared; the second prints a count of 1):
 systemctl show mesh-discord-shim-watchdog.service -p EnvironmentFiles
 systemctl show mesh-discord-shim-watchdog.service -p Environment | grep -c CNJ_DISCORD_WEBHOOK
 ```
-Not verified against systemd's documentation from this session: that an empty
-`EnvironmentFile=` assignment in a drop-in resets the list (the verification
-above is how to confirm it). The 30-minute no-events rule is a separate open
+Deployed on cnjmesh1 Nov 11 2026 5:57 PM and verified there: `EnvironmentFiles` printed empty and the webhook count was 1, so the empty `EnvironmentFile=` assignment did reset the list. (Not checked against systemd's documentation from the session.) The 30-minute no-events rule is a separate open
 question (todo 18).
 
