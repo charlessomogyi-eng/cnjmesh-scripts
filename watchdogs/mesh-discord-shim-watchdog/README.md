@@ -33,3 +33,27 @@ sudo cp mesh-discord-shim-watchdog.service mesh-discord-shim-watchdog.timer /etc
 sudo systemctl daemon-reload
 sudo systemctl enable --now mesh-discord-shim-watchdog.timer
 ```
+
+## Send alerts to the private channel (Nov 11 2026)
+The original deploy used a `.env` file with the public channel's webhook, so the
+service file's `EnvironmentFile=` line feeds the public webhook. To move to the
+private `cnj-infrastructure-alerts` channel without printing the webhook, reuse
+the Graywolf watchdog's drop-in and clear the `EnvironmentFile=` list so the old
+`.env` cannot supply a second value:
+```bash
+sudo mkdir -p /etc/systemd/system/mesh-discord-shim-watchdog.service.d
+sudo cp /etc/systemd/system/graywolf-health-watchdog.service.d/webhook.conf /etc/systemd/system/mesh-discord-shim-watchdog.service.d/webhook.conf
+printf '[Service]\nEnvironmentFile=\n' | sudo tee /etc/systemd/system/mesh-discord-shim-watchdog.service.d/no-env.conf
+sudo systemctl daemon-reload
+```
+Verify without printing the webhook (the first prints nothing if the list is
+cleared; the second prints a count of 1):
+```bash
+systemctl show mesh-discord-shim-watchdog.service -p EnvironmentFiles
+systemctl show mesh-discord-shim-watchdog.service -p Environment | grep -c CNJ_DISCORD_WEBHOOK
+```
+Not verified against systemd's documentation from this session: that an empty
+`EnvironmentFile=` assignment in a drop-in resets the list (the verification
+above is how to confirm it). The 30-minute no-events rule is a separate open
+question (todo 18).
+
