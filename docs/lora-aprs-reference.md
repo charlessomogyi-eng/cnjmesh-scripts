@@ -169,7 +169,7 @@ Research as of Sep 22 (**[S]**, not re-checked since): Graywolf's own modem only
 
 **Net effect: no change needed today.** K2GIA-10 stays a pure RF digipeater with local MQTT; K2GIA-1 stays 2 m only; they are unbridged. Revisit only if those branches appear in an actual release — check upstream first, since this note is dated. (The repo does not say whether K2GIA-10's firmware or Graywolf 0.13.13 are "stock", so that word is deliberately not used.)
 
-Related: the line above that says to use `ANSRVR`/`CQSRVR` "(see below)" has no "below" — `CQSRVR` appears nowhere else in the repo and is unverified. For ANSRVR-style check-ins see the nets table in `docs/aprs-bulletins-and-bridging-reference.md`.
+Related: the line above that says to use `ANSRVR`/`CQSRVR` "(see below)" has no "below" — `CQSRVR` appears nowhere else in the repo and is unverified. For ANSRVR-style check-ins see the nets table in `docs/aprs-bulletins-and-bridging-reference.md`. **Update Nov 12 2026:** CQSRVR is a real service (aprs-is.net/CQSrvr.aspx) but keeps its own group lists. A test showed `HOTG 0 Messages Sent` on CQSRVR versus `N:HOTG 180 Messages Sent` on ANSRVR. Use ANSRVR for HOTG. The original "ANSRVR/CQSRVR" wording has no recorded source, so treat "CQSRVR" as unsourced.
 
 
 ## Update 2026-10-13 (clarification, from aprs-github handoff)

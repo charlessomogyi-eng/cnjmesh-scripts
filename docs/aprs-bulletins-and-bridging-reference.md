@@ -48,4 +48,10 @@ APRS **message-based** check-ins, not voice. The destination station is the net'
 Eastern equivalents (EDT until Nov 1, 2026; one hour later on the clock in EST): Thursday = Wed 8 PM to Thu 8 PM if a full UTC day (see above); Friday = Thu 8 PM to Fri 8 AM; Sunday = Sat 8 PM to Sun 8 PM; Tuesday = Mon noon to Tue noon.
 
 **Routing caveats (unverified):** whether a check-in from K2GIA-1 goes over RF or APRS-IS depends on Graywolf's messaging config, which was not verified. K2GIA-10 has APRS-IS off (Aug 28), but another iGate that hears K2GIA-9/-10 traffic could still gate it (`docs/lora-aprs-reference.md`). Test one check-in end to end before assuming a route. The repo's earlier ANSRVR use is in session-log (Jul 14-15 session, `CQ HOTG ...` then `U HOTG`; `U HOTG` is the standard step after checking in, not "leaving the net"). I don't know whether Charles checks in regularly — he only asked what the Tuesday net is and to save details.
+**Verified Nov 12 2026 (Thursday, 4:01-4:02 PM EST) from K2GIA-1 via Graywolf's Messages page [V, screenshots]:**
+- Graywolf on K2GIA-1 **can** send APRS messages (RF to the iGate path). An earlier note that it could not was wrong.
+- `CQ HOTG <message>` to **`ANSRVR`** answered `N:HOTG 180 Messages Sent`, and `APRSPH` replied `Logged:1112 2102Z https://aprsph.net/aprsthursday`, so the check-in was delivered and logged.
+- The same text to **`CQSRVR`** answered `HOTG 0 Messages Sent`. CQSRVR keeps its own group list, and nobody is on HOTG there. **Use ANSRVR for HOTG, not CQSRVR**, even though the CQSRVR page says it accepts ANSRVR commands.
+- `U HOTG` afterward gave `N:HOTG Removed From Group` (ANSRVR) and `Removed from HOTG` (CQSRVR). The ack_state "rejected" in Graywolf is still cosmetic (see known-issues.md).
+
 **Do not rely on:** a claim made in an earlier chat draft that these nets use `CQ` as a workaround for rejected `CQ` addressees — that was wrong and was dropped.
