@@ -1,7 +1,7 @@
 # meshcore-bot-watchdog (cnjmesh1)
 
 Keeps `meshcore-bot.service` (the CentralNJ-MC 7:05 AM weather bot, talking through `/dev/kpc1`)
-running, and posts to Discord when it has to act or cannot. Drafted Nov 11 2026, **not yet deployed**.
+running, and posts to Discord when it has to act or cannot. Deployed Nov 11 2026; forecast check added Nov 12 2026 (**not yet deployed**).
 The Meshtastic bot has its own watchdog: `mesh-bot-watchdog`.
 
 ## Why it was rewritten (Nov 11 2026)
@@ -22,8 +22,15 @@ so it never retried. [V, Charlie's journal output Nov 11; the Oct 31 failure its
 - A post only counts as sent after Discord accepts it, so a failed post is retried next run.
 - `sudo touch /opt/meshcore-bot-watchdog/paused` pauses restarts (alerts continue);
   `sudo rm /opt/meshcore-bot-watchdog/paused` resumes. `AUTO_RECOVER=0` turns restarts off.
-- Not covered yet: a bot that is running but did not post the 7:05 forecast. To be added once the
-  first real run (Nov 12) shows what the bot logs when it posts.
+- **"Did the 7:05 forecast go out?" check (added Nov 12 2026).** From 07:30 local on, the watchdog looks in the bot's own
+  log, `/etc/meshcore-bot/meshcore_bot.log` (the bot does not write to the journal; the file rotates at 5 MB and
+  keeps 3 old copies), for a line of today's date containing `Daily weather forecast sent to CentralNJ-MC`. Found: silent,
+  and it stops reading the log for the rest of the day. Not found: ONE message per day, worded differently when the
+  forecast started but never finished (`Sending daily weather forecast` present) versus never started. If the log
+  cannot be read, one message says so. [V, the real log on Nov 12: 07:05:00 `Sending daily weather forecast at
+  07:05:00`, one `Sending channel message to CentralNJ-MC (channel 2)` and `Channel message sent` per chunk, then 07:05:12
+  `Daily weather forecast sent to CentralNJ-MC`; tested offline, 29 tests, including other timezones.] Watch out: the
+  log path or those two phrases can change if the bot is upgraded, which would make this check report a miss every day.
 
 ## Install (cnjmesh1)
 Each block finishes on its own. The unit on the Pi already has a webhook in it that Discord

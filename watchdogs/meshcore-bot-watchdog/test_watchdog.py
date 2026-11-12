@@ -6,6 +6,7 @@ Run:  python3 test_watchdog.py     (finishes on its own)
 import os
 import sys
 import tempfile
+import time
 import unittest
 import urllib.error
 from unittest import mock
@@ -14,6 +15,7 @@ TMP = tempfile.mkdtemp()
 os.environ["STATE_FILE"] = os.path.join(TMP, "state.json")
 os.environ["PAUSE_FILE"] = os.path.join(TMP, "paused")
 os.environ["MESHCORE_DEVICE"] = os.path.join(TMP, "kpc1")
+os.environ["MESHCORE_LOG"] = os.path.join(TMP, "meshcore_bot.log")
 os.environ["RECOVER_SETTLE_SECONDS"] = "0"
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import watchdog as w  # noqa: E402
@@ -22,7 +24,7 @@ NOW = 1793200000.0
 
 
 def reset():
-    for p in (w.PAUSE_FILE, w.DEVICE, w.STATE_FILE):
+    for p in (w.PAUSE_FILE, w.DEVICE, w.STATE_FILE, w.LOG_FILE, w.LOG_FILE + ".1"):
         if os.path.exists(p):
             os.remove(p)
 
@@ -91,6 +93,7 @@ class Main(unittest.TestCase):
         self.patches = [
             mock.patch.object(w, "send_discord", side_effect=fake_send),
             mock.patch.object(w.time, "time", return_value=NOW),
+            mock.patch.object(w, "check_forecast"),  # covered by class Forecast below
         ]
         for p in self.patches:
             p.start()
@@ -175,6 +178,114 @@ class Main(unittest.TestCase):
             f.write('{"service_state": "active", "last_alert": 1794438676.7}')
         self.run_main(["active"])
         self.assertEqual(self.sent, [])
+
+
+def at(hour, minute, day=12):
+    """Epoch seconds for local Nov <day> 2026 at hour:minute (the check works in local time)."""
+    return time.mktime((2026, 11, day, hour, minute, 0, 0, 0, -1))
+
+
+SENT_LINES = (
+    "2026-11-12 07:05:00 - MeshCoreBot - INFO - \U0001F4C5  Sending daily weather forecast at 07:05:00\n"
+    "2026-11-12 07:05:00 - MeshCoreBot - INFO - ✅ Channel message sent to CentralNJ-MC (channel 2)\n"
+    "2026-11-12 07:05:12 - MeshCoreBot - INFO - Daily weather forecast sent to CentralNJ-MC\n"
+)
+STARTED_LINES = SENT_LINES.rsplit("2026-11-12 07:05:12", 1)[0]
+
+
+def write_log(text, path=None):
+    with open(path or w.LOG_FILE, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+class Forecast(unittest.TestCase):
+    def setUp(self):
+        reset()
+        self.sent = []
+        self.ok_post = True
+
+        def fake_send(msg):
+            self.sent.append(msg)
+            return self.ok_post
+
+        p = mock.patch.object(w, "send_discord", side_effect=fake_send)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def check(self, state, now, st="active"):
+        w.check_forecast("cnjmesh1", state, st, now)
+
+    def test_sent_line_today_is_quiet_and_remembered(self):
+        write_log(SENT_LINES)
+        s = w.default_state()
+        self.check(s, at(8, 0))
+        self.assertEqual(self.sent, [])
+        self.assertEqual(s["forecast_ok_date"], "2026-11-12")
+
+    def test_remembered_day_does_not_read_the_log_again(self):
+        s = w.default_state()
+        s["forecast_ok_date"] = "2026-11-12"
+        with mock.patch.object(w, "forecast_status") as fs:
+            self.check(s, at(9, 0))
+        fs.assert_not_called()
+
+    def test_silent_before_the_deadline(self):
+        write_log("")
+        self.check(w.default_state(), at(7, 20))
+        self.assertEqual(self.sent, [])
+
+    def test_missing_after_deadline_alerts_once(self):
+        write_log("2026-11-12 06:00:00 - MeshCoreBot - INFO - something else\n")
+        s = w.default_state()
+        self.check(s, at(7, 45))
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("did NOT go out", self.sent[0])
+        self.assertEqual(s["forecast_alerted_date"], "2026-11-12")
+        self.check(s, at(8, 0))  # next 15-minute run, same day
+        self.assertEqual(len(self.sent), 1)
+
+    def test_started_but_never_finished_is_reported_as_such(self):
+        write_log(STARTED_LINES)
+        self.check(w.default_state(), at(7, 45))
+        self.assertIn("STARTED but never finished", self.sent[0])
+
+    def test_yesterdays_forecast_does_not_count(self):
+        write_log(SENT_LINES.replace("2026-11-12", "2026-11-11"))
+        self.check(w.default_state(), at(7, 45))
+        self.assertIn("did NOT go out", self.sent[0])
+
+    def test_new_day_alerts_again(self):
+        s = w.default_state()
+        s["forecast_alerted_date"] = "2026-11-12"
+        write_log("")
+        self.check(s, at(7, 45, day=13))
+        self.assertEqual(len(self.sent), 1)
+
+    def test_rotated_file_still_counts(self):
+        write_log("2026-11-12 07:40:00 - MeshCoreBot - INFO - new file after rotation\n")
+        write_log(SENT_LINES, w.LOG_FILE + ".1")
+        self.check(w.default_state(), at(8, 0))
+        self.assertEqual(self.sent, [])
+
+    def test_missing_log_says_it_cannot_check(self):
+        s = w.default_state()
+        self.check(s, at(7, 45))
+        self.assertIn("could not read", self.sent[0])
+        self.assertEqual(s["forecast_alerted_date"], "2026-11-12")
+
+    def test_discord_failure_is_retried_next_run(self):
+        write_log("")
+        s = w.default_state()
+        self.ok_post = False
+        self.check(s, at(7, 45))
+        self.assertIsNone(s["forecast_alerted_date"])
+        self.check(s, at(8, 0))
+        self.assertEqual(len(self.sent), 2)
+
+    def test_message_names_the_bot_state(self):
+        write_log("")
+        self.check(w.default_state(), at(7, 45), st="failed")
+        self.assertIn("meshcore-bot is failed", self.sent[0])
 
 
 if __name__ == "__main__":

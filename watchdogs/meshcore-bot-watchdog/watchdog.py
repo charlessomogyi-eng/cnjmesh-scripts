@@ -21,6 +21,8 @@ What it does now (run by a systemd timer, every 15 minutes):
   - `touch /opt/meshcore-bot-watchdog/paused` stops automatic restarts (alerts still go out);
     AUTO_RECOVER=0 does the same permanently.
   - Never touches the bot while systemd is already restarting it ("activating").
+  - After 07:30 local, reads the bot's own log (/etc/meshcore-bot/meshcore_bot.log) for today's
+    "Daily weather forecast sent to CentralNJ-MC" line; if it is missing, ONE message that day.
 
 Switches: --check (read-only, posts nothing), DRY_RUN=1 (full logic, prints instead of posting,
 state untouched).
@@ -46,6 +48,14 @@ AUTO_RECOVER = os.environ.get("AUTO_RECOVER", "1") == "1"
 DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 CHECK_ONLY = "--check" in sys.argv
 
+# "Did the 7:05 forecast actually go out?" The bot writes its own log (not the journal). Verified Nov 12 2026
+# from the real log: 07:05:00 "Sending daily weather forecast at 07:05:00", one "Sending channel message to
+# CentralNJ-MC" + "Channel message sent" pair per chunk, then 07:05:12 "Daily weather forecast sent to CentralNJ-MC".
+LOG_FILE = os.environ.get("MESHCORE_LOG", "/etc/meshcore-bot/meshcore_bot.log")
+FORECAST_DEADLINE = (7, 30)  # local time; the check stays silent before this
+FORECAST_STARTED = "Sending daily weather forecast"
+FORECAST_SENT = "Daily weather forecast sent to CentralNJ-MC"
+
 RECOVER_MIN_GAP = 60 * 60
 RECOVER_MAX_PER_DAY = 2
 RECOVER_SETTLE_SECONDS = int(os.environ.get("RECOVER_SETTLE_SECONDS", "20"))
@@ -62,6 +72,8 @@ def default_state():
         "limit_alerted_at": None,   # last "restart limit / paused" message accepted
         "device_alerted_at": None,  # last "KPC1 missing" message accepted
         "recoveries": [],           # epoch seconds of automatic restarts in the last 24 h
+        "forecast_ok_date": None,       # YYYY-MM-DD the log showed the forecast was sent (stops re-reading the log)
+        "forecast_alerted_date": None,  # YYYY-MM-DD a "forecast did not go out" message was accepted
     }
 
 
@@ -159,6 +171,59 @@ def due(last, now):
     return last is None or now - last >= REMINDER_SECONDS
 
 
+def forecast_status(today):
+    """Look for today's forecast in the bot's log (the newest file, plus .1 in case it rotated mid-morning).
+
+    Returns 'sent', 'started' (began but never logged the finish), 'none', or None if the log cannot be read."""
+    started = sent = False
+    for path, required in ((LOG_FILE + ".1", False), (LOG_FILE, True)):
+        try:
+            with open(path, "r", errors="replace") as f:
+                for line in f:
+                    if not line.startswith(today):
+                        continue
+                    if FORECAST_SENT in line:
+                        sent = True
+                    elif FORECAST_STARTED in line:
+                        started = True
+        except FileNotFoundError:
+            if required:
+                return None
+        except Exception as e:  # noqa: BLE001
+            print(f"could not read {path}: {e}", file=sys.stderr)
+            if required:
+                return None
+    return "sent" if sent else ("started" if started else "none")
+
+
+def check_forecast(host, state, st, now):
+    """After FORECAST_DEADLINE, make sure the log shows today's forecast went out. One message per day."""
+    lt = time.localtime(now)
+    today = time.strftime("%Y-%m-%d", lt)
+    if state["forecast_ok_date"] == today or state["forecast_alerted_date"] == today:
+        return
+    if (lt.tm_hour, lt.tm_min) < FORECAST_DEADLINE:
+        return
+    res = forecast_status(today)
+    if res == "sent":
+        state["forecast_ok_date"] = today
+        return
+    hh, mm = FORECAST_DEADLINE
+    if res is None:
+        msg = (f"\U0001F7E1 CNJMESH {host}: I could not read {LOG_FILE}, so I cannot tell whether today's 7:05 AM "
+               f"CentralNJ-MC forecast went out. Check that the file exists and the watchdog (root) can read it.")
+    elif res == "started":
+        msg = (f"\U0001F534 CNJMESH {host}: today's 7:05 AM CentralNJ-MC forecast STARTED but never finished "
+               f"(no 'Daily weather forecast sent' line in {LOG_FILE} by {hh:02d}:{mm:02d}). {SERVICE_NAME} is {st}. "
+               f"Check: `tail -60 {LOG_FILE}`.")
+    else:
+        msg = (f"\U0001F534 CNJMESH {host}: today's 7:05 AM CentralNJ-MC forecast did NOT go out "
+               f"(no forecast lines in {LOG_FILE} by {hh:02d}:{mm:02d}). {SERVICE_NAME} is {st}. "
+               f"Check: `journalctl -u {SERVICE_NAME} -n 30 --no-pager` and `tail -60 {LOG_FILE}`.")
+    if send_discord(msg):
+        state["forecast_alerted_date"] = today
+
+
 def main():
     host = get_hostname()
     state = load_state()
@@ -215,6 +280,8 @@ def main():
                 if send_discord(msg):
                     state["limit_alerted_at"] = now
                     state["down_alerted_at"] = now
+
+    check_forecast(host, state, st, now)
 
     save_state(state)
     print(f"{host}: {SERVICE_NAME}={st} recoveries_24h={len(prune_recoveries(state, now))}")
