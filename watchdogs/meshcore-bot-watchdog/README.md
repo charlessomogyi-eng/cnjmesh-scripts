@@ -29,7 +29,9 @@ so it never retried. [V, Charlie's journal output Nov 11; the Oct 31 failure its
   forecast started but never finished (`Sending daily weather forecast` present) versus never started. If the log
   cannot be read, one message says so. [V, the real log on Nov 12: 07:05:00 `Sending daily weather forecast at
   07:05:00`, one `Sending channel message to CentralNJ-MC (channel 2)` and `Channel message sent` per chunk, then 07:05:12
-  `Daily weather forecast sent to CentralNJ-MC`; tested offline, 29 tests, including other timezones.] Watch out: the
+  `Daily weather forecast sent to CentralNJ-MC`; tested offline, 30 tests, including other timezones.] **The bot colours its log lines**, so each real line starts with a hidden `\x1b[32m` before the date; the first
+  version of this check did not allow for that and falsely reported a miss on the real log (caught by `--check` on the Pi Nov 12
+  4:44 PM, before the timer posted anything). The check now strips colour codes; tests use coloured lines. Watch out: the
   log path or those two phrases can change if the bot is upgraded, which would make this check report a miss every day.
 
 ## Install (cnjmesh1)

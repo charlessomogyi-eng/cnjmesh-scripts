@@ -32,6 +32,7 @@ systemd drop-in, never in the repo (see README.md).
 """
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -53,6 +54,7 @@ CHECK_ONLY = "--check" in sys.argv
 # CentralNJ-MC" + "Channel message sent" pair per chunk, then 07:05:12 "Daily weather forecast sent to CentralNJ-MC".
 LOG_FILE = os.environ.get("MESHCORE_LOG", "/etc/meshcore-bot/meshcore_bot.log")
 FORECAST_DEADLINE = (7, 30)  # local time; the check stays silent before this
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 FORECAST_STARTED = "Sending daily weather forecast"
 FORECAST_SENT = "Daily weather forecast sent to CentralNJ-MC"
 
@@ -180,6 +182,7 @@ def forecast_status(today):
         try:
             with open(path, "r", errors="replace") as f:
                 for line in f:
+                    line = ANSI_RE.sub("", line)  # the bot colours its log lines: "\x1b[32m2026-11-12 07:05:12 - ..."
                     if not line.startswith(today):
                         continue
                     if FORECAST_SENT in line:

@@ -185,12 +185,16 @@ def at(hour, minute, day=12):
     return time.mktime((2026, 11, day, hour, minute, 0, 0, 0, -1))
 
 
+# The real log lines are wrapped in terminal colour codes (green INFO), which is what broke the first version
+# of this check on Nov 12 2026: the line starts with "\x1b[32m", not with the date.
+GREEN, RESET = "\x1b[32m", "\x1b[0m"
 SENT_LINES = (
-    "2026-11-12 07:05:00 - MeshCoreBot - INFO - \U0001F4C5  Sending daily weather forecast at 07:05:00\n"
-    "2026-11-12 07:05:00 - MeshCoreBot - INFO - ✅ Channel message sent to CentralNJ-MC (channel 2)\n"
-    "2026-11-12 07:05:12 - MeshCoreBot - INFO - Daily weather forecast sent to CentralNJ-MC\n"
+    GREEN + "2026-11-12 07:05:00 - MeshCoreBot - INFO - \U0001F4C5 Sending daily weather forecast at 07:05:00" + RESET + "\n"
+    + GREEN + "2026-11-12 07:05:00 - MeshCoreBot - INFO - \u2705 Channel message sent to CentralNJ-MC (channel 2)" + RESET + "\n"
+    + GREEN + "2026-11-12 07:05:12 - MeshCoreBot - INFO - Daily weather forecast sent to CentralNJ-MC" + RESET + "\n"
 )
-STARTED_LINES = SENT_LINES.rsplit("2026-11-12 07:05:12", 1)[0]
+PLAIN_SENT = SENT_LINES.replace(GREEN, "").replace(RESET, "")
+STARTED_LINES = SENT_LINES.rsplit(GREEN + "2026-11-12 07:05:12", 1)[0]
 
 
 def write_log(text, path=None):
@@ -220,6 +224,12 @@ class Forecast(unittest.TestCase):
         s = w.default_state()
         self.check(s, at(8, 0))
         self.assertEqual(self.sent, [])
+        self.assertEqual(s["forecast_ok_date"], "2026-11-12")
+
+    def test_uncoloured_log_lines_work_too(self):
+        write_log(PLAIN_SENT)
+        s = w.default_state()
+        self.check(s, at(8, 0))
         self.assertEqual(s["forecast_ok_date"], "2026-11-12")
 
     def test_remembered_day_does_not_read_the_log_again(self):
