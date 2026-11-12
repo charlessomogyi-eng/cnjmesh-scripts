@@ -49,3 +49,15 @@ Patch applies against commit: see upstream-commit.txt
       cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
       cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
   (`--check` fails if the first patch has not been applied; it has been on cnjmesh1 since Nov 12.)
+- modules/locationdata.py (patch `locationdata-alert-wide.diff`, written Nov 12 2026, **ON HOLD by Charlie: not applied, may never be**;
+  would go on after the other two): also broadcasts NWS alerts for Middlesex and the counties south of it
+  (Somerset, Mercer, Monmouth, Ocean, Burlington, Camden, Gloucester, Salem, Cumberland, Atlantic, Cape May).
+  The bot's alert query is the single home point, so alerts that miss that point never reach the mesh. The patch keeps that
+  query and adds a second one for the whole state (`?area=NJ`), keeping alerts whose six-digit county codes match a configured
+  list. Only the scheduled broadcast does this (`wide=True`); the bot's user commands are unchanged. Config would be
+  `alertStateArea = NJ` and `alertFIPS = 34023,34035,34025,34029,34021,34005,34007,34015,34033,34011,34001,34009`
+  (codes from NWS's list, weather.gov/media/pimar/FIPS/nj_cnty.pdf); with neither set, nothing changes.
+  [V offline with stand-in feeds: applies after the other two, compiles, adds matching alerts, drops other counties and alerts
+  with no county code, keeps the point alert if the statewide fetch fails. Unverified: the real feed's geocode element names
+  (the patch takes any six-digit number in `cap:geocode`) and message volume. The bot's repeat-check compares the combined text
+  of the first two alerts, so a wider net would re-send more often.]

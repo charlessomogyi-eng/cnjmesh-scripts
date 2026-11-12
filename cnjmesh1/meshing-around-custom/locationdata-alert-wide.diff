@@ -1,0 +1,86 @@
+--- a/modules/locationdata.py
++++ b/modules/locationdata.py
+@@ -427,7 +427,49 @@
+     extra = len(areas) - len(shown)
+     return f"{text} +{extra}" if extra > 0 else text
+ 
+-def getWeatherAlertsNOAA(lat=0, lon=0, useDefaultLatLon=False):
++def alert_wide_config():
++    # optional [location] alertStateArea = NJ  and  alertFIPS = 34023,34025,...  (county FIPS, comma separated)
++    # Both must be set, otherwise the broadcast keeps using the single home point only.
++    try:
++        sec = my_settings.config['location']
++        area = sec.get('alertStateArea', '').strip().upper()
++        fips = {c.strip() for c in sec.get('alertFIPS', '').split(',') if c.strip()}
++    except Exception:
++        return "", set()
++    if not area or not fips:
++        return "", set()
++    return area, fips
++
++def alert_entry_fips(entry):
++    # county FIPS codes ("34023") of one NWS atom <entry>. NWS lists them in cap:geocode as six-digit
++    # SAME codes ("034023"); this takes any six-digit number there, whatever the valueName is called.
++    codes = set()
++    for g in entry.getElementsByTagName("cap:geocode"):
++        for v in g.getElementsByTagName("value"):
++            if v.childNodes:
++                for tok in v.childNodes[0].nodeValue.split():
++                    if tok.isdigit() and len(tok) == 6:
++                        codes.add(tok[1:])
++    return codes
++
++def alert_entries(point_text, wide_text="", fips=()):
++    # entries from the home-point feed (always) plus entries from the statewide feed that touch one of
++    # the wanted counties. An alert in both feeds is returned once (matched by its <id>).
++    seen = set()
++    for text, wide in ((point_text, False), (wide_text, True)):
++        if not text:
++            continue
++        for e in xml.dom.minidom.parseString(text).getElementsByTagName("entry"):
++            ids = e.getElementsByTagName("id")
++            key = ids[0].childNodes[0].nodeValue if ids and ids[0].childNodes else e.toxml()
++            if key in seen:
++                continue
++            if wide and not (alert_entry_fips(e) & set(fips)):
++                continue
++            seen.add(key)
++            yield e
++
++def getWeatherAlertsNOAA(lat=0, lon=0, useDefaultLatLon=False, wide=False):
+     # get weather alerts from NOAA limited to ALERT_COUNT with the total number of alerts found
+     alerts = ""
+     location = lat,lon
+@@ -450,9 +492,21 @@
+         logger.warning(f"Location:Error fetching weather alert request error: {type(e).__name__}: {e}")
+         return my_settings.ERROR_FETCHING_DATA
+     
++    # broadcast mode only: also fetch the whole state and keep alerts that touch the wanted counties
++    wide_text = ""
++    wide_area, wide_fips = alert_wide_config() if wide else ("", set())
++    if wide_fips:
++        try:
++            wide_data = requests.get("https://api.weather.gov/alerts/active.atom?area=" + wide_area, timeout=my_settings.urlTimeoutSeconds)
++            if wide_data.ok:
++                wide_text = wide_data.text
++            else:
++                logger.warning("Location:Error fetching statewide weather alerts from NOAA bad data")
++        except Exception as e:
++            logger.warning(f"Location:Error fetching statewide weather alerts: {type(e).__name__}: {e}")
++
+     alerts = ""
+-    alertxml = xml.dom.minidom.parseString(alert_data.text)
+-    for i in alertxml.getElementsByTagName("entry"):
++    for i in alert_entries(alert_data.text, wide_text, wide_fips):
+         title = i.getElementsByTagName("title")[0].childNodes[0].nodeValue
+         area_desc_nodes = i.getElementsByTagName("cap:areaDesc")
+         if area_desc_nodes and area_desc_nodes[0].childNodes:
+@@ -513,7 +567,7 @@
+ def alertBrodcastNOAA():
+     # get the latest weather alerts and broadcast them if there are any
+     global wxAlertCacheNOAA
+-    currentAlert = getWeatherAlertsNOAA(my_settings.latitudeValue, my_settings.longitudeValue)
++    currentAlert = getWeatherAlertsNOAA(my_settings.latitudeValue, my_settings.longitudeValue, wide=True)
+     # check if any reason to discard the alerts
+     if currentAlert == my_settings.ERROR_FETCHING_DATA or currentAlert == my_settings.NO_DATA_NOGPS:
+         return False
