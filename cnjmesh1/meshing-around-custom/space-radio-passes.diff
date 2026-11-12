@@ -1,0 +1,37 @@
+--- a/modules/space.py
++++ b/modules/space.py
+@@ -276,7 +276,20 @@
+     if n2yoAPIKey == '':
+         logger.error("System: Missing API key free at https://www.n2yo.com/login/")
+         return "not configured, bug your sysop"
+-    url = visualPassAPI + str(satellite) + "/" + str(lat) + "/" + str(lon) + "/0/2/300/" + "&apiKey=" + n2yoAPIKey
++    # optional [location] satPassMode = radio  (default "visual", the upstream behavior: only passes you could SEE,
++    # sunlit satellite and dark sky, at least 300 s visible, which hides most ham satellites)
++    # and satMinElevation = 20  (degrees; radio mode only). Radio passes are every pass of at least that elevation.
++    sat_mode, sat_min_el = "visual", 20
++    try:
++        import modules.settings as my_settings
++        sat_mode = my_settings.config['location'].get('satPassMode', 'visual').strip().lower()
++        sat_min_el = int(my_settings.config['location'].get('satMinElevation', '20'))
++    except Exception:
++        pass
++    if sat_mode == "radio":
++        url = visualPassAPI.replace("visualpasses", "radiopasses") + str(satellite) + "/" + str(lat) + "/" + str(lon) + "/0/2/" + str(sat_min_el) + "/" + "&apiKey=" + n2yoAPIKey
++    else:
++        url = visualPassAPI + str(satellite) + "/" + str(lat) + "/" + str(lon) + "/0/2/300/" + "&apiKey=" + n2yoAPIKey
+     # get the next pass data
+     try:
+         if not int(satellite):
+@@ -287,7 +300,11 @@
+             if 'info' in pass_json and 'passescount' in pass_json['info'] and pass_json['info']['passescount'] > 0:
+                 satname = pass_json['info']['satname']
+                 pass_time = pass_json['passes'][0]['startUTC']
+-                pass_duration = pass_json['passes'][0]['duration']
++                # radio passes have no 'duration' field (visual ones do), so work it out from start and end
++                if 'duration' in pass_json['passes'][0]:
++                    pass_duration = pass_json['passes'][0]['duration']
++                else:
++                    pass_duration = pass_json['passes'][0]['endUTC'] - pass_time
+                 pass_maxEl = pass_json['passes'][0]['maxEl']
+                 pass_rise_time = datetime.fromtimestamp(pass_time).strftime('%a %d %I:%M%p')
+                 pass_startAzCompass = pass_json['passes'][0]['startAzCompass']

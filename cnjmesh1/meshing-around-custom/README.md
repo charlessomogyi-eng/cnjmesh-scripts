@@ -49,6 +49,19 @@ Patch applies against commit: see upstream-commit.txt
       cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
       cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
   (`--check` fails if the first patch has not been applied; it has been on cnjmesh1 since Nov 12.)
+- modules/space.py (patch `space-radio-passes.diff`, written Nov 12 2026, **not yet applied on the Pi**; independent of the other patches):
+  the bot's `satpass` command uses n2yo's `visualpasses` endpoint (`.../0/2/300/`: only passes you could SEE, meaning a sunlit satellite
+  in a dark sky with at least 300 s visible), so ham satellites like AO-7 almost always answer "no upcoming passes". n2yo also has a
+  `radiopasses` endpoint (every pass above a minimum elevation, no visibility needed). The patch adds `[location] satPassMode = radio`
+  and `satMinElevation = 20` (degrees); without them the behavior is exactly upstream's. Radio responses have no `duration` field, so it is
+  computed from start and end. n2yo's limit is 100 transactions per hour per endpoint, and each satellite in the list is one call.
+  [V: n2yo's API page for the endpoint formats and limits; applies cleanly on the pinned commit, compiles, and visual mode was tested
+  offline to give identical output to the original; radio mode tested with stand-in responses. Not yet seen against the real n2yo API.]
+  Apply on the Pi:
+      cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/space-radio-passes.diff
+      cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/space-radio-passes.diff
+  then add `satPassMode = radio` and `satMinElevation = 20` under `satList` in `[location]`, and restart `mesh_bot.service`.
+  The bot answers `satpass` (list from `satList`) or `satpass 25544,7530` (any NORAD numbers) by DM, using the sender's node position.
 - modules/locationdata.py (patch `locationdata-alert-wide.diff`, written Nov 12 2026, **ON HOLD by Charlie: not applied, may never be**;
   would go on after the other two): also broadcasts NWS alerts for Middlesex and the counties south of it
   (Somerset, Mercer, Monmouth, Ocean, Burlington, Camden, Gloucester, Salem, Cumberland, Atlantic, Cape May).
