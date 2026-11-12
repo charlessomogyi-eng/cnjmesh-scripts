@@ -43,10 +43,11 @@ ALERT_COOLDOWN_SECONDS = 24 * 60 * 60  # never re-alert the same condition more 
 
 DISCORD_WEBHOOK_URL = os.environ.get("CNJ_DISCORD_WEBHOOK", "REPLACE_ME")
 
-# Generous on purpose -- see module docstring. Advertisement events were
-# observed multiple times per minute during normal operation Sep 2 2026,
-# so 30 minutes of total silence is a strong signal, not routine quiet.
-STALE_THRESHOLD_SECONDS = 30 * 60
+# Generous on purpose -- see module docstring. Raised from 30 to 90 minutes Nov 11 2026:
+# the shim's own log over the previous 24 h had a longest quiet gap of 2714 s (45 min), so
+# the old 30-minute limit false-alarmed on normal quiet stretches. 90 minutes is twice
+# that observed gap. One day of data; raise it again if it still cries wolf.
+STALE_THRESHOLD_SECONDS = 90 * 60
 
 
 def get_hostname():

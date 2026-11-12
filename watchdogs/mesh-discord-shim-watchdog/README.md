@@ -15,7 +15,7 @@ pattern as `sjmesh-relay-watchdog`):
    doesn't have one). Unlike the APRS dead-air check (rejected Sep 2, 2026 —
    message *volume* isn't a reliable Graywolf signal), MeshCore advertisement
    events are frequent/automatic — several per minute observed during normal
-   operation — so 30 minutes of total silence is a much stronger signal.
+   operation — so a long stretch of total silence is a much stronger signal. **Threshold raised from 30 to 90 minutes Nov 11 2026** [V, Charlie's command output]: the shim's log for the previous 24 h had a longest gap of 2714 s (45 min, ending 18:30 UTC) and every hour had events (12 to 62), so 30 minutes false-alarmed on normal quiet.
    **If this ever false-alarms during genuinely normal quiet periods, raise
    `STALE_THRESHOLD_SECONDS` in `watchdog.py` rather than disabling the check.**
 
