@@ -102,3 +102,14 @@ First live test of APRS OTA (aprsota.org) via K2GIA-1:
 - **ANSRVR "rejected / retry budget exhausted":** messages to ANSRVR show `ack_state=rejected`, `attempts=4` even when they worked (ANSRVR answers with a text message, not a protocol ACK). Cosmetic [I]. `CQ HOTG` on Sep 24 16:32 EDT and `U HOTG` 16:37 EDT worked [V].
 - **Discord bridge:** Graywolf's DB-poller still relays *outbound* messages (including ones to `CQ`) to Discord — Discord shows what Graywolf sent, not that anyone received it. See the BLOCKLIST note in `cnjmesh1-operations.md`.
 - Sep 24 19:07 EDT `K2GIA listening from Kendall Park NJ` sent to CQ; Charles reported it in Discord (not checked in the bridge journal).
+
+## K2GIA-1 radio settings (UV-5R M with Digirig) — written Nov 11 2026
+The repo had no settings list until now. Where each value comes from:
+- **144.390 MHz, VFO mode** [V, Charlie's photo of the radio Oct 31 2026]. No CTCSS/DCS tone (APRS on 144.390 uses none) [standard practice, not from the repo].
+- **TX power LOW** [S, Charlie set it Nov 8 2026; the Oct 31 photo showed high].
+- **TOT (time-out timer) 30 s** [V, session-log Oct 31 2026: it was 120 s, which cut the stuck transmission after exactly two minutes; the 30 s value is recorded in the same log].
+- **Squelch 0, volume about 50%, APO (auto power off) off, VOX off, dual watch (TDR) off** [S, from earlier chats, not re-verified against the repo or the radio].
+- **Optional, not required:** beeps, voice prompts, roger beep and battery saver off [my suggestions, never confirmed to matter].
+- **Menu numbers are not recorded.** The UV-5RM manual page I could read lists none (only "VOX is usually menu item 4"), so find each item by name on the radio.
+- The Graywolf input gain (-11.5 dB) was tuned against the old radio's volume; after a swap, re-check Graywolf's receive level rather than assuming it carries over.
+- A different model's guide mentions a "TX tail / STE delay" menu item that Digirig forum users looked for with Baofengs; whether the UV-5R M has it is unconfirmed.
