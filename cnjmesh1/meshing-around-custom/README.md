@@ -43,8 +43,9 @@ Patch applies against commit: see upstream-commit.txt
   `alertAreaHome` is optional, comma separated, matched anywhere in the area name; without it the
   areas appear in the order NWS lists them. [V: applies cleanly on top of the first patch against the pinned commit,
   compiles, and the helper was tested offline with both NWS name styles (`Middlesex; Mercer` and
-  `New Castle, DE; Salem, NJ`). Unverified: how the bot splits an alert that is now longer than one
-  Meshtastic message, and the live feed's exact areaDesc text (api.weather.gov blocks the session).]
+  `New Castle, DE; Salem, NJ`). **Verified live Nov 12 2026 4:30 PM** on cnjmesh1: a Tornado Watch went out as
+  `...by NWS Mount Holly NJ. Middlesex, Burlington, Camden +8` in one message (145 bytes). Still unverified: how the bot splits an alert
+  that would be longer than one Meshtastic message.]
   Apply on the Pi:
       cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
       cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
