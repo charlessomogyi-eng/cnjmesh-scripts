@@ -426,3 +426,27 @@ Charles reported (screenshot of the CentralNJ channel at 8:47 AM, only a TUM2 po
 - **[OPEN — where we left off Oct 17 2026 20:40]** (1) shim alert above; (2) MURS RT27V radios: test and decide on the 2-pack replacement (club meeting Sun Oct 18); (3) private-repo test (waiting on Charles to flip the GitHub setting); (4) cnjmesh2: OS and Wi-Fi firmware update (`sudo apt update && apt list --upgradable ...`), watch `journalctl -t wifi-selfheal`; (5) website: broken News link (next deploy); (6) backups for all Pis plus SD-card images plan; (7) Pi Health Checks brainstorm; (8) Tab5 and C6L arrive about Oct 27 to Nov 6; (9) CoreScope cleanup of backups in a few days.
 
 *Archived 2026-11-04. Stale: pointer list; every item on it is tracked elsewhere or done, except the cnjmesh2 OS and Wi-Fi firmware update, which is now a pointer under the cnjmesh2 reliability item in todos.md.*
+
+## Closed Nov 12 2026 (Charlie's OK, 6:35 PM)
+
+Four of the oldest open items, closed when Charlie answered "mark 1-4 as done or moot" to the Nov 12 old-todo triage. Text moved verbatim; each ends with its reason.
+
+**1. cnjmesh1 Wi-Fi dropout (July)**
+### cnjmesh1 WiFi dropout — likely root cause found (wlan0 power-save), validation ongoing
+
+Third occurrence pattern (July 22-23, July 24, July 30) — Pi looks healthy from its own side but is 100% unreachable from the LAN. Power-save fix applied July 30 (`iw dev wlan0 set power_save off` + permanent NetworkManager setting). **Watch for recurrence** — if dropouts stop, confirmed cause; if they recur despite power-save being off, next layer to check is AP-side/L2 or DHCP lease drift.
+*Closed Nov 12 2026 as Done. No recurrence since the fix; the Oct 22 notes show cnjmesh1 had been up about 77 days (so no reboot or dropout needed in that time).*
+
+**2. Graywolf PTT device pinning**
+- **Graywolf PTT device pinning to a stable path** — field not found in the 0.13.13 web UI; approach should be asking the Graywolf Discord/handbook first, direct SQLite edit is a last resort only. **[status unclear: the repo cannot tell]**
+- **Update on the "Graywolf PTT device pinning" item above:** `ptt_configs` already holds the by-id path (date unknown). Item can be closed once Charles agrees; old wording left in place. **[status unclear: the repo cannot tell]**
+*Closed Nov 12 2026 as Done. `ptt_configs` already holds the by-id path (the Oct 13 note), so there is nothing left to change.*
+
+**3. APRSdroid filter and the K2GIA-5 to K2GIA-7 retest (Aug)**
+- **[OPEN] Enter the corrected APRSdroid filter** (`t/moi/K2GIA-1/150` or `/K2GIA-5/` — Charles to choose the anchor), then Stop/Start Tracking. Unverified — see `known-issues.md`. **[status unclear: the repo cannot tell]**
+- **[OPEN] Retest K2GIA-5 to K2GIA-7 over APRS-IS** with Tracking on (already listed above, Aug 23).
+*Closed Nov 12 2026 as Done. The filter was corrected, and K2GIA-7 messages now arrive over APRS-IS in the Discord relay. Charlie closed it knowing that is not the exact retest the item names.*
+
+**4. Rotate `meshuser`/`meshdev` MQTT credentials (mid-July)**
+- **Rotate `meshuser`/`meshdev` MQTT credentials** — overdue since mid-July (broker is public over WSS, and these are well-known Meshtastic public-broker defaults, shared with Tilly's bridge too).
+*Closed Nov 12 2026 as Moot (decided not to). These are the well-known public Meshtastic broker logins for a broker that is public on purpose, and Charlie does not worry about openly published community passwords. The separate `meshdev/large4cats` local-broker password that leaked into git history stays open under the leaked-credentials item in todos.md.*

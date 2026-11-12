@@ -120,12 +120,7 @@ Process/technique lessons worth a fresh read at the start of future sessions on 
 ### [MASTER GATE] Pre-Tilly health checklist — everything 100% before finalizing Tilly
 Charles's requirement: confirm all of cnjmesh1/2/3, Malla, Meshview, APRS/Graywolf, LoRa APRS, MeshCore Observer/repeaters/Hub healthy before finalizing Tilly's-fork-on-KPR1. Full checklist: `docs/pre-tilly-master-checklist.md`. Given KPR1 itself is the Tilly work (see entry above), this checklist is really just standing verification for everything else — worth a fresh pass before the Tilly blocker resolves, not urgent until then.
 
-### cnjmesh1 WiFi dropout — likely root cause found (wlan0 power-save), validation ongoing
-Third occurrence pattern (July 22-23, July 24, July 30) — Pi looks healthy from its own side but is 100% unreachable from the LAN. Power-save fix applied July 30 (`iw dev wlan0 set power_save off` + permanent NetworkManager setting). **Watch for recurrence** — if dropouts stop, confirmed cause; if they recur despite power-save being off, next layer to check is AP-side/L2 or DHCP lease drift.
-
 ### Smaller open items, roughly in priority order
-- **Rotate `meshuser`/`meshdev` MQTT credentials** — overdue since mid-July (broker is public over WSS, and these are well-known Meshtastic public-broker defaults, shared with Tilly's bridge too).
-- **Graywolf PTT device pinning to a stable path** — field not found in the 0.13.13 web UI; approach should be asking the Graywolf Discord/handbook first, direct SQLite edit is a last resort only. **[status unclear: the repo cannot tell]**
 - **[NEW Aug 17 — investigate when time allows]** Graywolf cpal/ALSA POLLERR audio capture bug — confirmed NOT blocking core function (TX, iGate, APRS OTA all worked fine despite it), but unresolved. Full root-cause research in `docs/aprs-2m-graywolf-reference.md`. Next step not yet tried: systemd `CPUSchedulingPolicy=rr` real-time priority override for graywolf.service. Low priority — proven cosmetic/non-blocking tonight, no rush.
 - **APRStastic experiment** (Meshtastic↔APRS gateway) — needs a dedicated spare node (not CJG1/CJG2) and ideally its own Pi. Two decisions pending: OK with CNJ node positions on public aprs.fi, and which node/Pi to use. Alpha software, hobby-tier.
 - **`whorepeated.sh`** — back-burner, now technically unblocked (KPR1 working), no urgency assigned.
@@ -163,8 +158,6 @@ Third occurrence pattern (July 22-23, July 24, July 30) — Pi looks healthy fro
 - **[OPEN] Coordinated RF test for K2GIA-10 still not done** — ask a nearby operator to watch their iGate while a CQ is sent on 433.775. K2GIA-10 non-self-gating means aprs.fi alone can't prove reach. **Possible test partner (Oct 14):** N2ZAV, on the CentralNJ-MC MeshCore channel, said he is working on an APRS digipeater and maybe a 433 MHz LoRa APRS station on a tower near Easton, PA, and Charles replied they would test once it is up (Charles's stations: 2 m digipeater + iGate; 70 cm digipeater, no iGate, by design since Aug 28). Whether Easton is within RF reach of K2GIA-10 is unknown; ask him for his frequency/settings first (US standard here is 433.775 MHz).
 
 ### From the Aug 20-24 / Oct 5-13 APRS messaging (TD-H9 / KISSLink / APRSdroid / Graywolf) handoff
-- **[OPEN] Enter the corrected APRSdroid filter** (`t/moi/K2GIA-1/150` or `/K2GIA-5/` — Charles to choose the anchor), then Stop/Start Tracking. Unverified — see `known-issues.md`. **[status unclear: the repo cannot tell]**
-- **[OPEN] Retest K2GIA-5 to K2GIA-7 over APRS-IS** with Tracking on (already listed above, Aug 23).
 - **[OPEN] Does K2GIA-9 firmware offer BLE KISS?** Repo has it on Bluetooth Classic; "tracker supports BLE KISS" came from the CA2RXU wiki and is untested for this board. Don't plan KISSLink with K2GIA-9 until confirmed.
 - **[OPEN, low]** Check ODmaster for Android 2.6.5; check Graywolf version/update; decide whether to try Ramble / PocketCHIRP (no commitment made).
 - **[DECISION NEEDED — public repo]** (a) APRS-IS passcode is committed in many files (APRS passcodes derive from the callsign by a public algorithm, so low risk, but it conflicts with the "no passwords" rule); (b) K2GIA-1 coordinates appear in `docs/k2gia-5-aprsdroid-reference.md`; (c) `docs/td-h9-odmaster-aprs-messaging-bug.md` contained a retailer order number and full name — **DONE 2026-10-13: removed** (also the full name in the session-log and CLAUDE_CONTEXT-backup headers). **Passcode: deliberately left** — it is derived from the callsign by a public algorithm, so Charles decided not to scrub it. **(b) coordinates: still OPEN.** Nothing was scrubbed in the Oct 13 handoff merge itself.
@@ -180,7 +173,6 @@ Third occurrence pattern (July 22-23, July 24, July 30) — Pi looks healthy fro
 ### From the Sep 24 / Oct 13 APRS RX recovery + GitHub push investigation handoff
 - **[DECISION] Keep or remove the Graywolf RT-scheduling override** (`graywolf.service.d/override.conf`) — it showed no benefit. POLLERR root cause unresolved; the Digirig replug is a workaround.
 - **[OPEN] Diff the live Graywolf Discord bridge script against the repo copy** (`md5sum` both, on cnjmesh1). **[status unclear: the repo cannot tell]**
-- **Update on the "Graywolf PTT device pinning" item above:** `ptt_configs` already holds the by-id path (date unknown). Item can be closed once Charles agrees; old wording left in place. **[status unclear: the repo cannot tell]**
 - **Update on the Aug 17 POLLERR item above:** "proven cosmetic" is too strong — see `known-issues.md` update. The RT override was tried Sep 24 with no effect.
 
 ### From the Oct 4-13 KPR3 / KPC2 500 kHz cutover handoff
