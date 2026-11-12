@@ -81,3 +81,5 @@ Switches (alerts continue either way):
   on purpose. `sudo rm /opt/mesh-bot-watchdog/paused` turns it back on.
 
 Offline tests (no Pi needed, finishes on its own): `python3 watchdogs/mesh-bot-watchdog/test_watchdog.py`
+
+**What a posted report looks like in the journal [V, Charlie's output Nov 12 2026, 07:00:00-07:00:08]:** the scheduler line `Scheduled Tasks 1, ... (last run: [never], next run: ...)`, then `Message length N exceeds maxBuffer200, forcing chunking` if the text is over 200 characters, then one `Device:1 Channel:1 Chunker1/2 SendingChannel: Today: ...` line per chunk (or a single `SendingChannel:` line when short). The watchdog's 09:30 check looks at the `last run` line, which proves the job ran but not that the send succeeded; a stricter check could look for the `SendingChannel: Today:` line between 07:00 and 07:05.

@@ -44,8 +44,7 @@ Patch applies against commit: see upstream-commit.txt
   areas appear in the order NWS lists them. [V: applies cleanly on top of the first patch against the pinned commit,
   compiles, and the helper was tested offline with both NWS name styles (`Middlesex; Mercer` and
   `New Castle, DE; Salem, NJ`). **Verified live Nov 12 2026 4:30 PM** on cnjmesh1: a Tornado Watch went out as
-  `...by NWS Mount Holly NJ. Middlesex, Burlington, Camden +8` in one message (145 bytes). Still unverified: how the bot splits an alert
-  that would be longer than one Meshtastic message.]
+  `...by NWS Mount Holly NJ. Middlesex, Burlington, Camden +8` in one message (145 bytes). Long text is split by the bot: the 7:00 report on Nov 12 logged `Message length 239 exceeds maxBuffer200, forcing chunking` and went out as `Chunker1/2` and `Chunker2/2`, so an alert longer than 200 characters is split the same way (not yet seen for an alert).]
   Apply on the Pi:
       cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
       cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
