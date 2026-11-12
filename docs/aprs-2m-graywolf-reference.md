@@ -109,6 +109,7 @@ The repo had no settings list until now. Where each value comes from:
 - **TX power LOW** [S, Charlie set it Nov 8 2026; the Oct 31 photo showed high].
 - **TOT (time-out timer) 30 s** [V, session-log Oct 31 2026: it was 120 s, which cut the stuck transmission after exactly two minutes; the 30 s value is recorded in the same log].
 - **Squelch 0, volume about 50%, APO (auto power off) off, VOX off, dual watch (TDR) off** [S, from earlier chats, not re-verified against the repo or the radio].
+- **APO:** Charlie could not find an auto-power-off item on the spare UV-5RM (Nov 11 2026 8:34 PM). I could not confirm from the manuals I could read whether this model has one, so nothing is set; if the radio ever switches itself off, Graywolf goes deaf and mute and the health watchdog should flag it.
 - **Optional, not required:** beeps, voice prompts, roger beep and battery saver off [my suggestions, never confirmed to matter].
 - **Menu numbers are not recorded.** The UV-5RM manual page I could read lists none (only "VOX is usually menu item 4"), so find each item by name on the radio.
 - The Graywolf input gain (-11.5 dB) was tuned against the old radio's volume; after a swap, re-check Graywolf's receive level rather than assuming it carries over.
