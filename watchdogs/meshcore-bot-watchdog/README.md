@@ -36,10 +36,12 @@ rejects, so leave the unit alone and override it with a drop-in that reuses the 
     sudo cp /etc/systemd/system/graywolf-health-watchdog.service.d/webhook.conf /etc/systemd/system/meshcore-bot-watchdog.service.d/webhook.conf
     sudo systemctl daemon-reload
 
-Check the override took, counting only. It prints 1 if the unit still has the REPLACE_ME placeholder
-and 2 if it also had an older real webhook (systemd lists both, the drop-in is the later one and wins):
+Check which webhook systemd will use (systemd keeps only the last value of a repeated variable, so
+counting `https` matches proves nothing). These print a short hash of each, never the webhook; the
+two codes must match:
 
-    sudo systemctl show meshcore-bot-watchdog.service -p Environment | grep -o "CNJ_DISCORD_WEBHOOK=https" | wc -l
+    sudo systemctl show meshcore-bot-watchdog.service -p Environment | grep -o 'CNJ_DISCORD_WEBHOOK=[^ "]*' | sha256sum | cut -c1-12
+    sudo grep -o 'CNJ_DISCORD_WEBHOOK=[^ "]*' /etc/systemd/system/meshcore-bot-watchdog.service.d/webhook.conf | sha256sum | cut -c1-12
 
 Read-only status (posts nothing, changes nothing):
 
