@@ -8,12 +8,14 @@ Tags: [V] verified from repo or pasted live output · [S] someone said it · [I]
 
 ## 1. The live picture (cnjmesh1, as pasted Oct 25 2026 15:14) [V]
 
+**Nov 12 2026 6:42 PM:** the `oceancounty` bridge was deleted from the live file and the broker restarted [V: Charlie's paste, `grep -i ocean` empty, clients reconnected]. Backup on cnjmesh1: `/opt/stacks/mqtt/config/mosquitto.conf.bak-pre-oceancounty-20261112`. Its bridge-identity user `oceancounty-bridge-local` may still sit in `pwfile` (harmless).
+
 Broker: Mosquitto in Docker, `/opt/stacks/mqtt/`, config bind-mounted from `/opt/stacks/mqtt/config/mosquitto.conf`. Listeners 1883 and 9001 (websockets). `allow_anonymous false`, `password_file`.
 
 | Connection | Remote | Direction | Topics |
 |---|---|---|---|
 | `meshtastic_public` | `mqtt.meshtastic.org:1883` | **out** | `msh/US/2/e/CentralNJ/#`, `msh/US/2/json/CentralNJ/#` |
-| `oceancounty` | `mqtt.oceancountyme.sh:8883` | **in** | `msh/US/2/e/CentralNJ/#`, `msh/US/NJ/2/e/CentralNJ/#` |
+| ~~`oceancounty`~~ | `mqtt.oceancountyme.sh:8883` | **REMOVED Nov 12 2026** | was inbound CentralNJ ×2; never connected after Aug 9 (operator never answered); Charlie had it deleted |
 | `liamcottle` | `mqtt.meshtastic.liamcottle.net:1883` | **in** | CentralNJ ×2, **LongFast ×2** |
 | `meshomatic` | `us-east.meshomatic.net:31883` | **out** | `meshcore/#` (MeshCore, not Meshtastic) |
 | `sjmesh` | — | **GONE** | no SJMesh connection exists in the live file |
@@ -31,11 +33,11 @@ cnjmesh2 is a **separate** stack (own Mosquitto + Malla in `~/meshtastic-mqtt`, 
 
 ## 2. Repo copies now match live (synced Oct 25 2026 15:30) [V]
 
-Before Oct 25 the committed `cnjmesh1/configs/mosquitto-cnjmesh1.conf` was stale: it had an active `connection sjmesh` and a trailing `connection sjmesh-bridge` with `topic msh/US/2/# out 0`, and lacked the LongFast lines. Restoring it would have re-created the Aug 5 loop. **Both configs in the repo are now verbatim copies of what is live** (cnjmesh1 file mtime Aug 15 21:48; cnjmesh2 as pasted). Only `oceancounty` and `meshomatic` passwords are redacted (see below). `docs/sjmesh-bridge-backup.md` is marked STALE.
+Before Oct 25 the committed `cnjmesh1/configs/mosquitto-cnjmesh1.conf` was stale: it had an active `connection sjmesh` and a trailing `connection sjmesh-bridge` with `topic msh/US/2/# out 0`, and lacked the LongFast lines. Restoring it would have re-created the Aug 5 loop. **Both configs in the repo are now verbatim copies of what is live** (cnjmesh1 file mtime Aug 15 21:48; cnjmesh2 as pasted). Only the `meshomatic` password is redacted (see below; the `oceancounty` bridge was removed Nov 12). `docs/sjmesh-bridge-backup.md` is marked STALE.
 
 **Still a trap inside the live file:** the commented-out `#connection sjmesh` block (it includes `#topic msh/US/2/e/SJMesh/# both 0`). **Do not un-comment it while `sjmesh-relay.service` is running.** The native bridge would send local CentralNJ traffic to SJMesh while the relay pulls it back in = the Aug 5 loop again. It is also the obvious-looking way to "restore the outbound path", which is why it is a trap.
 
-**Credentials:** shared/public community logins are committed as-is (`meshdev`/public Meshtastic, `uplink`/Liam Cottle, `meshuser`/SJMesh: also published on cnjmesh.me). The MeshOmatic one is a personal per-account token and the Ocean County one is not shown published anywhere; both stay `REDACTED` because a public repo cannot be un-leaked cheaply (the Aug 30 webhook incident needed `git filter-repo`). Charlie can flip that.
+**Credentials:** shared/public community logins are committed as-is (`meshdev`/public Meshtastic, `uplink`/Liam Cottle, `meshuser`/SJMesh: also published on cnjmesh.me). The MeshOmatic one is a personal per-account token and stays `REDACTED` (the Ocean County bridge, whose password was also redacted, was removed Nov 12) because a public repo cannot be un-leaked cheaply (the Aug 30 webhook incident needed `git filter-repo`). Charlie can flip that.
 
 **Backups on cnjmesh1, `/opt/stacks/mqtt/config/` (listing Oct 25):** `mosquitto.conf.bak-20260719`, `bak-preNJscope-20260804`, `bak-preloopfix-20260805`, `bak-presjmeshtopic-20260809`, `bak-sjmesh-test` (Aug 12), `bak-active-sjmesh` (Aug 14, **SJMesh enabled**, despite the name), `bak-preACL`, `bak-before-3bridge-acl`, `bak-longfasttest-20260815` (the last config before LongFast was added), plus `pwfile.bak-before-acl` and a stray `mossquitto.conf2` (typo, Jan 2026, 338 bytes). Live has no `acl_file`, no `local_username`, no `sjmesh-bridge`. The 3 bridge-identity users and the `aclfile` mentioned in the Aug 14 handoff were not in this listing (no `aclfile` file in the directory); `pwfile` was last touched Aug 14 17:37, so those users may still be inside it. [V listing, I for pwfile contents]
 

@@ -91,9 +91,6 @@ Build after a day of baseline numbers (the relay's 10-minute `Stats since start`
 **Still open, lower priority:**
 1. Meshview is v3.0.5, current release is 3.0.7 — worth a version bump eventually. **[status unclear: the repo cannot tell]**
 
-### [UPDATE — Aug 10, 2026] oceancounty MQTT bridge still failing to connect
-Persistent connect-then-immediately-close loop on `mqtt.oceancountyme.sh:8883`, since Aug 9, no successful connection. Details sent to the operator (Discord: takinglives3) on Aug 9 — awaiting his follow-up on his own broker/logs. No action needed on our side until he responds.
-
 ### [ACTIVE — blocked on one fact only Tilly has] Get Tilly's fork running on KPR1 (cross-mesh packet bridge)
 Full multi-week debugging narrative archived in session-log.md (Aug 16 entry) — this is just the current status. KPR1 is dedicated to this project (CNJ endpoint `b`), fully built and connected to Tilly's AWS broker. Root cause of the connection flapping fully traced to source: the bridge needs `RX_LOG_DATA` companion-protocol frames, which neither KPR1 nor KPR2 (both repeaters) ever emit — confirmed via meshcore library source, not a guess.
 **The one remaining blocker:** what makes a MeshCore device start pushing companion-protocol LOG_DATA frames over serial — a firmware build, a device setting, or a specific command? Tilly's endpoint does this successfully; ours doesn't. This is a question only Tilly can answer from his own working config. Everything else (container, config, broker connection, topic subscribe) is confirmed working.
