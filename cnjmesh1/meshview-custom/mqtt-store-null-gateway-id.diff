@@ -1,0 +1,13 @@
+diff --git a/meshview/mqtt_store.py b/meshview/mqtt_store.py
+index 8632f62..02516fe 100644
+--- a/meshview/mqtt_store.py
++++ b/meshview/mqtt_store.py
+@@ -35,6 +35,8 @@ def parse_node_id(value: str | None) -> int | None:
+     """
+     if not value:
+         return None
++    # CNJ Mesh local patch: some gateways send the id padded with trailing NUL bytes.
++    value = value.rstrip("\x00")
+     match = NODE_ID_PATTERN.match(value)
+     if not match:
+         return None

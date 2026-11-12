@@ -1,0 +1,11 @@
+# Meshview customizations (cnjmesh1, `~/meshview`, pablorevilla-meshtastic/meshview)
+
+Units: `meshview-db.service` (writer, `startdb.py`) and `meshview-web.service` (`main.py`), both from `/home/somog/meshview` with `env/bin/python`. Database: `sqlite+aiosqlite:///packets.db` (about 14 MB plus a WAL file on Nov 12 2026).
+
+## Local patch: NUL-padded gateway IDs (`mqtt-store-null-gateway-id.diff`)
+Before Nov 12 2026 the Pi carried an undocumented edit to `meshview/mqtt_store.py` (3 lines): `int(env.gateway_id[1:].rstrip("\x00"), 16)` at the three places the old code parsed a gateway ID, so a gateway that sends its ID padded with trailing NUL bytes is still recorded. [V: `git diff` pasted Nov 12 2026; which gateway needs it is not recorded.]
+Upstream 4.0.0 parses gateway IDs in one place, `parse_node_id()`, with the regex `^!([0-9a-fA-F]{1,16})$`, which would reject a NUL-padded ID and skip that gateway's PacketSeen rows with a "malformed gateway_id" warning. The patch adds one line to `parse_node_id()` (`value = value.rstrip("\x00")`). [V offline against upstream `0453de0`: applies cleanly, compiles, `!699a9390` with 0 to 3 trailing NULs gives the same ID, garbage still gives `None`.]
+
+## Upgrade from v3.0.5.1+2 (`e4384f0`, Apr 2026) to 4.0.0 (Nov 9 2026)
+Upstream's `requirements.txt` is identical between the two, so no new packages. New optional `config.ini` sections (`[map_channel_colors]`, `[snapshot]`, `api = True`) have defaults. The old `starting = /chat` key is no longer read. The writer applies the migrations itself on start (drop `node.public_key`, daily-snapshot table, altitude column, packet index); the web unit waits for it.
+Rollback = stop both units, `git checkout e4384f0`, restore the pre-upgrade `packets.db` copy (the migrations change the schema, so the old code needs the old file), start both units.
