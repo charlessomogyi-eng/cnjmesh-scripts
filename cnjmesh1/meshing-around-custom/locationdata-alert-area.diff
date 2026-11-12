@@ -1,0 +1,45 @@
+--- a/modules/locationdata.py
++++ b/modules/locationdata.py
+@@ -401,6 +401,32 @@
+ 
+     return text
+ 
++ALERT_AREA_MAX = 3  # counties/zones named per alert; the rest are shown as "+N"
++
++def format_alert_areas(area_desc):
++    # area_desc is the CAP areaDesc: "Middlesex; Mercer" or "New Castle, DE; Salem, NJ".
++    # Short form for a radio message: up to ALERT_AREA_MAX areas, the home area first, then "+N".
++    areas = [a.strip() for a in area_desc.split(";") if a.strip()]
++    if not areas:
++        return ""
++    # optional [location] alertAreaHome = Middlesex   (comma separated; matched anywhere in the name)
++    try:
++        home = [h.strip().lower() for h in my_settings.config['location'].get('alertAreaHome', '').split(',') if h.strip()]
++    except Exception:
++        home = []
++    if home:
++        areas.sort(key=lambda a: 0 if any(h in a.lower() for h in home) else 1)  # stable sort
++    shown = areas[:ALERT_AREA_MAX]
++    # drop the ", NJ" style suffix when every shown area has the same one
++    suffixes = {a.rsplit(",", 1)[1].strip() if "," in a else "" for a in shown}
++    if len(suffixes) == 1 and "" not in suffixes:
++        shown = [a.rsplit(",", 1)[0].strip() for a in shown]
++    else:
++        shown = [a.replace(", ", " ") for a in shown]  # "New Castle DE, Salem NJ" reads unambiguously
++    text = ", ".join(shown)
++    extra = len(areas) - len(shown)
++    return f"{text} +{extra}" if extra > 0 else text
++
+ def getWeatherAlertsNOAA(lat=0, lon=0, useDefaultLatLon=False):
+     # get weather alerts from NOAA limited to ALERT_COUNT with the total number of alerts found
+     alerts = ""
+@@ -453,7 +479,8 @@
+ 
+         if my_settings.enableExtraLocationWx:
+             # adds location data which is too much data?
+-            alerts += f"{main_alert}. {area_desc.replace(' ', '')}"
++            area_text = format_alert_areas(area_desc)
++            alerts += f"{main_alert}. {area_text}" if area_text else f"{main_alert}"
+             # Only add headline if not already used as main_alert
+             # if nws_headline and main_alert != nws_headline:
+             #     alerts += f" ALERT: {nws_headline}"
