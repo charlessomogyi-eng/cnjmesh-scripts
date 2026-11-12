@@ -89,7 +89,7 @@ Build after a day of baseline numbers (the relay's 10-minute `Stats since start`
 
 ### [OPEN — low] Meshview upgrade, carried from the Aug 15 LongFast investigation
 **Still open, lower priority:**
-1. Meshview is v3.0.5, current release is 3.0.7 — worth a version bump eventually. **[status unclear: the repo cannot tell]**
+1. Meshview on cnjmesh1 is **v3.0.5.1 plus 2 commits (`e4384f0`, Apr 1 2026)** [V, `git describe` Nov 12 2026 6:46 PM]; upstream is **4.0.0 (Nov 9 2026)** [V, upstream README], so six releases behind (3.0.6, 3.0.7, 3.0.8, 3.0.9, 3.0.9.1, 4.0.0; the old "3.0.7 is current" note was stale). The jump runs several automatic DB migrations (drops `node.public_key`, adds the daily-snapshot table, an altitude column and a packet index), so back up the DB first; 4.0.0 also redesigns the web UI and serves its JS/CSS locally. Still to check: local edits (`git status`), free disk vs DB size, `[mqtt] topics` in `config.ini`. Not started; Charlie has not said to upgrade.
 
 ### [ACTIVE — blocked on one fact only Tilly has] Get Tilly's fork running on KPR1 (cross-mesh packet bridge)
 Full multi-week debugging narrative archived in session-log.md (Aug 16 entry) — this is just the current status. KPR1 is dedicated to this project (CNJ endpoint `b`), fully built and connected to Tilly's AWS broker. Root cause of the connection flapping fully traced to source: the bridge needs `RX_LOG_DATA` companion-protocol frames, which neither KPR1 nor KPR2 (both repeaters) ever emit — confirmed via meshcore library source, not a guess.
