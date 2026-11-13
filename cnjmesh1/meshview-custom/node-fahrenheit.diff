@@ -1,0 +1,43 @@
+diff --git a/meshview/templates/node.html b/meshview/templates/node.html
+index 00e9c61..a6afb61 100644
+--- a/meshview/templates/node.html
++++ b/meshview/templates/node.html
+@@ -897,8 +897,10 @@ async function loadTelemetryCharts(){
+         chartData.chanUtil.push(
+             parseFloat(pl.match(/channel_utilization:\s*([\d.]+)/)?.[1] || NaN)
+         );
++        // CNJ Mesh local patch: nodes report Celsius; show Fahrenheit, and accept negative readings
+         chartData.temperature.push(
+-            parseFloat(pl.match(/temperature:\s*([\d.]+)/)?.[1] || NaN)
++            (c => isNaN(c) ? NaN : Math.round((c * 9 / 5 + 32) * 10) / 10)(
++                parseFloat(pl.match(/temperature:\s*(-?[\d.]+)/)?.[1] || NaN))
+         );
+         chartData.humidity.push(
+             parseFloat(pl.match(/relative_humidity:\s*([\d.]+)/)?.[1] || NaN)
+@@ -999,14 +1001,14 @@ async function loadTelemetryCharts(){
+         chart3 = initMeshChart(document.getElementById('chart_environment'));
+         chart3.setOption({
+             tooltip: { trigger:'axis' },
+-            legend: { data:[MeshI18n.t("Temperature (°C)"),MeshI18n.t("Humidity (%)"),MeshI18n.t("Pressure (hPa)")], textStyle:{ color:'#64748b' } },
++            legend: { data:[MeshI18n.t("Temperature (°F)"),MeshI18n.t("Humidity (%)"),MeshI18n.t("Pressure (hPa)")], textStyle:{ color:'#64748b' } },
+             xAxis: { type:'category', data:chartData.times, axisLabel:{ color:'#64748b' } },
+             yAxis: [
+-                { type:'value', name:'°C / %', axisLabel:{ color:'#64748b' } },
++                { type:'value', name:'°F / %', axisLabel:{ color:'#64748b' } },
+                 { type:'value', name:'hPa', axisLabel:{ color:'#64748b' } }
+             ],
+             series: [
+-                makeLine(MeshI18n.t("Temperature (°C)"), 'rgba(255,138,82,1)', chartData.temperature),
++                makeLine(MeshI18n.t("Temperature (°F)"), 'rgba(255,138,82,1)', chartData.temperature),
+                 makeLine(MeshI18n.t("Humidity (%)"), 'rgba(138,255,108,1)', chartData.humidity),
+                 makeLine(MeshI18n.t("Pressure (hPa)"), 'rgba(79,155,255,1)', chartData.pressure, 1)
+             ]
+@@ -1381,7 +1383,7 @@ function exportCSV(type){
+             rows.push([chartData.times[i], chartData.airUtil[i], chartData.chanUtil[i]]);
+     }
+     else if (type === "environment") {
+-        rows[0].push(MeshI18n.t("Temperature"), MeshI18n.t("Humidity"), MeshI18n.t("Pressure"));
++        rows[0].push(MeshI18n.t("Temperature") + " (°F)", MeshI18n.t("Humidity"), MeshI18n.t("Pressure"));
+         for (let i = 0; i < chartData.times.length; i++)
+             rows.push([
+                 chartData.times[i],
