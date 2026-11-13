@@ -17,7 +17,7 @@ Patch applies against commit: see upstream-commit.txt
   in the weather scheduler lambda (all scheduled calls were referencing the same
   handle_wxc binding instead of capturing it per-call), trailing newline fix.
 - config.ini: live bot configuration (radio interface, scheduler timing, channels)
-- modules/locationdata.py (patch `locationdata-eas-filter.diff`, found Nov 12 2026, **drafted, not yet applied on the Pi**):
+- modules/locationdata.py (patch `locationdata-eas-filter.diff`, found Nov 12 2026, **applied on cnjmesh1 Nov 12 2026; NWS alerts have broadcast since**):
   in `alertBrodcastNOAA()` the `elif currentAlert[0] not in wxAlertCacheNOAA:` belongs to
   `if my_settings.ignoreEASenable:`, so with `ignoreEASenable = True` (our config) the function
   checks the ignore words and then falls through to `return False`: it never returns an alert and
@@ -31,7 +31,7 @@ Patch applies against commit: see upstream-commit.txt
       sudo systemctl restart mesh_bot.service
   Upstream is pinned at the commit in upstream-commit.txt. Checked Nov 12 2026: upstream's latest
   (`92280b7`, Nov 9 2026) still has the same `elif`, so the patch is still needed on a newer pin.
-- modules/locationdata.py (patch `locationdata-alert-area.diff`, written Nov 12 2026, **not yet applied on the Pi**;
+- modules/locationdata.py (patch `locationdata-alert-area.diff`, written Nov 12 2026, **applied on cnjmesh1 Nov 12 2026, verified live 4:30 PM**;
   apply AFTER `locationdata-eas-filter.diff`): NWS alerts to the mesh name the issuing office but not
   the county. Upstream already has a switch, `enableExtraLocationWx`, but with it on it appends the
   whole county list from the feed (a watch can list many counties) with the spaces stripped. This
@@ -49,14 +49,14 @@ Patch applies against commit: see upstream-commit.txt
       cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
       cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/locationdata-alert-area.diff
   (`--check` fails if the first patch has not been applied; it has been on cnjmesh1 since Nov 12.)
-- modules/space.py (patch `space-radio-passes.diff`, written Nov 12 2026, **not yet applied on the Pi**; independent of the other patches):
+- modules/space.py (patch `space-radio-passes.diff`, written Nov 12 2026, **applied on cnjmesh1 Nov 12 2026 about 6:20 PM**; independent of the other patches):
   the bot's `satpass` command uses n2yo's `visualpasses` endpoint (`.../0/2/300/`: only passes you could SEE, meaning a sunlit satellite
   in a dark sky with at least 300 s visible), so ham satellites like AO-7 almost always answer "no upcoming passes". n2yo also has a
   `radiopasses` endpoint (every pass above a minimum elevation, no visibility needed). The patch adds `[location] satPassMode = radio`
   and `satMinElevation = 20` (degrees); without them the behavior is exactly upstream's. Radio responses have no `duration` field, so it is
   computed from start and end. n2yo's limit is 100 transactions per hour per endpoint, and each satellite in the list is one call.
   [V: n2yo's API page for the endpoint formats and limits; applies cleanly on the pinned commit, compiles, and visual mode was tested
-  offline to give identical output to the original; radio mode tested with stand-in responses. Not yet seen against the real n2yo API.]
+  offline to give identical output to the original; radio mode tested with stand-in responses. **Seen against the real n2yo API Nov 12 2026:** the ISS answers (a SPACE STATION pass at 7:31 PM, max elevation 21.84 degrees); commands need the leading `!` (`!satpass`) because `cmdBang = True`; `!satpass 7530` (AO-7) answers with the bot's catch-all error and the cause was never found (the bot logs none). Charlie archived the satellite topic, so that stays as is.]
   Apply on the Pi:
       cd /opt/meshing-around && sudo git apply --check ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/space-radio-passes.diff
       cd /opt/meshing-around && sudo git apply ~/cnjmesh-scripts/cnjmesh1/meshing-around-custom/space-radio-passes.diff
