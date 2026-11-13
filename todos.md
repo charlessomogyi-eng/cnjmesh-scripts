@@ -163,7 +163,7 @@
 ### From the Oct 4-13 KPR3 / KPC2 500 kHz cutover handoff
 
 - **[OPEN] KPR3 remote-admin login on 500 kHz fails** while packets relay (see `known-issues.md`). Ideas, none tested: reset the contact's Out Path; re-enter admin password; check status/uptime from KPC2.… *(L159)*
-- **[OPEN] Observer clock ~27 h ahead** (see `known-issues.md`): a power cycle on Oct 14 did NOT reset it (still ~96,700 s ahead), so that test is done and failed; firmware refuses to set it backwards. Just documented unless a fix is found — if… *(L160–L161)*
+- **[OPEN] Observer clock ~27 h ahead** (see `known-issues.md`): a power cycle on Oct 14 did NOT reset it (still ~96,700 s ahead), so that test is done and failed; firmware refuses to set it backwards. Just documented unless a fix is found — if… *(L160–L161)* **Nov 13:** MeshOMatic emailed Charlie on Oct 26 about this same clock ("1 day 2 hours ahead", consistent with the ~27 h) and suggested a fix: the `clkreboot` command (reboot with the clock reset to 15 May 2024, then set clock to now), or its Devices > Repeater Mgmt > Actions > "Fix clock" button. The MeshCore CLI docs list `clkreboot` under the Repeater/Room Server/Sensor commands; whether the Observer's companion firmware accepts it is untested. Try the site's button once Charlie is logged in to MeshOMatic. Plain reboot and power cycle already failed.
 - **[OPEN] KPR1** (Tilly bridge) — now the **only** MeshCore node still on 62.5 kHz.… *(L162)*
 - **[OPEN] path.hash.mode** on KPR1/KPR2: unchanged, decision pending. *(L163)*
 - **[OPEN] KPR3 health check, Nov 8 2026 evening [V, CoreScope screenshots Charlie sent, 9:48-9:53 PM]:** *(L164)*
