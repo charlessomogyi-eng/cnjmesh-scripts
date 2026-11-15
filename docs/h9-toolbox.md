@@ -18,7 +18,7 @@ Charlie asked on Nov 15 2026 to have this written down so it is not forgotten. T
 
 ## Not verified
 - Whether the firmware or apps change the stock Bluetooth KISS behavior that K2GIA-7 depends on (KISSLink / TD-H9 APRS Messenger). Nothing says they do; nothing says they don't.
-- Whether the restore-to-stock works if a flash fails; license; compatibility beyond firmware 1.0.38. K2GIA-7 is on stock firmware 1.0.15 APRS / see the firmware 1.0.38 decision item in `todos.md`.
+- Whether the restore-to-stock works if a flash fails; license; compatibility beyond firmware 1.0.38. K2GIA-7's own firmware is a separate question: the Oct 21 decision item about updating it to 1.0.38 is still open in `todos.md` (an Aug 2026 screenshot showed its APRS firmware as v1.0.15).
 - Neither the site pages nor the repo were re-read on Nov 15; this update comes from Charlie's two screenshots.
 
 ## Rules for trying it
