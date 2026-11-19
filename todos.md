@@ -43,7 +43,7 @@
 2. **Learn APRS by playing:** hands-on with 2 m APRS, LoRa APRS, Digirig, TD-H9 and the LilyGo nodes (his stated goal, Oct 2026). Candidate starters: message another station, watch packets on aprs.fi, try an APRS "query" or weather request, try… *(L22)*
 3. **Learn how MQTT works:** guided, read-only first. Candidate: the MQTT Explorer session already listed in the handoff items (watch `msh/US/2/json/CentralNJ/#` while JSON still exists on 2.7 nodes), plus a walk through how our own broker, the… *(L23)*
 4. **KPN9 Long Turbo listen test** (running to about 9:44 PM Nov 5): see what Turbo nodes are out there. Hobby-flavored, not a repair. *(L24)*
-5. **[Added Nov 11 2026 9:54 PM, Charlie: "this looks interesting"] H9 Toolbox satellite pass predictor for the TD-H9 (look into, hobby).** Living notes now in `docs/h9-toolbox.md` (updated Nov 15 with a photo of the app on a real radio); do not install on K2GIA-7. *(L25)*
+5. **[Added Nov 11 2026 9:54 PM, Charlie: "this looks interesting"] H9 Toolbox satellite pass predictor for the TD-H9 (look into, hobby).** Living notes now in `docs/h9-toolbox.md` (updated Nov 15 with a photo of the app on a real radio, and Nov 19 with the developer's teaser of an experimental packet/WinLink KISS TNC build, beta testers wanted; test-project sketch is in the doc; needs a second TD-H9); do not install on K2GIA-7. *(L25)*
 5. **Tab5 with OrcSDR** (cards arrived): see the pick-up list below and `docs/tab5-c6l-tracker.md`. *(L26)*
 6. **MeshCore regions vs scopes (learned Nov 4 2026 from the MeshCore public-map Discord thread; background, no action needed).** *(L27)*
 7. **TD-H9 drive test: how far does it reach over RF only? (Charlie, Nov 4 2026 9:05 PM.)** *(L28)*
