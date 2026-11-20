@@ -23,9 +23,20 @@ Charlie asked on Nov 15 2026 to have this written down so it is not forgotten. T
 - Why it matters here: the stock TD-H9 does APRS over Bluetooth but not general packet. If this works it would add Winlink email and packet BBS use from a handheld, which fits Charlie's emergency-communications interest (RACES/AUXCOMM plans). That is my reading; the post does not say it.
 - Open questions: how stable it is, whether it can coexist with APRS use, whether the Bluetooth KISS link works from Windows/Linux/Android, what a Winlink account and license-class limits mean for use, and how to restore stock firmware.
 
+## Nov 19 evening: Charlie is in as a beta tester
+- Charlie replied to the developer, agreed to beta test the KISS TNC firmware, and **ordered a second TD-H9 to test with** (Nov 19). The developer sent a private message with `https://dev.h9toolbox.com/firmware/` and a PDF, `H9-KISS-TNC-Beta-Instructions.pdf` (76 KB, not seen by me yet). He says it only needs a laptop or desktop, a USB-C cable and Chrome or Edge, and offered a walkthrough if Charlie hits snags.
+- What the firmware page says (read Nov 19, not the PDF):
+  - It is for the **Type-C TD-H9** only. **Confirm the new radio is the Type-C version when it arrives.**
+  - "H9 Toolbox Firmware" is the main experimental build (APRS station list and messaging, FM satellite pass tracking, GPS tools, app menu; saved channels are kept). The **KISS TNC** is an optional APRS modem update, v0.1.5: after the updater stages it, an "Optional: Unlock KISS TNC" choice appears, and compatible packet software such as Pat or Paracon connects over Bluetooth. The page does not call it beta; the developer did.
+  - Install is guided in the browser: connect, **save a recovery backup**, install. Keep that backup.
+  - **Revert:** pick "Stock Type-C v1.0.38" in the same updater.
+  - **If an install is interrupted:** hold **PTT + 2** while powering on to reconnect in update mode, then follow the TD-H9 recovery guide.
+  - USB-C connection to App Manager is labeled experimental. APRS transmitting needs an amateur licence.
+  - A separate joke/experimental "Doom" firmware exists; avoid it on a radio you need.
+
 ## Test project idea (fun, not urgent)
 Charlie suggested on Nov 19 making this a hobby test project. Sketch, to refine when the build is out:
-1. Get a **second TD-H9** (never K2GIA-7). Back up its `.img` first.
+1. Use the **second TD-H9 Charlie ordered** (never K2GIA-7). Back up its `.img` and keep the updater's recovery backup first.
 2. Flash the experimental build from the browser tool once released; confirm restore-to-stock works before relying on it.
 3. Pair the radio to a laptop over Bluetooth KISS and run Pat in a local-only test: no on-air Winlink until a gateway on a nearby VHF packet frequency is confirmed (check which Winlink gateways are in range first).
 4. Try a short test message; log what worked in this file.
