@@ -34,6 +34,19 @@ Charlie asked on Nov 15 2026 to have this written down so it is not forgotten. T
   - USB-C connection to App Manager is labeled experimental. APRS transmitting needs an amateur licence.
   - A separate joke/experimental "Doom" firmware exists; avoid it on a radio you need.
 
+## The developer's beta instructions (PDF, 2 pages, read Nov 19 8:33 PM)
+Summary only; the PDF itself is not in the repo. Needs a charged **Type-C** TD-H9, a USB-C **data** cable, a laptop or desktop with Chrome or Edge, Python 3.11+, Bluetooth on the computer, and Pat with a Winlink login.
+1. **Install H9 Toolbox Firmware v0.1.5** at `dev.h9toolbox.com/firmware-update/` (the dev updater). Radio off, plug in, hold side PTT + keypad 2 while powering on (screen stays blank, top light green). Connect, choose "USB Composite Device", Load v0.1.5, Install. **Leave the backup option on and keep the `.h9hid` file it downloads.** First install can take **up to 45 minutes**; keep the radio on and plugged in until the updater says finished.
+2. **Unlock the TNC on the radio.** After the reboot: off, then hold PTT + 7 while powering on until "APRS Update" shows. Menu once, "APRS STAGE READY", Menu again, wait for "APRS BOOT VERIFIED", power cycle normally. In APRS Info the version should read V1.0.15X. If it keeps saying "Querying..." or APRS was never staged, message the developer before retrying.
+3. **Bridge:** download `h9-kiss-bridge.zip` from the dev site, unzip, make a Python virtual environment, `pip install -r requirements.txt`, then run `bridge.py --scan` to get the radio's Bluetooth ID. Radio Bluetooth on, on the normal channel screen, App Manager and other apps closed.
+4. **Start the bridge and Pat together** with `run_pat.py --device <ID> --pat-config <path from "pat env"> --gateway <GATEWAY-SSID> --open-browser --allow-tx`. Tune the radio to the Winlink packet gateway's published frequency first. `--allow-tx` lets the radio transmit: only use it where licensed.
+5. **Test connect** in Pat (entry starting with "H9" plus the gateway callsign, Pat at `http://127.0.0.1:8080/`). **Check Pat's Outbox first: anything queued may send on connect.**
+
+My notes on it:
+- The bridge is a Python program from the developer's site that Charlie would run on a computer. Run it only on the **laptop**, never on cnjmesh1/2/3 or any Pi in the mesh setup. I could not download or read the bridge code from here (the download host is blocked in my session), so it is unreviewed. The site says the source is on GitHub; read it before running, or ask me to once GitHub access to it is enabled.
+- Still needed before step 4: a Winlink account, Pat installed and configured, and a **Winlink packet gateway in range of Kendall Park** with its frequency and callsign (not yet researched; Pat can transmit mail, so use a short test message).
+- Step 2 and step 1 both depend on the Type-C radio; stop and ask the developer if the new radio's updater step says anything else.
+
 ## Test project idea (fun, not urgent)
 Charlie suggested on Nov 19 making this a hobby test project. Sketch, to refine when the build is out:
 1. Use the **second TD-H9 Charlie ordered** (never K2GIA-7). Back up its `.img` and keep the updater's recovery backup first.
