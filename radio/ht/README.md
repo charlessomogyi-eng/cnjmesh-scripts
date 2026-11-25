@@ -9,6 +9,7 @@ mesh/Pi documentation. Last updated: 2026-10-25.
 - `codeplugs/` - channel lists as CHIRP CSV files (one per radio, plus shared lists)
 - `images/` - untouched CHIRP `.img` backups, read from each radio **before** any upload
 - `W2NJR.md` - notes on the W2NJR linked repeater system and what changed
+- `nifog.md` - notes from the CISA NIFOG (calling frequencies, HF emergency channels, GMRS/MURS/FRS)
 - `local-repeaters.md` - other local repeaters and nets (K2GE Sayreville, Middlesex Chat Group Net, CJTN)
 
 ## Radio inventory
@@ -67,6 +68,9 @@ Never upload to a radio before its original image is backed up.
   for the Middlesex County Chat Group Net. Paste into the same radios as the W2NJR list.
 
 - `codeplugs/W2ZQ_CHIRP.csv` - W2ZQ DVRA club repeater, West Trenton 146.670 -, PL 131.8.
+- `codeplugs/ham_calling_simplex_NIFOG_CHIRP.csv` - 146.520 and 446.000 FM simplex calling (ham radios only).
+- `codeplugs/GMRS_NIFOG_CHIRP.csv` - GMRS channels 1-22 for the Retevis RT76P only (needs a GMRS license to transmit).
+- `codeplugs/MURS_NIFOG_CHIRP.csv` - five MURS channels; for MURS-certified radios only, not ham HTs.
 
 ## HF digital modes (reference, no radio yet)
 

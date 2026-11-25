@@ -1,0 +1,6 @@
+Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment
+1,MURS1,151.820000,,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,NFM,5.00,,,"MURS ch 1, 11.25 kHz, 2 W max, no license needed, Part 95 certified radios only"
+2,MURS2,151.880000,,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,NFM,5.00,,,"MURS ch 2, 11.25 kHz, 2 W max, no license needed, Part 95 certified radios only"
+3,MURS3,151.940000,,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,NFM,5.00,,,"MURS ch 3, 11.25 kHz, 2 W max, no license needed, Part 95 certified radios only"
+4,MURS4,154.570000,,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,FM,5.00,,,"MURS ch 4, 20 kHz, 2 W max, no license needed, Part 95 certified radios only"
+5,MURS5,154.600000,,0.000000,,88.5,88.5,023,NN,023,Tone->Tone,FM,5.00,,,"MURS ch 5, 20 kHz, 2 W max, no license needed, Part 95 certified radios only"
