@@ -2846,7 +2846,7 @@ Charlie pushed back on being sent to contact people ("most people can reach MQTT
 
 ## Oct 28 2026 (late evening): cloudflared upgraded, malla made public
 - [V] cloudflared upgraded to 2026.10.5 on cnjmesh2 (dpkg package, .deb from GitHub releases) and cnjmesh1 (manual binary at /usr/local/bin, swapped); both registered 4 tunnel connections. Backups: `/root/cloudflared.bak-2026.2.0` (cnjmesh2), `/usr/local/bin/cloudflared.bak-2026.1.2` (cnjmesh1). cnjmesh3 not yet checked.
-- [V] Cloudflare account that owns cnjmesh.me is the att.net email login, not Google (a Google sign-in opens a different, empty account).
+- [V] Cloudflare account that owns cnjmesh.me is a non-Google email login (a Google sign-in opens a different, empty account).
 - [V] Deleted the Zero Trust Access application "CNJ Mesh Malla Dashboard"; malla.cnjmesh.me loads without a login (tested by Charlie on his phone); graywolf.cnjmesh.me still asks for the email code. The login was Access email one-time-code, not Google.
 - Still open: MQTT Explorer session; install graywolf-health-watchdog on cnjmesh1; About-page note on what Malla collects.
 
