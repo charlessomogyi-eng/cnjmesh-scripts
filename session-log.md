@@ -2900,3 +2900,6 @@ Charlie shared screenshots from the MeshCore public-map Discord. Explained that 
 
 ## 2026-11-04 (8:55 PM) — decision: keep the health watchdog's one automatic Graywolf restart
 Charlie decided to keep it. Reasons recorded: it self-heals a Digirig that drops off USB (Oct 28 was deaf and mute for 9+ hours); the risk (a restart beacons about 30 s later and keys the radio) is covered by the PTT guard and the radio's 30 s TOT. Nothing changed on the Pi.
+
+## 2026-11-25 (1:30 PM) — Part 3 handoff written; Nov 13-25 summarized
+Wrote `docs/handoff-part3-2026-11-25.md` for a fresh chat: how to read, update and review this repo (raw URLs, add_repo, pull before editing, commit trailers, what to say if a push fails), working agreement, stable network facts, Nov 13-25 chronology (the log had stopped at Nov 4), threads in flight with the next step for each, decisions waiting on Charlie, an index of every `todos.md` section, a docs map and the traps from this chat. Added a pointer to it in `CLAUDE_CONTEXT.md`. Also added the 2 m mobile reception test (K2GIA-1 and the TD-H9) to `todos.md`. Nothing changed on any Pi, broker or node.
