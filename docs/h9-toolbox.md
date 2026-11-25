@@ -69,3 +69,10 @@ Charlie suggested on Nov 19 making this a hobby test project. Sketch, to refine 
 1. Read the GitHub repo and the Firmware page for the restore procedure and the license (read-only).
 2. Decide whether to get or borrow a second TD-H9 to try the App Manager and the satellite app.
 3. If it works, consider asking the developer about the APRS mute and BLE-bridge requests, since APRS is Charlie's main use of the radio.
+
+## Related lead: H9 OPS (Android APRS dashboard) — noted Nov 25 2026
+Source: two Facebook posts in the TIDRADIO H9 - USERS group (Nov 23 and Nov 25 screenshots from Charlie); nothing here was verified on the GitHub page.
+- **What the posts show [S, screenshots]:** an Android app called H9 OPS that connects to a TD-H9 over Bluetooth (PIN locked) and shows a live dashboard: both VFOs, battery, a Stations list tagged DIRECT or VIA a digipeater, Messages, Log and Map tabs, plus Weather, Tracks, Objects and Alerts. The screenshots use NOCALL placeholder callsigns, so they look like demo data.
+- **Requirement [S, the poster's text, Nov 25]:** it "does require a firmware patch", named `TD-H9-V1.0.38.P2.fw`. The poster gave a GitHub address (`Deadly447/H9-OPS`). I could not open it from the assistant's session.
+- **Unknown:** who wrote it, whether it is the same developer as H9 Toolbox, what the patched firmware changes, how to flash it and go back, and the license.
+- **Rule:** the patched firmware would replace the stock APRS firmware, so it is not for K2GIA-7 (do-not-reprogram). Same rule as above: use the second TD-H9. The Oct 21 decision on updating K2GIA-7 to 1.0.38 is a separate open item in `todos.md`.
