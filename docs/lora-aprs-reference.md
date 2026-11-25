@@ -222,3 +222,12 @@ Jon Adams N7UV, "LoRa APRS: High-Speed, Low-Power, Long-Range Tactical Data Comm
 - **RXT:** per-hop RSSI, SNR, frequency offset and relay delay. Live view `jonadams.com/rxt/`; one slide shows Graywolf with "RXT Telemetry" and "RXT Links". Group: `groups.google.com/g/ham-radio-lora-aprs`.
 - **Checked Nov 25 [V, web]:** upstream `chrissnell/graywolf` releases list v0.14.14 (1 Oct) as newest, with no mention of RXT or LoRa. The fork `moricef/graywolf` publishes experimental RXT test builds (for example `rxt-8d41f0ac`, 31 Oct, based on 0.14.14). [I] The slide's screenshot is from such a build. Nothing installed; not for K2GIA-1 without a separate decision.
 - **Firmware versions on a flasher slide [S]:** CA2RXU iGate V4.0.4 (14 Oct 2026), Tracker V4.0.1 (6 Oct 2026), with a T-Beam 1W selected. The repo records older versions on K2GIA-9 and K2GIA-10; whether the 4.x builds support the T3 V1.6.1 and what changes was not checked.
+
+## Idea Nov 25 2026: LilyGO T-LoRa Pager as a LoRa APRS handheld (Charlie wants to do this)
+Source: LoRa APRS Discord #hardware, Nov 23; project by Walter Dunckel K6ATV. The posted `pager-tracker` link did not load; the project read is `github.com/radiohound/lora-aprs-pager` (commit `a9c1641`, Nov 25). Nothing bought or flashed.
+- **Hardware [S]:** T-LoRa Pager, **433 MHz, SX1262** version (the app drives SX1262 only; not LR1121, not 915). microSD (FAT32) for map tiles, USB-C cable.
+- **Radio settings [V, source `src/app/app.cpp`]:** 433.775 MHz, SF12, BW125, CR 4/5, sync 0x12. Same frequency, SF and BW as K2GIA-10 per this repo. On-air operation with our stations is untested.
+- **Features [S]:** offline map, heard list with RSSI/SNR, beacon, APRS messages with ack and retry, phone setup over its own hotspot. Default path WIDE1-1. Clock and map default to California.
+- **Status [S]:** alpha, release `v0.1.0-alpha.2` (Nov 24), tested by the author on one unit. Prebuilt .bin files on the Releases page or build with PlatformIO. Back up the 16 MB factory flash first (README has the command).
+- **Price/stock (web, Nov 25):** lilygo.cc listed $92.04 with every variant sold out; resellers list roughly $78-100, stock of the 433 version not checked.
+- Jason K4APR said in the same thread he has his own unfinished adaptation.

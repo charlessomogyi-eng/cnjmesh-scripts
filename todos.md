@@ -36,6 +36,7 @@
 - **[Added Nov 25 2026] Pick up here (on hold until Charlie says he is ready):**
   - On cnjmesh2 (both finish on their own), paste the output into the chat: `uptime -s`, then `journalctl --list-boots --no-pager | tail -15`. Purpose: see whether the malla2 DOWN/UP alerts line up with cnjmesh2 resets.
   - Answer: is K2GIA-1 on the roof antenna or the garage whip right now?
+- **[Added Nov 25 2026] LoRa APRS pager (wanted):** LilyGO T-LoRa Pager, 433 MHz SX1262, with the alpha firmware `radiohound/lora-aprs-pager`. Next: find 433 stock and decide on buying; check for newer releases before flashing. Details in `docs/lora-aprs-reference.md`.
 
 ## Everything else that is still open (one line each; full text in `docs/todos-full-2026-11-12.md`)
 
