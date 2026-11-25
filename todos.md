@@ -33,6 +33,9 @@
   - **Tck's 62.5 test and CoreScope.** Tck's group wants to switch from 500 to 62.5 together (910.525 / 62.5 / SF7 / CR5) and see who hears whom. Open: read-only check of our CoreScope `mqttSources` and `iataFilter`; whether to add his IATA code; whether LetsMesh accepts a 62.5 observer (unverified). CoreScope is software someone hosts, not a service you sign up for.
   - **A second node named "CNJ Mesh Observer"** (key starts `101afe5e`, not our `a8c40bf3`). Harmless; no action unless Charlie wants the owner to rename.
   - **K2GIA-1 antenna location is unresolved** (roof dual-band per the ops file since Aug 17, garage whip per older notes). Ask Charlie; needed before the 2 m mobile test.
+- **[Added Nov 25 2026] Pick up here (on hold until Charlie says he is ready):**
+  - On cnjmesh2 (both finish on their own), paste the output into the chat: `uptime -s`, then `journalctl --list-boots --no-pager | tail -15`. Purpose: see whether the malla2 DOWN/UP alerts line up with cnjmesh2 resets.
+  - Answer: is K2GIA-1 on the roof antenna or the garage whip right now?
 
 ## Everything else that is still open (one line each; full text in `docs/todos-full-2026-11-12.md`)
 
