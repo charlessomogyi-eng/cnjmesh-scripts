@@ -213,3 +213,12 @@ Charles pasted a pinout and wiring guide from another AI assistant. Checked agai
 - **Practical rule:** trust the labels printed on the board. One wire from the button to the hole labeled **15**, the other to a hole labeled **GND**. Use wires so nothing bridges neighboring holes. GPIO2 and GPIO12 are boot-strapping pins, so keep clear of them, and do not hold the button while the board powers on [I, general ESP32 behavior].
 - This supersedes the "underside pad" wording in the install steps above for locating IO15. The signal is the same either way.
 
+
+## Update 2026-11-25: N7UV LoRa APRS slide deck (dated 23 Nov 2026, shared on the LoRa APRS Discord)
+Jon Adams N7UV, "LoRa APRS: High-Speed, Low-Power, Long-Range Tactical Data Communications for Ham Radio", 32 slides. The PDF is not stored in the repo. **[S]** = the presenter's claims, not tested here.
+- **Arizona network [S]:** 433.775 MHz, BW125, **SF7** (4557 bps; his benchmark slide shows CR 4/6), RF-centric, iGates for services. K2GIA-10 uses SF12 BW125, so the two settings do not interoperate over the air. At CR 4/5, SF12 BW125 is about 293 bps (calculated).
+- **Digipeaters [S]:** mostly 1 W QRPLabs LightGateway Plus, CA2RXU-F4MLV firmware, all solar, 4 dBi fiberglass antennas (dual-band where shared with 2 m APRS).
+- **Suggestion in the deck [S]:** add 70 cm LoRa to existing 2 m digipeaters using a dual-band antenna, diplexer and filter.
+- **RXT:** per-hop RSSI, SNR, frequency offset and relay delay. Live view `jonadams.com/rxt/`; one slide shows Graywolf with "RXT Telemetry" and "RXT Links". Group: `groups.google.com/g/ham-radio-lora-aprs`.
+- **Checked Nov 25 [V, web]:** upstream `chrissnell/graywolf` releases list v0.14.14 (1 Oct) as newest, with no mention of RXT or LoRa. The fork `moricef/graywolf` publishes experimental RXT test builds (for example `rxt-8d41f0ac`, 31 Oct, based on 0.14.14). [I] The slide's screenshot is from such a build. Nothing installed; not for K2GIA-1 without a separate decision.
+- **Firmware versions on a flasher slide [S]:** CA2RXU iGate V4.0.4 (14 Oct 2026), Tracker V4.0.1 (6 Oct 2026), with a T-Beam 1W selected. The repo records older versions on K2GIA-9 and K2GIA-10; whether the 4.x builds support the T3 V1.6.1 and what changes was not checked.
