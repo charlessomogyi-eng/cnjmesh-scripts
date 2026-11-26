@@ -4,6 +4,7 @@ from pathlib import Path
 
 from support import SAMPLES, mqtt, syslog
 import aprs
+from dashboard import settings
 from store import Store
 
 T = 1_000_000.0
@@ -146,6 +147,33 @@ class Figures(Base):
         self.assertEqual(s["relayed"][0]["stations"][0]["call"], "N0CALL-7")
         self.assertEqual([r["call"] for r in s["unknown"]], ["N0CALL-9"])
         self.assertEqual(s["own_tx"]["packets"], 1)
+
+    def test_channel_load_with_crc_estimate(self):
+        self.feed("status", T - 120)
+        w = self.store.summary(T)["windows"][0]
+        self.assertEqual(w["busy_crc_pct"], w["busy_pct"])      # no CRC errors
+        self.store.on_syslog(syslog("crc_error"), T - 60)
+        self.store.on_syslog(syslog("crc_error"), T - 30)
+        w = self.store.summary(T)["windows"][0]
+        one = aprs.airtime(3 + len(SAMPLES["status"]["mqtt_payload"]))
+        self.assertAlmostEqual(w["busy_pct"], 100 * one / 600)
+        self.assertAlmostEqual(w["busy_crc_pct"], 100 * 3 * one / 600)
+
+    def test_crc_errors_alone_give_no_estimate(self):
+        self.store.on_syslog(syslog("crc_error"), T - 60)
+        w = self.store.summary(T)["windows"][0]
+        self.assertEqual((w["crc_errors"], w["busy_crc_pct"]), (1, None))
+
+    def test_setup_text_is_passed_through(self):
+        store = Store(str(Path(self.tmp.name) / "s.db"), setup={"Antenna": "whip"})
+        self.assertEqual(store.summary(T)["setup"], {"Antenna": "whip"})
+        store.close()
+
+    def test_setup_settings(self):
+        self.assertEqual(settings({})["setup"], {})
+        self.assertEqual(
+            settings({"SETUP_ANTENNA": " whip on the sill ", "SETUP_NOTES": ""})["setup"],
+            {"Antenna": "whip on the sill"})
 
     def test_empty(self):
         s = self.store.summary(T)

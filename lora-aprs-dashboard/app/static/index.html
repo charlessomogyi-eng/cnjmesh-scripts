@@ -15,16 +15,24 @@ h1{font-size:19px;margin:0}h2{font-size:15px;margin:22px 0 6px}
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
 button,select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
 button[aria-pressed="true"]{border-color:var(--link);color:var(--link)}
-.cards{display:flex;flex-wrap:wrap;gap:8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:150px}
-.card b{font-size:20px}
+#totals table{width:auto;min-width:min(100%,460px)}
+#totals th,table.plain th{cursor:default}
+#totals td:first-child{white-space:normal}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:16px 0 0;border-bottom:1px solid var(--line)}
+.tabs button{border-radius:8px 8px 0 0;border-bottom:0;color:var(--mute);padding:7px 14px}
+.tabs button[aria-selected="true"]{color:var(--fg);font-weight:600;border-color:var(--link)}
+input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;min-width:0;flex:1 1 180px;max-width:320px}
+[hidden]{display:none !important}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0}
+dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;background:var(--card);font-variant-numeric:tabular-nums}
 th,td{border:1px solid var(--line);padding:4px 8px;text-align:right;white-space:nowrap}
 th:first-child,td:first-child,td.text,th.text{text-align:left}
 th:first-child,td:first-child{position:sticky;left:0;background:var(--card)}
 th{font-weight:600;cursor:pointer;user-select:none}
-td.info{white-space:normal;overflow-wrap:anywhere;text-align:left;min-width:180px}
+td.info{white-space:normal;overflow-wrap:anywhere;text-align:left;min-width:300px}
+#totals{margin-top:8px}
 tr.dim td{color:var(--mute)}
 td.red{color:var(--red);font-weight:600}td.amber{color:var(--amber);font-weight:600}
 .compact th,.compact td{padding:1px 6px;font-size:12px}
@@ -38,26 +46,43 @@ footer{margin-top:24px;color:var(--mute);font-size:12px;max-width:80ch}
 <h1 id="title">LoRa APRS receive dashboard</h1>
 <div class="mute" id="updated">Loading…</div>
 <div id="warnings"></div>
+<div class="scroll" id="totals"></div>
+
+<div class="tabs" role="tablist">
+  <button role="tab" data-tab="stations">Stations</button>
+  <button role="tab" data-tab="packets">Recent packets</button>
+  <button role="tab" data-tab="setup">Local setup</button>
+</div>
+
+<div class="bar" id="common">
+  <input id="filter" type="search" placeholder="Filter digis or stations" aria-label="Filter digis or stations">
+  <button id="compact" aria-pressed="false">Compact</button>
+</div>
+
+<section id="tab-stations">
 <div class="bar">
   <label>Sort <select id="sort">
     <option value="packets">packets</option><option value="last">last heard</option>
     <option value="call">name</option><option value="noise">noise (high first)</option>
   </select></label>
-  <button id="compact" aria-pressed="false">Compact</button>
   <button id="hidden" aria-pressed="false">Show hidden</button>
   <button id="expand">Expand all</button>
   <button id="collapse">Collapse all</button>
 </div>
-<div class="cards" id="cards"></div>
-
-<h2>Heard directly by this receiver</h2>
-<div class="mute">Each row is a station whose transmitter this receiver heard, over the last 24 hours.</div>
-<div class="scroll" id="local"></div>
-
+<div id="overviewBox"></div>
+<div id="localBox"></div>
 <div id="relayedBox"></div>
 <div id="unknownBox"></div>
+</section>
 
-<details id="recentBox"><summary>Recent packets</summary><div class="scroll" id="recent"></div></details>
+<section id="tab-packets">
+<div class="mute">Newest first, from the last 100 packets. The filter looks at the sender and the station heard.</div>
+<div class="scroll" id="recent"></div>
+</section>
+
+<section id="tab-setup">
+<dl id="setup"></dl>
+</section>
 
 <footer id="notes"></footer>
 
@@ -72,6 +97,9 @@ let data = null, packets = [];
 let sortKey = store.get("sort", "packets"), sortDir = 0;
 let hidden = new Set(store.get("hiddenCalls", [])), showHidden = false;
 const closed = new Set();
+let needle = "";
+let tab = store.get("tab", "stations");
+const matches = (...calls) => !needle || calls.some(c => c && c.toUpperCase().includes(needle));
 
 // All packet text arrives over the air from strangers: only ever set textContent.
 function el(tag, text, cls) {
@@ -124,7 +152,7 @@ function ordered(rows, key, dir) {
   });
 }
 
-function table(columns, rows, hideable) {
+function table(columns, rows, hideable, pinned = []) {
   const t = el("table"), head = el("tr");
   for (const c of columns) {
     const th = el("th", c.name + (c.key === sortKey ? (( sortDir || (c.key === "call" ? 1 : -1)) > 0 ? " ▲" : " ▼") : ""), c.extra ? "extra" : "");
@@ -137,7 +165,7 @@ function table(columns, rows, hideable) {
   }
   t.append(head);
   let shown = 0;
-  for (const r of ordered(rows, sortKey, sortDir)) {
+  for (const r of [...pinned, ...ordered(rows, sortKey, sortDir)]) {
     const isHidden = hidden.has(r.call);
     if (isHidden && !showHidden) continue;
     shown++;
@@ -157,10 +185,140 @@ function table(columns, rows, hideable) {
     t.append(tr);
   }
   if (!shown) {
-    const tr = el("tr"), td = el("td", rows.length ? "All rows are hidden." : "Nothing yet.", "text");
+    const tr = el("tr"), td = el("td", rows.length ? "All rows are hidden." : needle ? "No match." : "Nothing yet.", "text");
     td.colSpan = columns.length; tr.append(td); t.append(tr);
   }
   return t;
+}
+
+const percent = (v, estimated) => v === null ? "–" : (estimated ? "≈ " : "") + v.toFixed(2);
+
+function renderTotals() {
+  const t = el("table"), head = el("tr");
+  head.append(el("th", ""), ...data.windows.map(w => el("th", w.label)));
+  t.append(head);
+  for (const [name, value] of [
+    ["Packets received", w => w.packets],
+    ["Stations heard", w => w.stations],
+    ["CRC errors", w => w.crc_errors],
+    ["Packets sent", w => w.sent],
+    ["Channel load %", w => percent(w.busy_pct, w.estimated)],
+    ["incl. CRC est. %", w => percent(w.busy_crc_pct, w.estimated || w.crc_errors > 0)]
+  ]) {
+    const tr = el("tr");
+    tr.append(el("td", name), ...data.windows.map(w => el("td", value(w))));
+    t.append(tr);
+  }
+  $("totals").replaceChildren(t);
+}
+
+// A section that stays open or closed across refreshes.
+function section(id, title, columns, rows, hideable, note, pinned) {
+  const box = el("details");
+  box.open = !closed.has(id);
+  box.ontoggle = () => box.open ? closed.delete(id) : closed.add(id);
+  box.append(el("summary", title));
+  if (note) box.append(el("div", note, "mute"));
+  const wrap = el("div", null, "scroll");
+  wrap.append(table(columns, rows, hideable, pinned));
+  box.append(wrap);
+  return box;
+}
+const pick = (...keys) => COLUMNS.filter(c => keys.includes(c.key));
+const total = rows => rows.reduce((n, r) => n + r.packets, 0);
+const latest = rows => rows.length ? Math.max(...rows.map(r => r.last)) : null;
+
+function renderStations() {
+  // One summary row per digipeater, so digipeaters sort the same way stations do.
+  const digis = data.relayed.map(d => ({
+    call: d.digi, kind: "digipeater", stations: d.stations.length,
+    packets: total(d.stations), last: latest(d.stations),
+    noise: (data.local.find(r => r.call === d.digi) || {}).noise ?? null, rows: d.stations
+  }));
+  const own = {
+    call: data.station, kind: "this receiver", stations: data.local.length,
+    packets: data.windows[data.windows.length - 1].packets,
+    last: latest([...data.local, ...data.unknown])
+  };
+  const [name, packetsCol, last] = pick("call", "packets", "last");
+  const overview = [{...name, name: "Site"}, packetsCol,
+    {key: "stations", name: "Stations", text: r => r.stations}, last,
+    {key: "kind", name: "Type", text: r => r.kind}];
+  $("overviewBox").replaceChildren(section("overview",
+    "Overview: this receiver and " + count(digis.length, "digipeater"), overview,
+    digis.filter(d => matches(d.call, ...d.rows.map(r => r.call))), false,
+    "Last 24 hours. A digipeater's figures count only what it passed on to this receiver.",
+    matches(own.call) ? [own] : []));
+
+  $("localBox").replaceChildren(section("local", "Heard directly by this receiver", COLUMNS,
+    data.local.filter(r => matches(r.call)), true,
+    "Each row is a station whose transmitter this receiver heard, over the last 24 hours."));
+
+  const rel = [];
+  const shown = ordered(digis, sortKey, sortDir)
+    .map(d => ({...d, rows: matches(d.call) ? d.rows : d.rows.filter(r => matches(r.call))}))
+    .filter(d => d.rows.length);
+  if (shown.length) {
+    rel.push(el("h2", "Arrived through a digipeater"),
+      el("div", "Who each digipeater passed on to this receiver. Signal figures for these hops are in the digipeater's row above.", "mute"));
+    for (const d of shown) {
+      rel.push(section("digi:" + d.call, "via " + d.call + " (" + count(total(d.rows), "packet") + ")",
+        pick("call", "packets", "last"), d.rows, false));
+    }
+  }
+  $("relayedBox").replaceChildren(...rel);
+
+  const unknown = data.unknown.filter(r => matches(r.call));
+  $("unknownBox").replaceChildren(...unknown.length ? [section("unknown", "Path unknown",
+    COLUMNS.filter(c => !c.localOnly), unknown, true,
+    "Listed by sender. The signal figures may belong to a digipeater, not to this station.")] : []);
+}
+
+function renderPackets() {
+  const t = el("table", null, "plain"), h = el("tr");
+  ["Time", "Kind", "From", "Heard from", "Type", "RSSI", "SNR", "Text"].forEach((n, i) => h.append(el("th", n, i === 7 ? "text" : "")));
+  t.append(h);
+  for (const p of packets.filter(p => matches(p.sender, p.transmitter))) {
+    const tr = el("tr");
+    const heard = p.kind === "tx" ? "sent by us" : p.transmitter || (p.kind === "rx" ? "unknown" : "–");
+    [new Date(p.ts * 1000).toLocaleTimeString(), p.kind, p.sender || "–", heard, p.type || "–",
+     num(p.rssi), num(p.snr, 2)].forEach(v => tr.append(el("td", v)));
+    tr.append(el("td", (p.header ? "[" + p.header + "] " : "") + (p.info || ""), "info"));
+    t.append(tr);
+  }
+  if (t.rows.length === 1) {
+    const tr = el("tr"), td = el("td", needle ? "No match." : "Nothing yet.", "text");
+    td.colSpan = 8; tr.append(td); t.append(tr);
+  }
+  $("recent").replaceChildren(t);
+}
+
+function renderSetup() {
+  const s = data.status, when = ts => ts ? new Date(ts * 1000).toLocaleString() : "never";
+  const items = [
+    ["Station", data.station],
+    ["Modem", "SF" + data.radio.sf + " BW" + data.radio.bw / 1000 + " CR4/" + data.radio.cr],
+    ...Object.entries(data.setup),
+    ["iGate firmware", s.firmware || "not seen yet"],
+    ["Program started", when(s.started)],
+    ["Data since", when(data.data_since)],
+    ["Last syslog line", when(s.syslog_last)],
+    ["MQTT", s.mqtt_connected === null ? "not configured" : s.mqtt_connected ? "connected" : "not connected"],
+    ["Last MQTT packet", when(s.mqtt_last)],
+    ["Feeds joined", count(s.matched, "packet") + " since start"],
+    ["Unreadable lines", s.unparsed + " since start"]
+  ];
+  $("setup").replaceChildren(...items.flatMap(([k, v]) => [el("dt", k), el("dd", v)]));
+}
+
+function showTab(name) {
+  if (!$("tab-" + name)) name = "stations";
+  tab = name; store.set("tab", name);
+  for (const b of document.querySelectorAll("[data-tab]")) {
+    b.setAttribute("aria-selected", b.dataset.tab === name);
+    $("tab-" + b.dataset.tab).hidden = b.dataset.tab !== name;
+  }
+  $("common").hidden = name === "setup";
 }
 
 function render() {
@@ -170,6 +328,7 @@ function render() {
   document.title = data.station + " LoRa APRS";
   $("updated").textContent = "Updated " + new Date(data.now * 1000).toLocaleString() +
     " · SF" + data.radio.sf + " BW" + data.radio.bw / 1000 + " CR4/" + data.radio.cr +
+    " · " + count(data.relayed.length, "digipeater") +
     (data.data_since ? " · data since " + new Date(data.data_since * 1000).toLocaleString() : "");
 
   const warn = [];
@@ -181,62 +340,17 @@ function render() {
   if (s.unparsed) warn.push(s.unparsed + " syslog line(s) could not be read. Last one: " + s.last_unparsed);
   $("warnings").replaceChildren(...warn.map(w => el("div", w, "warn")));
 
-  $("cards").replaceChildren(...data.windows.map(w => {
-    const c = el("div", null, "card");
-    c.append(el("div", "Last " + w.label, "mute"), el("b", count(w.packets, "packet")),
-      el("div", count(w.stations, "station") + " heard"),
-      el("div", "Channel busy " + w.busy_pct.toFixed(2) + " %"),
-      el("div", w.sent + " sent · " + w.crc_errors + " CRC errors", "mute"));
-    return c;
-  }));
-
-  $("local").replaceChildren(table(COLUMNS, data.local, true));
-
-  const rel = [];
-  if (data.relayed.length) {
-    rel.push(el("h2", "Arrived through a digipeater"),
-      el("div", "Who each digipeater passed on to this receiver. Signal figures for these hops are in the digipeater's row above.", "mute"));
-    for (const d of data.relayed) {
-      const box = el("details");
-      box.open = !closed.has(d.digi);
-      box.ontoggle = () => box.open ? closed.delete(d.digi) : closed.add(d.digi);
-      const rows = d.stations;
-      box.append(el("summary", "via " + d.digi + " (" + count(rows.reduce((n, r) => n + r.packets, 0), "packet") + ")"));
-      const wrap = el("div", null, "scroll");
-      wrap.append(table(COLUMNS.filter(c => ["call", "packets", "last"].includes(c.key)), rows, false));
-      box.append(wrap); rel.push(box);
-    }
-  }
-  $("relayedBox").replaceChildren(...rel);
-
-  const unk = [];
-  if (data.unknown.length) {
-    unk.push(el("h2", "Path unknown"),
-      el("div", "Listed by sender. The signal figures may belong to a digipeater, not to this station.", "mute"));
-    const wrap = el("div", null, "scroll");
-    wrap.append(table(COLUMNS.filter(c => !c.localOnly), data.unknown, true));
-    unk.push(wrap);
-  }
-  $("unknownBox").replaceChildren(...unk);
-
-  const t = el("table"), h = el("tr");
-  ["Time", "Kind", "From", "Heard from", "Type", "RSSI", "SNR", "Text"].forEach((n, i) => h.append(el("th", n, i === 7 ? "text" : "")));
-  t.append(h);
-  for (const p of packets) {
-    const tr = el("tr");
-    const heard = p.kind === "tx" ? "sent by us" : p.transmitter || (p.kind === "rx" ? "unknown" : "–");
-    [new Date(p.ts * 1000).toLocaleTimeString(), p.kind, p.sender || "–", heard, p.type || "–",
-     num(p.rssi), num(p.snr, 2)].forEach(v => tr.append(el("td", v)));
-    tr.append(el("td", (p.header ? "[" + p.header + "] " : "") + (p.info || ""), "info"));
-    t.append(tr);
-  }
-  $("recent").replaceChildren(t);
+  renderTotals();
+  renderStations();
+  renderPackets();
+  renderSetup();
 
   const l = limit(data.radio.sf);
   $("notes").replaceChildren(...[
     "All signal figures are measured at " + data.station + ". Averages use packets that had a syslog line.",
     "SNR red: below " + (l + 1.5) + " dB. Amber: below " + (l + 10.5) + " dB. The decode limit at SF" + data.radio.sf + " is " + l + " dB. Grey row: fewer than " + data.dim_below + " packets.",
     "Noise estimate: median of RSSI with the signal's share removed, from packets under +8 dB SNR. It is an estimate, not a calibrated measurement.",
+    "Channel load: time on air of packets received and sent, as a share of the whole window, even if the collector started more recently. The CRC estimate gives each CRC error the airtime of a typical good packet from the last 24 hours.",
     "Airtime %: share of the last hour taken by that station's transmissions. ≈ means a packet length was incomplete, so the figure is likely low.",
     "Our own transmissions: " + data.own_tx.packets + " in 24 h, " + pct(data.own_tx) + " % airtime in the last hour."
   ].map(x => el("p", x)));
@@ -258,8 +372,14 @@ function applyCompact(on) { document.body.classList.toggle("compact", on); $("co
 applyCompact(store.get("compact", false));
 $("compact").onclick = () => { const on = !document.body.classList.contains("compact"); store.set("compact", on); applyCompact(on); };
 $("hidden").onclick = () => { showHidden = !showHidden; $("hidden").setAttribute("aria-pressed", showHidden); render(); };
-$("expand").onclick = () => { closed.clear(); $("recentBox").open = true; render(); };
-$("collapse").onclick = () => { if (data) data.relayed.forEach(d => closed.add(d.digi)); $("recentBox").open = false; render(); };
+$("expand").onclick = () => { closed.clear(); render(); };
+$("collapse").onclick = () => {
+  if (data) ["overview", "local", "unknown", ...data.relayed.map(d => "digi:" + d.digi)].forEach(id => closed.add(id));
+  render();
+};
+$("filter").oninput = e => { needle = e.target.value.trim().toUpperCase(); render(); };
+for (const b of document.querySelectorAll("[data-tab]")) b.onclick = () => showTab(b.dataset.tab);
+showTab(tab);
 refresh();
 setInterval(refresh, 15000);
 </script>

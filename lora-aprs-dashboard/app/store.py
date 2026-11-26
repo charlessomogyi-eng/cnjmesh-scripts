@@ -38,8 +38,9 @@ CREATE INDEX IF NOT EXISTS packets_ts ON packets (ts);
 
 class Store:
     def __init__(self, path, own_call="K2GIA-10", sf=12, bw=125000, cr=5,
-                 preamble=8):
+                 preamble=8, setup=None):
         self.own_call = own_call
+        self.setup = dict(setup or {})      # free text for the "Local setup" tab
         self.radio = {"sf": sf, "bw": bw, "cr": cr, "preamble": preamble}
         self.lock = threading.RLock()
         self.db = sqlite3.connect(path, check_same_thread=False)
@@ -201,20 +202,35 @@ class Store:
             status = dict(self.status)
             first = self.db.execute("SELECT MIN(ts) FROM packets").fetchone()[0]
 
+        # A packet with a CRC error has no usable length, so its airtime is
+        # estimated as that of a typical good packet from the last 24 hours.
+        sizes = [self._air(r) for r in rows if r["kind"] == "rx" and r["length"]]
+        typical = statistics.median(sizes) if sizes else None
+
         windows = []
         for label, seconds in (("10 min", 600), ("1 hour", 3600),
                                ("24 hours", 86400)):
             part = [r for r in rows if r["ts"] >= now - seconds]
             heard = [r for r in part if r["kind"] == "rx"]
+            known = [r for r in part if r["kind"] != "crc"]
+            bad = len(part) - len(known)
+            busy = sum(map(self._air, known))
+            with_crc = None
+            if not bad:
+                with_crc = busy
+            elif typical is not None:
+                with_crc = busy + bad * typical
             windows.append({
                 "label": label,
                 "packets": len(heard),
                 "stations": len({r["transmitter"] for r in heard
                                  if r["transmitter"]}),
-                "crc_errors": sum(r["kind"] == "crc" for r in part),
+                "crc_errors": bad,
                 "sent": sum(r["kind"] == "tx" for r in part),
-                "busy_pct": 100 * sum(self._air(r) for r in part
-                                      if r["kind"] != "crc") / seconds,
+                "busy_pct": 100 * busy / seconds,
+                "busy_crc_pct": None if with_crc is None
+                else 100 * with_crc / seconds,
+                "estimated": any(not r["exact"] for r in known),
             })
 
         rx = [r for r in rows if r["kind"] == "rx"]
@@ -234,6 +250,7 @@ class Store:
             "now": now,
             "station": self.own_call,
             "radio": self.radio,
+            "setup": self.setup,
             "dim_below": DIM_BELOW,
             "data_since": first,
             "status": status,

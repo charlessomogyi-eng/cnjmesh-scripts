@@ -52,12 +52,16 @@ radio, WiFi and network layers are stand-ins. It is not a test on the board.
 - Noise estimate: total = RSSI - min(SNR, 0), then
   noise = total - 10 log10(1 + 10^(SNR/10)), only for SNR under +8 dB. It is
   derived from the formula above, not calibrated against any measurement.
+- Channel load "incl. CRC est.": a CRC error line gives no usable length, so
+  each one is counted as the median airtime of good received packets from the
+  last 24 hours. With no good packet to go by, no estimate is shown. How the
+  model page works this figure out is not known.
 - SNR colours: decode limit = -7.5 - 2.5 x (SF - 7) dB; red under limit + 1.5,
   amber under limit + 10.5. At SF7 this gives the model page's -6 and +3.
 
 ## Test status
 
-29 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
+33 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
 with the compiled firmware code, and a full run through a local mosquitto
 broker (paho-mqtt 1.6.1 and 2.2.0). All sample packets use placeholder calls
 and positions. **No real captured line has been tested.**

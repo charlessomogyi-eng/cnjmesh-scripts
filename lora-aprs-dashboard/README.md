@@ -20,11 +20,22 @@ K2GIA-10 --MQTT (aprs-k2gia-10/<sender>): path---> dashboard.py --> web page :80
 The two feeds are joined per packet. Without MQTT it still runs, but many
 packets then have no known path and are listed under "Path unknown".
 
+Totals for 10 minutes, 1 hour and 24 hours sit above three tabs: **Stations**,
+**Recent packets** and **Local setup**. A filter box narrows the stations and
+packets shown.
+
+- **Overview:** this receiver and each digipeater it heard relaying.
 - **Heard directly by this receiver:** one row per station whose transmitter was
   heard. A digipeated packet counts for the digipeater, since the signal
   figures are the digipeater's.
 - **Arrived through a digipeater:** who each digipeater passed on.
 - **Path unknown:** syslog-only packets whose path the firmware left out.
+- **Channel load incl. CRC est.:** each CRC error counted as a typical good
+  packet. An estimate only.
+
+Before showing the page to others: the distance column can help someone work out
+where the receiver is, and Recent packets shows message text. There is no
+setting yet that hides them.
 
 ## What is here
 

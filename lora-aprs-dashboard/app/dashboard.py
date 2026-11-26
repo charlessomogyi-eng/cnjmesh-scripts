@@ -45,6 +45,9 @@ def settings(env=os.environ):
         "http_port": int(get("HTTP_PORT", "8090")),
         "db": get("DB_PATH", "lora-aprs.db"),
         "retention_days": float(get("RETENTION_DAYS", "30")),
+        "setup": {label: get(name, "") for label, name in (
+            ("Hardware", "SETUP_HARDWARE"), ("Antenna", "SETUP_ANTENNA"),
+            ("Notes", "SETUP_NOTES")) if get(name, "")},
         "sf": int(get("LORA_SF", "12")),
         "bw": int(get("LORA_BW", "125000")),
         "cr": int(get("LORA_CR", "5")),
@@ -178,7 +181,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     cfg = settings()
     store = Store(cfg["db"], cfg["own_call"], cfg["sf"], cfg["bw"], cfg["cr"],
-                  cfg["preamble"])
+                  cfg["preamble"], cfg["setup"])
     # Open both ports before starting anything, so a busy port fails loudly.
     sock = open_syslog_socket(cfg)
     web = ThreadingHTTPServer((cfg["http_bind"], cfg["http_port"]),

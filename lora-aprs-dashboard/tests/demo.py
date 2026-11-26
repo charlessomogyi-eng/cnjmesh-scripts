@@ -68,7 +68,8 @@ def main():
         sys.exit("Run tests/harness/build.sh first.")
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8090
     with tempfile.TemporaryDirectory() as tmp:
-        store = Store(str(Path(tmp) / "demo.db"))
+        store = Store(str(Path(tmp) / "demo.db"), setup={
+            "Hardware": "simulated receiver", "Antenna": "simulated antenna"})
         now = time.time()
         fill(store, now)
         server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(store, lambda: now))
