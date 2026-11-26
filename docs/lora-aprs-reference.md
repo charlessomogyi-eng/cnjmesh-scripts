@@ -231,3 +231,18 @@ Source: LoRa APRS Discord #hardware, Nov 23; project by Walter Dunckel K6ATV. Th
 - **Status [S]:** alpha, release `v0.1.0-alpha.2` (Nov 24), tested by the author on one unit. Prebuilt .bin files on the Releases page or build with PlatformIO. Back up the 16 MB factory flash first (README has the command).
 - **Price/stock (web, Nov 25):** lilygo.cc listed $92.04 with every variant sold out; resellers list roughly $78-100, stock of the 433 version not checked.
 - Jason K4APR said in the same thread he has his own unfinished adaptation.
+
+## Plan Nov 25 2026: our own RXT-style LoRa APRS dashboard (Charlie wants to build it)
+Model: `jonadams.com/rxt/` (per-station packets, last heard, average SNR, noise estimate, frequency offset, channel time-on-air %; a local table plus one table per remote digi). Its source code was not found. Nothing built or changed yet.
+
+**Verified from source [V]**
+- CA2RXU iGate **V3.2.4** (K2GIA-10's recorded version) sends a syslog UDP line for every received packet ending ` / <RSSI>dBm / <SNR>dB / <FreqErr>Hz` (`src/syslog_utils.cpp`, `lora_utils.cpp`). Position packets add distance and comment after that.
+- Syslog lines do not always keep the path: message, Mic-E, status and object lines omit it; position lines with `WIDE1-1` show only tocall and `WIDE1-1`. So the last-hop digipeater can be lost.
+- The MQTT feed (`aprs-k2gia-10/<sender>`) publishes the packet text (with path) but no signal data. Combining both feeds (match by sender and time) would give full records [I].
+- RXT per-hop data exists only when the relaying digipeater runs RXT firmware (`moricef/LoRa_APRS_iGate`, branch `rxt`, experimental, commits as of Nov 25; has a `ttgo-lora32-v21` build and a small built-in WebUI RXT panel). Stock CA2RXU stops reading at the zero byte before the RXT block, so K2GIA-10 as it is cannot see it. Protocol docs: that branch's `docs/RXT.md`; JSON stream spec `moricef/LoRa_APRS_JSON_Protocol`.
+
+**Stages**
+1. No reflash: collector on cnjmesh1 (syslog, plus MQTT for paths) into a small database and a local web page: the local-receiver table.
+2. Only if wanted: try RXT firmware on a spare board (the second RX board's arrival is unconfirmed), not on K2GIA-10.
+
+**Check first on cnjmesh1:** UDP 1514 may already be held by `lora-aprs-discord-bridge-v2.py` (only one listener); confirm what is running and capture real RX lines.
