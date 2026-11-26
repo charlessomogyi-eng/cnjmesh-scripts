@@ -10,6 +10,8 @@ through it yet.** Installing needs Charlie's OK.
 
 Facts behind the design, and what is still unknown: [NOTES.md](NOTES.md).
 
+**To install it, follow [INSTALL.md](INSTALL.md)** (cnjmesh3, step by step).
+
 ## How it works
 
 ```
