@@ -44,7 +44,7 @@ def settings(env=os.environ):
         "http_bind": get("HTTP_BIND", "0.0.0.0"),
         "http_port": int(get("HTTP_PORT", "8090")),
         "db": get("DB_PATH", "lora-aprs.db"),
-        "retention_days": float(get("RETENTION_DAYS", "30")),
+        "retention_days": float(get("RETENTION_DAYS", "90")),
         "setup": {label: get(name, "") for label, name in (
             ("Hardware", "SETUP_HARDWARE"), ("Antenna", "SETUP_ANTENNA"),
             ("Notes", "SETUP_NOTES")) if get(name, "")},
@@ -86,11 +86,30 @@ def syslog_loop(sock, store, cfg, stop):
     out.close()
 
 
+def is_local(host):
+    """True if host is an address of this machine (binding to it works)."""
+    try:
+        ip = socket.gethostbyname(host)
+    except OSError:
+        return False
+    if ip.startswith("127.") or ip == "0.0.0.0":
+        return True
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.bind((ip, 0))
+        return True
+    except OSError:
+        return False
+    finally:
+        probe.close()
+
+
 def open_syslog_socket(cfg):
     for host, port in cfg["forward"]:
-        if port == cfg["syslog_port"] and host in (
-                "127.0.0.1", "localhost", "0.0.0.0", cfg["syslog_bind"]):
-            raise ValueError("SYSLOG_FORWARD points back at our own port")
+        if port == cfg["syslog_port"] and is_local(host):
+            # Each line would come straight back and be sent again, forever.
+            raise ValueError("SYSLOG_FORWARD %s:%d points back at our own port"
+                             % (host, port))
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((cfg["syslog_bind"], cfg["syslog_port"]))
     return sock

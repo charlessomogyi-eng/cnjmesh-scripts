@@ -32,6 +32,12 @@ radio, WiFi and network layers are stand-ins. It is not a test on the board.
 - (*) The MQTT payload is the packet without the LoRa header, on
   `<topic>/<sender>`. A packet is not published if
   5 + 2 + topic length + payload length is over 256 bytes (PubSubClient 2.8).
+- Order in one pass of the main loop (`LoRa_APRS_iGate.cpp`): receive and send
+  the syslog line, then APRS-IS, then digipeat (only queued, see
+  `digi_utils.cpp`), then KISS, then the MQTT publish. Transmitting happens
+  later, in `processOutputPacketBuffer`. So both feeds leave the iGate
+  milliseconds apart, well inside the 4 second join window. Blacklisted
+  stations get neither.
 - The iGate's MQTT client ID is its callsign, so nothing else may use that ID.
 - (*) A digipeater marks the path with `*`, for example
   `...,N0DIGI-10,K2GIA-10*`, or `K2GIA-10*,WIDE2-1`.
@@ -61,12 +67,14 @@ radio, WiFi and network layers are stand-ins. It is not a test on the board.
 
 ## Test status
 
-33 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
+37 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
 with the compiled firmware code, and a full run through a local mosquitto
 broker (paho-mqtt 1.6.1 and 2.2.0). All sample packets use placeholder calls
 and positions. **No real captured line has been tested.**
 
 ## Not yet checked (needs the Pi)
+
+0. Host: cnjmesh3 is planned (K2GIA-10 is moving there); see README.
 
 1. What holds UDP 1514 on cnjmesh1, and whether the Discord bridge runs.
 2. Real syslog lines from K2GIA-10, compared with the formats above.

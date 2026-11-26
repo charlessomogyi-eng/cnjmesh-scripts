@@ -95,6 +95,7 @@ const store = {
 };
 let data = null, packets = [];
 let sortKey = store.get("sort", "packets"), sortDir = 0;
+if (typeof sortKey !== "string") sortKey = "packets";
 let hidden = new Set(store.get("hiddenCalls", [])), showHidden = false;
 const closed = new Set();
 let needle = "";
