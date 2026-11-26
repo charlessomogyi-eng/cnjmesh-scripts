@@ -130,7 +130,10 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(summary["windows"][0]["sent"], 3)
         self.assertTrue(any("café" in (p["info"] or "") for p in packets))
         self.assertIn("receive dashboard", self.get(""))
-        for bad in ("nothing", "../dashboard.py", "static/index.html"):
+        with urllib.request.urlopen(self.url + "leaflet/leaflet.js", timeout=5) as r:
+            self.assertGreater(len(r.read()), 100000)
+        for bad in ("nothing", "../dashboard.py", "static/index.html",
+                    "leaflet/LICENSE", "leaflet/../dashboard.py"):
             with self.assertRaises(urllib.error.HTTPError):
                 self.get(bad)
         # The collector must never publish anything to the broker.

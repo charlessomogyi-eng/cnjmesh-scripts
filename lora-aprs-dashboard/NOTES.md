@@ -50,6 +50,11 @@ radio, WiFi and network layers are stand-ins. It is not a test on the board.
 
 ## Choices made here
 
+- Map positions are the latitude and longitude the iGate itself decoded and put
+  in the syslog line, so Mic-E, objects and stations without position packets
+  are not placed. Position 0, 0 is ignored. A position belongs to the sender,
+  even if the packet came through a digipeater.
+
 - Feeds are joined when the packet text agrees and the arrival times are within
   4 seconds. A MQTT message under the iGate's own callsign only completes a
   syslog record and never creates one.
@@ -67,7 +72,7 @@ radio, WiFi and network layers are stand-ins. It is not a test on the board.
 
 ## Test status
 
-37 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
+41 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
 with the compiled firmware code, and a full run through a local mosquitto
 broker (paho-mqtt 1.6.1 and 2.2.0). All sample packets use placeholder calls
 and positions. **No real captured line has been tested.**

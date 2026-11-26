@@ -20,8 +20,8 @@ K2GIA-10 --MQTT (aprs-k2gia-10/<sender>): path---> dashboard.py --> web page :80
 The two feeds are joined per packet. Without MQTT it still runs, but many
 packets then have no known path and are listed under "Path unknown".
 
-Totals for 10 minutes, 1 hour and 24 hours sit above three tabs: **Stations**,
-**Recent packets** and **Local setup**. A filter box narrows the stations and
+Totals for 10 minutes, 1 hour and 24 hours sit above four tabs: **Stations**,
+**Map**, **Recent packets** and **Local setup**. A filter box narrows the stations and
 packets shown.
 
 - **Overview:** this receiver and each digipeater it heard relaying.
@@ -30,6 +30,11 @@ packets shown.
   figures are the digipeater's.
 - **Arrived through a digipeater:** who each digipeater passed on.
 - **Path unknown:** syslog-only packets whose path the firmware left out.
+- **Map:** each station at the last position it reported, with a line to the
+  receiver coloured by average SNR, and dashed lines to the digipeater that
+  passed it on. Set `OWN_LAT` / `OWN_LON` in the `.env` on the Pi for the
+  receiver's own marker. Map tiles come from OpenStreetMap over the internet;
+  the map library (Leaflet 1.9.4, BSD licence) is served from `app/static/leaflet/`.
 - **Channel load incl. CRC est.:** each CRC error counted as a typical good
   packet. An estimate only.
 

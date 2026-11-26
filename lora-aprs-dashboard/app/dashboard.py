@@ -22,6 +22,21 @@ from store import Store
 
 log = logging.getLogger("lora-aprs-dashboard")
 STATIC = Path(__file__).resolve().parent / "static"
+# The only files served besides the page itself (no directory browsing).
+FILES = {
+    "/leaflet/leaflet.js": ("leaflet/leaflet.js", "text/javascript; charset=utf-8"),
+    "/leaflet/leaflet.css": ("leaflet/leaflet.css", "text/css; charset=utf-8"),
+}
+
+
+def parse_home(lat, lon):
+    """Receiver position from OWN_LAT / OWN_LON, or None if not set."""
+    if not lat and not lon:
+        return None
+    home = (float(lat), float(lon))
+    if not (-90 <= home[0] <= 90 and -180 <= home[1] <= 180):
+        raise ValueError("OWN_LAT / OWN_LON out of range")
+    return home
 
 
 def settings(env=os.environ):
@@ -31,6 +46,7 @@ def settings(env=os.environ):
 
     return {
         "own_call": get("OWN_CALL", "K2GIA-10"),
+        "home": parse_home(get("OWN_LAT", ""), get("OWN_LON", "")),
         "syslog_bind": get("SYSLOG_BIND", "0.0.0.0"),
         "syslog_port": int(get("SYSLOG_PORT", "1514")),
         "syslog_allow": [a for a in get("SYSLOG_ALLOW", "").replace(",", " ").split()],
@@ -168,6 +184,9 @@ def make_handler(store, clock=None):
                 if url.path in ("/", "/index.html"):
                     self.reply((STATIC / "index.html").read_bytes(),
                                "text/html; charset=utf-8")
+                elif url.path in FILES:
+                    name, kind = FILES[url.path]
+                    self.reply((STATIC / name).read_bytes(), kind, cache=True)
                 elif url.path == "/api/summary":
                     self.json(store.summary(clock() if clock else None))
                 elif url.path == "/api/packets":
@@ -181,11 +200,11 @@ def make_handler(store, clock=None):
         def json(self, value):
             self.reply(json.dumps(value).encode(), "application/json")
 
-        def reply(self, body, kind):
+        def reply(self, body, kind, cache=False):
             self.send_response(200)
             self.send_header("Content-Type", kind)
             self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", "max-age=86400" if cache else "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.end_headers()
             self.wfile.write(body)
@@ -200,7 +219,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     cfg = settings()
     store = Store(cfg["db"], cfg["own_call"], cfg["sf"], cfg["bw"], cfg["cr"],
-                  cfg["preamble"], cfg["setup"])
+                  cfg["preamble"], cfg["setup"], cfg["home"])
     # Open both ports before starting anything, so a busy port fails loudly.
     sock = open_syslog_socket(cfg)
     web = ThreadingHTTPServer((cfg["http_bind"], cfg["http_port"]),

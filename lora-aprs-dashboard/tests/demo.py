@@ -23,7 +23,10 @@ def traffic(now, seed=7):
     # station, packets in 24 h, SNR, frequency offset, kind of packet
     stations = [("N0DIGI-10", 96, 4.0, -350, "beacon"), ("N0DIGI-3", 70, -9.0, 820, "beacon"),
                 ("N0CALL-7", 140, -4.0, 150, "position"), ("N0CALL-9", 25, -14.0, -2100, "message"),
-                ("N0CALL-5", 40, -18.5, 430, "status"), ("N0FAR", 2, -19.5, 90, "status")]
+                ("N0CALL-5", 40, -18.5, 430, "position"), ("N0FAR", 2, -19.5, 90, "status")]
+    # Made-up places around the harness's made-up receiver at 40.0 N, 74.5 W.
+    where = {"N0DIGI-10": "4018.00N/07418.00W", "N0DIGI-3": "4033.00N/07445.00W",
+             "N0CALL-7": "4007.20N/07437.20W", "N0CALL-5": "3951.00N/07412.00W"}
     events = []
     for call, count, snr0, ferr0, kind in stations:
         for _ in range(count):
@@ -37,8 +40,9 @@ def traffic(now, seed=7):
             noise = -113 + rng.gauss(0, 1.5)
             rssi = int(noise + snr if snr > 0 else noise + snr + 0.5)
             path = "APLRT1" + (via or ",WIDE1-1")
-            body = {"beacon": "!4015.00N/07430.00W#simulated digipeater",
-                    "position": "!4015.00N/07430.00W>simulated",
+            spot = where.get(call, "4015.00N/07430.00W")
+            body = {"beacon": "!%s#simulated digipeater" % spot,
+                    "position": "!%s>simulated" % spot,
                     "message": ":N0CALL-7 :simulated message{%d" % rng.randint(1, 99),
                     "status": ">simulated status"}[kind]
             raw = "%s>%s:%s" % (call, path, body)
@@ -69,7 +73,8 @@ def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8090
     with tempfile.TemporaryDirectory() as tmp:
         store = Store(str(Path(tmp) / "demo.db"), setup={
-            "Hardware": "simulated receiver", "Antenna": "simulated antenna"})
+            "Hardware": "simulated receiver", "Antenna": "simulated antenna"},
+            home=(40.0, -74.5))
         now = time.time()
         fill(store, now)
         server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(store, lambda: now))

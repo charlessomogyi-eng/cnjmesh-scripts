@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LoRa APRS receive dashboard</title>
+<link rel="stylesheet" href="leaflet/leaflet.css">
+<script src="leaflet/leaflet.js"></script>
 <style>
 :root{--bg:#fbfbfa;--fg:#1c1f23;--mute:#6a7178;--line:#d9dcdf;--card:#fff;--red:#b3261e;--amber:#8a5a00;--link:#14599c}
 @media (prefers-color-scheme:dark){:root{--bg:#14171a;--fg:#e6e8ea;--mute:#959ca3;--line:#2d3338;--card:#1b1f23;--red:#ff8a80;--amber:#ffc65c;--link:#8cc2ff}}
@@ -24,6 +26,16 @@ button[aria-pressed="true"]{border-color:var(--link);color:var(--link)}
 input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;min-width:0;flex:1 1 180px;max-width:320px}
 [hidden]{display:none !important}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0}
+#map{height:min(70vh,620px);border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.leaflet-container{font:inherit}
+.leaflet-tooltip.lbl{background:transparent;border:0;box-shadow:none;padding:0 0 0 6px;font-size:11px;font-weight:600;color:#111;text-shadow:0 0 3px #fff,0 0 3px #fff}
+.leaflet-tooltip.lbl:before{display:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:0;border-top:3px solid}
+.sw.dash{border-top-style:dashed}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;border:2px solid #fff;outline:1px solid #555}
+.pop b{display:block;margin-bottom:2px}.pop div{white-space:nowrap}
 dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;background:var(--card);font-variant-numeric:tabular-nums}
@@ -50,6 +62,7 @@ footer{margin-top:24px;color:var(--mute);font-size:12px;max-width:80ch}
 
 <div class="tabs" role="tablist">
   <button role="tab" data-tab="stations">Stations</button>
+  <button role="tab" data-tab="map">Map</button>
   <button role="tab" data-tab="packets">Recent packets</button>
   <button role="tab" data-tab="setup">Local setup</button>
 </div>
@@ -73,6 +86,17 @@ footer{margin-top:24px;color:var(--mute);font-size:12px;max-width:80ch}
 <div id="localBox"></div>
 <div id="relayedBox"></div>
 <div id="unknownBox"></div>
+</section>
+
+<section id="tab-map">
+<div class="bar">
+  <button id="fit">Fit all</button>
+  <span class="mute" id="mapNote"></span>
+</div>
+<div id="map"></div>
+<div class="legend" id="legend"></div>
+<p class="mute">Stations heard in the last 24 hours, at the last position they reported. A solid line is a signal this receiver heard, coloured by average SNR. A dashed line shows which digipeater passed a station on; the signal of that hop is not known here. Positions come from position packets only, so a station that sends none is listed below the map instead. Map tiles © OpenStreetMap contributors, loaded from the internet.</p>
+<div class="mute" id="unplaced"></div>
 </section>
 
 <section id="tab-packets">
@@ -312,6 +336,122 @@ function renderSetup() {
   $("setup").replaceChildren(...items.flatMap(([k, v]) => [el("dt", k), el("dd", v)]));
 }
 
+// ---- map ------------------------------------------------------------------
+const COLORS = {red: "#c62828", amber: "#d89000", good: "#2e7d32", via: "#5c6bc0", none: "#8a9096"};
+let map = null, layer = null, fitted = false, bounds = null;
+
+function snrColor(v) {
+  if (v === null || v === undefined) return COLORS.none;
+  const c = snrClass(v);
+  return c === "red" ? COLORS.red : c === "amber" ? COLORS.amber : COLORS.good;
+}
+function km(a, b) {
+  const r = Math.PI / 180, dlat = (b.lat - a.lat) * r, dlon = (b.lon - a.lon) * r;
+  const h = Math.sin(dlat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dlon / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+function popup(title, lines) {
+  const box = el("div", null, "pop");
+  box.append(el("b", title), ...lines.filter(Boolean).map(t => el("div", t)));
+  return box;
+}
+
+function renderMap() {
+  if (typeof L === "undefined") {
+    $("mapNote").textContent = "The map library did not load.";
+    return;
+  }
+  if (!map) {
+    map = L.map("map", {worldCopyJump: true});
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: "© OpenStreetMap contributors"
+    }).addTo(map);
+    layer = L.layerGroup().addTo(map);
+    map.setView([40.2, -74.5], 9);
+  }
+  layer.clearLayers();
+  const pos = data.positions, home = data.home;
+  const local = new Map(data.local.map(r => [r.call, r]));
+  const viaDigis = new Map();        // station -> [digi, packets]
+  for (const d of data.relayed) for (const s of d.stations) {
+    if (!viaDigis.has(s.call)) viaDigis.set(s.call, []);
+    viaDigis.get(s.call).push([d.digi, s.packets]);
+  }
+  const calls = new Set([...local.keys(), ...viaDigis.keys(), ...data.unknown.map(r => r.call)]);
+  const shown = [...calls].filter(c => matches(c, ...(viaDigis.get(c) || []).map(x => x[0])));
+  const points = [], unplaced = [];
+
+  // Dashed lines first, so solid lines and markers sit on top.
+  for (const call of shown) {
+    const p = pos[call];
+    for (const [digi, n] of viaDigis.get(call) || []) {
+      if (p && pos[digi]) {
+        L.polyline([[p.lat, p.lon], [pos[digi].lat, pos[digi].lon]],
+          {color: COLORS.via, weight: 2, dashArray: "6 6", opacity: 0.8})
+          .bindTooltip(el("span", call + " via " + digi + ": " + count(n, "packet"))).addTo(layer);
+      }
+    }
+  }
+  for (const call of shown) {
+    const p = pos[call], r = local.get(call);
+    if (p && r && home) {
+      L.polyline([[home.lat, home.lon], [p.lat, p.lon]],
+        {color: snrColor(r.snr), weight: r.packets >= 10 ? 4 : 2.5, opacity: 0.9})
+        .bindTooltip(el("span", call + ": " + num(r.snr, 1) + " dB average SNR")).addTo(layer);
+    }
+  }
+  for (const call of shown) {
+    const p = pos[call];
+    const r = local.get(call) || data.unknown.find(u => u.call === call);
+    const via = viaDigis.get(call) || [];
+    if (!p) { unplaced.push(call); continue; }
+    points.push([p.lat, p.lon]);
+    const heard = local.has(call);
+    const color = heard ? snrColor(r.snr) : via.length ? COLORS.via : COLORS.none;
+    const dist = home ? km(home, p) : null;
+    const lines = [
+      r ? count(r.packets, "packet") + " heard" + (heard ? " directly" : ", path unknown") : null,
+      via.length ? "Via " + via.map(([d, n]) => d + " (" + n + ")").join(", ") : null,
+      r && r.snr !== null ? "Avg SNR " + num(r.snr, 1) + " dB · RSSI " + num(r.rssi) + " dBm" : null,
+      r ? "Last heard " + (heard ? "directly " : "") + ago(r.last) : null,
+      "Position reported " + ago(p.ts),
+      dist !== null ? dist.toFixed(1) + " km (" + (dist / 1.609344).toFixed(1) + " mi) from " + data.station : null
+    ];
+    L.circleMarker([p.lat, p.lon], {radius: 7, color: "#fff", weight: 2, fillColor: color, fillOpacity: 1})
+      .bindPopup(popup(call, lines))
+      .bindTooltip(el("span", call), {permanent: true, direction: "right", className: "lbl"})
+      .addTo(layer);
+  }
+  if (home && matches(data.station)) {
+    points.push([home.lat, home.lon]);
+    L.circleMarker([home.lat, home.lon], {radius: 9, color: "#fff", weight: 3, fillColor: "#111", fillOpacity: 1})
+      .bindPopup(popup(data.station, ["This receiver", count(data.local.length, "station") + " heard directly in 24 h"]))
+      .bindTooltip(el("span", data.station), {permanent: true, direction: "right", className: "lbl"})
+      .addTo(layer);
+  }
+  bounds = points.length ? L.latLngBounds(points) : null;
+  if (!fitted && bounds && !$("tab-map").hidden) { fitAll(); fitted = true; }
+
+  $("mapNote").textContent = home ? "" : "Receiver position not set (OWN_LAT / OWN_LON), so no signal lines are drawn.";
+  $("unplaced").textContent = unplaced.length ? "No position reported: " + unplaced.sort().join(", ") : "";
+  const l = limit(data.radio.sf);
+  $("legend").replaceChildren(...[
+    ["sw", COLORS.good, "SNR " + (l + 10.5) + " dB or better"],
+    ["sw", COLORS.amber, "SNR " + (l + 1.5) + " to " + (l + 10.5) + " dB"],
+    ["sw", COLORS.red, "SNR below " + (l + 1.5) + " dB (near the limit)"],
+    ["sw dash", COLORS.via, "passed on by a digipeater"],
+    ["dot", COLORS.none, "path unknown"]
+  ].map(([cls, color, text]) => {
+    const s = el("span"), mark = el("i", null, cls);
+    mark.style[cls === "dot" ? "background" : "borderTopColor"] = color;
+    s.append(mark, text);
+    return s;
+  }));
+}
+function fitAll() {
+  if (map && bounds) map.fitBounds(bounds.pad(0.15), {maxZoom: 13});
+}
+
 function showTab(name) {
   if (!$("tab-" + name)) name = "stations";
   tab = name; store.set("tab", name);
@@ -320,6 +460,10 @@ function showTab(name) {
     $("tab-" + b.dataset.tab).hidden = b.dataset.tab !== name;
   }
   $("common").hidden = name === "setup";
+  if (name === "map" && map) {
+    map.invalidateSize();
+    if (!fitted && bounds) { fitAll(); fitted = true; }
+  }
 }
 
 function render() {
@@ -345,6 +489,7 @@ function render() {
   renderStations();
   renderPackets();
   renderSetup();
+  if (!$("tab-map").hidden || map) renderMap();
 
   const l = limit(data.radio.sf);
   $("notes").replaceChildren(...[
@@ -379,7 +524,8 @@ $("collapse").onclick = () => {
   render();
 };
 $("filter").oninput = e => { needle = e.target.value.trim().toUpperCase(); render(); };
-for (const b of document.querySelectorAll("[data-tab]")) b.onclick = () => showTab(b.dataset.tab);
+for (const b of document.querySelectorAll("[data-tab]")) b.onclick = () => { showTab(b.dataset.tab); if (b.dataset.tab === "map" && data) renderMap(); };
+$("fit").onclick = fitAll;
 showTab(tab);
 refresh();
 setInterval(refresh, 15000);

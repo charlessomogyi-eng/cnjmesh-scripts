@@ -29,17 +29,22 @@ CREATE TABLE IF NOT EXISTS packets (
     header      TEXT,
     info        TEXT,
     dist_km     REAL,
+    lat         REAL,               -- position the sender reported, as decoded
+    lon         REAL,               -- by the iGate (position packets only)
     syslog      INTEGER NOT NULL DEFAULT 0,
     mqtt        INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS packets_ts ON packets (ts);
 """
+# Columns added after the first version: added to an older database on start.
+ADDED_COLUMNS = {"lat": "REAL", "lon": "REAL"}
 
 
 class Store:
     def __init__(self, path, own_call="K2GIA-10", sf=12, bw=125000, cr=5,
-                 preamble=8, setup=None):
+                 preamble=8, setup=None, home=None):
         self.own_call = own_call
+        self.home = home                    # (lat, lon) of the receiver, or None
         self.setup = dict(setup or {})      # free text for the "Local setup" tab
         self.radio = {"sf": sf, "bw": bw, "cr": cr, "preamble": preamble}
         self.lock = threading.RLock()
@@ -48,6 +53,11 @@ class Store:
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=NORMAL")
         self.db.executescript(SCHEMA)
+        have = {r[1] for r in self.db.execute("PRAGMA table_info(packets)")}
+        for name, kind in ADDED_COLUMNS.items():
+            if name not in have:
+                self.db.execute("ALTER TABLE packets ADD COLUMN %s %s" % (name, kind))
+        self.db.commit()
         self._waiting = {"syslog": [], "mqtt": []}   # (ts, key, row id)
         self.status = {
             "started": time.time(), "syslog_last": None, "mqtt_last": None,
@@ -97,7 +107,7 @@ class Store:
             return None
         fields = dict(rssi=event["rssi"], snr=event["snr"],
                       freq_err=event["freq_err"], dist_km=event.get("dist_km"),
-                      syslog=1)
+                      lat=event.get("lat"), lon=event.get("lon"), syslog=1)
         partner = self._take("mqtt", event["content"], ts)
         if partner is not None:
             self._update(partner, **fields)
@@ -251,6 +261,8 @@ class Store:
             "station": self.own_call,
             "radio": self.radio,
             "setup": self.setup,
+            "home": {"lat": self.home[0], "lon": self.home[1]} if self.home else None,
+            "positions": self.positions(),
             "dim_below": DIM_BELOW,
             "data_since": first,
             "status": status,
@@ -298,6 +310,20 @@ class Store:
             "estimated": any(not r["exact"] for r in hour),
             "dist_km": dist[-1] if dist else None,
         }
+
+    def positions(self):
+        """Latest reported position of every sender still in the database.
+
+        A position belongs to the station that wrote the packet, even when it
+        reached us through a digipeater.
+        """
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT sender, lat, lon, MAX(ts) AS ts FROM packets "
+                "WHERE lat IS NOT NULL AND lon IS NOT NULL AND kind = 'rx' "
+                "AND NOT (lat = 0 AND lon = 0) GROUP BY sender").fetchall()
+        return {r["sender"]: {"lat": r["lat"], "lon": r["lon"], "ts": r["ts"]}
+                for r in rows if -90 <= r["lat"] <= 90 and -180 <= r["lon"] <= 180}
 
     def recent(self, limit=100):
         with self.lock:

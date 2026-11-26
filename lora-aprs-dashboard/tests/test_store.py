@@ -175,6 +175,49 @@ class Figures(Base):
             settings({"SETUP_ANTENNA": " whip on the sill ", "SETUP_NOTES": ""})["setup"],
             {"Antenna": "whip on the sill"})
 
+    def test_positions(self):
+        self.feed("position_wide1", T - 600)
+        self.feed("position_via_digi", T - 300)    # relayed: still N0CALL-7's own
+        self.feed("status", T - 200)               # no position
+        e = aprs.parse_syslog(syslog("position_via_digi"))
+        s = self.store.summary(T)
+        self.assertEqual(set(s["positions"]), {"N0CALL-7"})
+        p = s["positions"]["N0CALL-7"]
+        self.assertEqual((p["lat"], p["lon"]), (e["lat"], e["lon"]))
+        self.assertIsNone(s["home"])
+
+    def test_position_from_syslog_survives_join_in_either_order(self):
+        self.feed("position_wide1", T, order=("mqtt", "syslog"))
+        row, = self.rows()
+        self.assertEqual((row["lat"], row["lon"]), (40.25, -74.5))
+
+    def test_older_database_gets_new_columns(self):
+        import sqlite3
+        path = str(Path(self.tmp.name) / "old.db")
+        old = sqlite3.connect(path)
+        old.execute("CREATE TABLE packets (id INTEGER PRIMARY KEY, ts REAL NOT NULL,"
+                    " kind TEXT NOT NULL, sender TEXT, transmitter TEXT, via TEXT,"
+                    " type TEXT, rssi INTEGER, snr REAL, freq_err INTEGER,"
+                    " length INTEGER, exact INTEGER, header TEXT, info TEXT,"
+                    " dist_km REAL, syslog INTEGER NOT NULL DEFAULT 0,"
+                    " mqtt INTEGER NOT NULL DEFAULT 0)")
+        old.commit()
+        old.close()
+        store = Store(path)
+        store.on_syslog(syslog("position_wide1"), T)
+        self.assertIn("N0CALL-7", store.summary(T)["positions"])
+        store.close()
+
+    def test_home_setting(self):
+        self.assertIsNone(settings({})["home"])
+        self.assertEqual(settings({"OWN_LAT": "40.1", "OWN_LON": "-74.6"})["home"],
+                         (40.1, -74.6))
+        with self.assertRaises(ValueError):
+            settings({"OWN_LAT": "140", "OWN_LON": "0"})
+        store = Store(str(Path(self.tmp.name) / "h.db"), home=(40.1, -74.6))
+        self.assertEqual(store.summary(T)["home"], {"lat": 40.1, "lon": -74.6})
+        store.close()
+
     def test_empty(self):
         s = self.store.summary(T)
         self.assertEqual((s["local"], s["data_since"]), ([], None))
