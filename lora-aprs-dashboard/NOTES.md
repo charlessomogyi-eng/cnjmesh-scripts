@@ -88,6 +88,29 @@ and positions. **No real captured line has been tested.**
 5. Port 8090 free (no use found in the repo docs).
 6. How often packets are "Path unknown" in practice.
 
+## Firmware V4 (read from source Nov 26 2026, not built or tested)
+
+Upstream tags go up to V4.0.4. K2GIA-10 runs 3.2.4, so nothing here affects
+tomorrow's install, but it matters before any firmware upgrade. Compared
+`src/syslog_utils.cpp` at V3.2.4 and V4.0.4 (`src/mqtt_utils.cpp` differs only
+in the copyright year):
+
+- RX line shape is the same: `RX / <TYPE> / ... / <rssi>dBm / <snr>dB / <ferr>Hz`.
+- MIC-E lines now carry only the indicator character (`` ` `` or `'`) after
+  the sender, no packet text. Matching a MIC-E syslog line to its MQTT packet
+  by content will fail on V4.
+- CRC errors keep the same `CRC / CRC-ERROR / <packet>` line.
+- Unrecognized packets log the full uncut packet.
+- Position lines are built from parsed fields and the path text may differ
+  slightly.
+
+Before upgrading: run `tests/harness/build.sh` against V4.0.4 and rerun
+`tests/test_firmware.py`.
+
+From a third-party write-up (hamradio.my, not checked in source): V4.0.0
+(Aug 16 2026) changes the transmit defaults to SF9 and CR 4/7, adds channel
+activity detection before transmit, and adds a web page with a live map.
+
 ## Seen in `lora-aprs-discord-bridge/` (not changed, outside this folder)
 
 Tested the bridge's patterns against lines from the compiled firmware code:
