@@ -1,0 +1,83 @@
+# Notes: verified facts and open items (Nov 25 2026)
+
+## Sources
+
+| What | Version |
+|---|---|
+| `richonguzman/LoRa_APRS_iGate` | tag V3.2.4, commit `305c5b7` |
+| `jgromes/RadioLib` | 7.6.0 |
+| `knolleary/PubSubClient` | 2.8 |
+| `richonguzman/APRSPacketLib` | 1.0.4 |
+| `mikalhart/TinyGPSPlus` | v1.0.3 |
+| `espressif/arduino-esp32` (WString) | 2.0.17 |
+| Model page | `jonadams.com/rxt/` |
+
+## Verified from the source, and with the compiled firmware code where marked (*)
+
+"Compiled" means the unchanged upstream `syslog_utils`, `mqtt_utils`,
+`gps_utils` and `digi_utils` files built for the PC (`tests/harness/`). The
+radio, WiFi and network layers are stand-ins. It is not a test on the board.
+
+- (*) Syslog header: `<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - `.
+  Received lines end ` / <rssi>dBm / <snr>dB / <freq error>Hz`
+  (`syslog_utils.cpp`; called from `lora_utils.cpp`).
+- (*) Position lines add ` / <lat>N / <lon>E / <km>km`, then the comment if
+  there is one, or ` _ / _ / _ `. South and west stay negative with N and E.
+- (*) Message, status, Mic-E, object and telemetry lines have **no path**.
+  Position lines containing `WIDE1-1` show only the destination call and
+  `WIDE1-1`. Other position lines show the whole path. Other packet types are
+  logged raw, including the 3 byte LoRa header.
+- (*) `TX / MESSAGE` lines drop the first 3 characters of the sender
+  (`K2GIA-10` appears as `IA-10`).
+- (*) The MQTT payload is the packet without the LoRa header, on
+  `<topic>/<sender>`. A packet is not published if
+  5 + 2 + topic length + payload length is over 256 bytes (PubSubClient 2.8).
+- The iGate's MQTT client ID is its callsign, so nothing else may use that ID.
+- (*) A digipeater marks the path with `*`, for example
+  `...,N0DIGI-10,K2GIA-10*`, or `K2GIA-10*,WIDE2-1`.
+- Packet text ends at the first zero byte, so an RXT binary block never
+  reaches syslog or MQTT.
+- With "log beacon over TCP/IP" on, the iGate's own internet beacon is logged
+  as `RX` with 0 / 0 / 0 (`utils.cpp`). The collector ignores those.
+- RadioLib 7.6.0, SX1278 below 868 MHz: packet RSSI is -164 + register, plus
+  SNR when SNR is negative.
+
+## Choices made here
+
+- Feeds are joined when the packet text agrees and the arrival times are within
+  4 seconds. A MQTT message under the iGate's own callsign only completes a
+  syslog record and never creates one.
+- Length (for airtime) is exact when MQTT or a raw line gives the whole packet,
+  otherwise a lower bound, marked `≈`.
+- Noise estimate: total = RSSI - min(SNR, 0), then
+  noise = total - 10 log10(1 + 10^(SNR/10)), only for SNR under +8 dB. It is
+  derived from the formula above, not calibrated against any measurement.
+- SNR colours: decode limit = -7.5 - 2.5 x (SF - 7) dB; red under limit + 1.5,
+  amber under limit + 10.5. At SF7 this gives the model page's -6 and +3.
+
+## Test status
+
+29 tests pass on Python 3.13: parsing, storage, 20,000 random packets compared
+with the compiled firmware code, and a full run through a local mosquitto
+broker (paho-mqtt 1.6.1 and 2.2.0). All sample packets use placeholder calls
+and positions. **No real captured line has been tested.**
+
+## Not yet checked (needs the Pi)
+
+1. What holds UDP 1514 on cnjmesh1, and whether the Discord bridge runs.
+2. Real syslog lines from K2GIA-10, compared with the formats above.
+3. That the running firmware still reports 3.2.4 (the page warns if not).
+4. K2GIA-10's radio settings: SF12 / BW125 / CR4/5 assumed.
+5. Port 8090 free (no use found in the repo docs).
+6. How often packets are "Path unknown" in practice.
+
+## Seen in `lora-aprs-discord-bridge/` (not changed, outside this folder)
+
+Tested the bridge's patterns against lines from the compiled firmware code:
+
+- `RX_MESSAGE_RE` and `TX_MESSAGE_RE` need a single space before the colon, so
+  they match only an 8 character addressee. `CQ`, `ANSRVR` and 9 character
+  calls such as `N0DIGI-10` do not match.
+- The script's "confirmed" `TX / MESSAGE` example shows a full sender call, but
+  the 3.2.4 source cuts 3 characters off it. One captured line would settle
+  which is right.

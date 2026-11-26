@@ -1,0 +1,20 @@
+[Unit]
+Description=LoRa APRS receive dashboard (collector and web page)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/opt/lora-aprs-dashboard/.env
+ExecStart=/usr/bin/python3 /opt/lora-aprs-dashboard/app/dashboard.py
+Restart=always
+RestartSec=5
+# Runs as a throwaway unprivileged user; the database lives in the state directory.
+DynamicUser=yes
+StateDirectory=lora-aprs-dashboard
+ProtectSystem=strict
+ProtectHome=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

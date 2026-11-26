@@ -1,0 +1,229 @@
+{
+ "firmware": "CA2RXU LoRa_APRS_iGate V3.2.4",
+ "samples": {
+  "position_wide1": {
+   "op": "rx",
+   "rssi": -97,
+   "snr": 9.5,
+   "freq_err": 120,
+   "frame": "<\u00ff\u0001N0CALL-7>APLRT1,WIDE1-1,WIDE2-1:!4015.00N/07430.00W>direct",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / N0CALL-7 / APLRT1 / WIDE1-1 / -97dBm / 9.50dB / 120Hz / 40.25000N / -74.50000E / 27.8km / direct",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-7",
+   "mqtt_payload": "N0CALL-7>APLRT1,WIDE1-1,WIDE2-1:!4015.00N/07430.00W>direct"
+  },
+  "position_via_digi": {
+   "op": "rx",
+   "rssi": -112,
+   "snr": -6.25,
+   "freq_err": -410,
+   "frame": "<\u00ff\u0001N0CALL-7>APLRT1,N0DIGI-10*,WIDE2-1:!4015.00N/07430.00W>via digi",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / N0CALL-7 / APLRT1,N0DIGI-10*,WIDE2-1 / - / -112dBm / -6.25dB / -410Hz / 40.25000N / -74.50000E / 27.8km / via digi",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-7",
+   "mqtt_payload": "N0CALL-7>APLRT1,N0DIGI-10*,WIDE2-1:!4015.00N/07430.00W>via digi"
+  },
+  "position_no_path": {
+   "op": "rx",
+   "rssi": -104,
+   "snr": 1.0,
+   "freq_err": 75,
+   "frame": "<\u00ff\u0001N0CALL-3>APLRT1:=4015.00N/07430.00W>no path",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / N0CALL-3 / APLRT1 / - / -104dBm / 1.00dB / 75Hz / 40.25000N / -74.50000E / 27.8km / no path",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-3",
+   "mqtt_payload": "N0CALL-3>APLRT1:=4015.00N/07430.00W>no path"
+  },
+  "position_timestamp": {
+   "op": "rx",
+   "rssi": -104,
+   "snr": 1.0,
+   "freq_err": 75,
+   "frame": "<\u00ff\u0001N0CALL-3>APLRT1:@092345z4015.00N/07430.00W>timed",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / N0CALL-3 / APLRT1 / - / -104dBm / 1.00dB / 75Hz / 40.25000N / -74.50000E / 27.8km / timed",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-3",
+   "mqtt_payload": "N0CALL-3>APLRT1:@092345z4015.00N/07430.00W>timed"
+  },
+  "position_compressed": {
+   "op": "rx",
+   "rssi": -108,
+   "snr": -2.0,
+   "freq_err": 310,
+   "frame": "<\u00ff\u0001N0DIGI-10>APLRG1:=L:.NN;]NNa  Gbase91 beacon",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / N0DIGI-10 / APLRG1 / - / -108dBm / -2.00dB / 310Hz / 40.25000N / -74.50000E / 27.8km / base91 beacon",
+   "mqtt_topic": "aprs-k2gia-10/N0DIGI-10",
+   "mqtt_payload": "N0DIGI-10>APLRG1:=L:.NN;]NNa  Gbase91 beacon"
+  },
+  "message": {
+   "op": "rx",
+   "rssi": -118,
+   "snr": -12.25,
+   "freq_err": -2300,
+   "frame": "<\u00ff\u0001N0CALL-9>APLRT1,WIDE1-1::K2GIA-10 :hello there{12",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / MESSAGE / N0CALL-9 ---> K2GIA-10 :hello there{12 / -118dBm / -12.25dB / -2300Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-9",
+   "mqtt_payload": "N0CALL-9>APLRT1,WIDE1-1::K2GIA-10 :hello there{12"
+  },
+  "message_fake_signal": {
+   "op": "rx",
+   "rssi": -101,
+   "snr": 4.0,
+   "freq_err": 15,
+   "frame": "<\u00ff\u0001N0CALL-9>APLRT1::K2GIA-10 :x / -1dBm / 1.00dB / 2Hz{13",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / MESSAGE / N0CALL-9 ---> K2GIA-10 :x / -1dBm / 1.00dB / 2Hz{13 / -101dBm / 4.00dB / 15Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-9",
+   "mqtt_payload": "N0CALL-9>APLRT1::K2GIA-10 :x / -1dBm / 1.00dB / 2Hz{13"
+  },
+  "status": {
+   "op": "rx",
+   "rssi": -110,
+   "snr": -3.5,
+   "freq_err": 40,
+   "frame": "<\u00ff\u0001N0DIGI-10>APLRG1:>status text",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / STATUS / N0DIGI-10 ---> status text / -110dBm / -3.50dB / 40Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0DIGI-10",
+   "mqtt_payload": "N0DIGI-10>APLRG1:>status text"
+  },
+  "mic_e": {
+   "op": "rx",
+   "rssi": -110,
+   "snr": -3.5,
+   "freq_err": 40,
+   "frame": "<\u00ff\u0001N0CALL-5>T0RS2P,WIDE1-1:`(_fn\"Oj/]comment",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / MIC-E / N0CALL-5 ---> (_fn\"Oj/]comment / -110dBm / -3.50dB / 40Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-5",
+   "mqtt_payload": "N0CALL-5>T0RS2P,WIDE1-1:`(_fn\"Oj/]comment"
+  },
+  "object": {
+   "op": "rx",
+   "rssi": -110,
+   "snr": -3.5,
+   "freq_err": 40,
+   "frame": "<\u00ff\u0001N0DIGI-10>APLRG1:;OBJNAME  *111111z4015.00N/07430.00Wr object",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / OBJECT / N0DIGI-10 ---> OBJNAME  *111111z4015.00N/07430.00Wr object / -110dBm / -3.50dB / 40Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0DIGI-10",
+   "mqtt_payload": "N0DIGI-10>APLRG1:;OBJNAME  *111111z4015.00N/07430.00Wr object"
+  },
+  "telemetry": {
+   "op": "rx",
+   "rssi": -110,
+   "snr": -3.5,
+   "freq_err": 40,
+   "frame": "<\u00ff\u0001N0CALL-5>APRS:T#005,199,000,255,073,123,01101001",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / TELEMETRY / N0CALL-5 ---> 005,199,000,255,073,123,01101001 / -110dBm / -3.50dB / 40Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-5",
+   "mqtt_payload": "N0CALL-5>APRS:T#005,199,000,255,073,123,01101001"
+  },
+  "weather": {
+   "op": "rx",
+   "rssi": -110,
+   "snr": -3.5,
+   "freq_err": 40,
+   "frame": "<\u00ff\u0001N0CALL-5>APRS:_10090556c220s004g005t077",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / <\u00ff\u0001N0CALL-5>APRS:_10090556c220s004g005t077 / -110dBm / -3.50dB / 40Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-5",
+   "mqtt_payload": "N0CALL-5>APRS:_10090556c220s004g005t077"
+  },
+  "third_party": {
+   "op": "rx",
+   "rssi": -110,
+   "snr": -3.5,
+   "freq_err": 40,
+   "frame": "<\u00ff\u0001N0DIGI-10>APLRG1:}N0CALL-1>APRS,TCPIP,N0DIGI-10*::N0CALL-7 :third party",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / <\u00ff\u0001N0DIGI-10>APLRG1:}N0CALL-1>APRS,TCPIP,N0DIGI-10*::N0CALL-7 :third party / -110dBm / -3.50dB / 40Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0DIGI-10",
+   "mqtt_payload": "N0DIGI-10>APLRG1:}N0CALL-1>APRS,TCPIP,N0DIGI-10*::N0CALL-7 :third party"
+  },
+  "utf8_comment": {
+   "op": "rx",
+   "rssi": -99,
+   "snr": 6.0,
+   "freq_err": 10,
+   "frame": "<\u00ff\u0001N0CALL-3>APLRT1:!4015.00N/07430.00W>caf\u00c3\u00a9 73",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / N0CALL-3 / APLRT1 / - / -99dBm / 6.00dB / 10Hz / 40.25000N / -74.50000E / 27.8km / caf\u00c3\u00a9 73",
+   "mqtt_topic": "aprs-k2gia-10/N0CALL-3",
+   "mqtt_payload": "N0CALL-3>APLRT1:!4015.00N/07430.00W>caf\u00c3\u00a9 73"
+  },
+  "zero_byte_tail": {
+   "op": "rx",
+   "rssi": -99,
+   "snr": 6.0,
+   "freq_err": 10,
+   "frame": "<\u00ff\u0001N0DIGI-10>APLRG1:>rxt digi\u0000\u0001\u0002\u0003",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / STATUS / N0DIGI-10 ---> rxt digi / -99dBm / 6.00dB / 10Hz",
+   "mqtt_topic": "aprs-k2gia-10/N0DIGI-10",
+   "mqtt_payload": "N0DIGI-10>APLRG1:>rxt digi"
+  },
+  "too_long_for_mqtt": {
+   "op": "rx",
+   "rssi": -99,
+   "snr": 6.0,
+   "freq_err": 10,
+   "frame": "<\u00ff\u0001N0CALL-3>APLRT1:>LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / STATUS / N0CALL-3 ---> LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL / -99dBm / 6.00dB / 10Hz",
+   "mqtt_topic": null,
+   "mqtt_payload": null
+  },
+  "crc_error": {
+   "op": "crc",
+   "rssi": -125,
+   "snr": -19.75,
+   "freq_err": -900,
+   "frame": "<\u00ff\u0001N0C\u0091\u0002ALL>garb",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - CRC / CRC-ERROR / <\u00ff\u0001N0C\u0091\u0002ALL>garb / -125dBm / -19.75dB / -900Hz",
+   "mqtt_topic": null,
+   "mqtt_payload": null
+  },
+  "own_internet_beacon": {
+   "op": "rx",
+   "rssi": 0,
+   "snr": 0.0,
+   "freq_err": 0,
+   "frame": "tcpK2GIA-10>APLRG1,qAC:=L:.NN;]NNa  Gbeacon",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - RX / GPS / K2GIA-10 / APLRG1,qAC / - / 0dBm / 0.00dB / 0Hz / 40.25000N / -74.50000E / 27.8km / beacon",
+   "mqtt_topic": null,
+   "mqtt_payload": null
+  },
+  "tx_own_beacon": {
+   "op": "tx",
+   "rssi": 0,
+   "snr": 0.0,
+   "freq_err": 0,
+   "frame": "K2GIA-10>APLRG1,WIDE1-1,WIDE2-1,RFONLY,NOGATE:=L:.NN;]NNa  GCNJ Mesh",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - TX / RFONLY / K2GIA-10>APLRG1,WIDE1-1,WIDE2-1,RFONLY,NOGATE:=L:.NN;]NNa  GCNJ Mesh",
+   "mqtt_topic": null,
+   "mqtt_payload": null
+  },
+  "tx_message": {
+   "op": "tx",
+   "rssi": 0,
+   "snr": 0.0,
+   "freq_err": 0,
+   "frame": "K2GIA-10>APLRG1,WIDE1-1::K2GIA-10 :test 10{89",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - TX / MESSAGE / IA-10 ---> K2GIA-10 :test 10{89",
+   "mqtt_topic": null,
+   "mqtt_payload": null
+  },
+  "tx_digipeat": {
+   "op": "tx",
+   "rssi": 0,
+   "snr": 0.0,
+   "freq_err": 0,
+   "frame": "N0CALL-7>APLRT1,K2GIA-10*:!4015.00N/07430.00W>digipeated",
+   "syslog": "<165>1 - K2GIA-10 CA2RXU_LoRa_iGate_3.2.4 - - - TX / N0CALL-7>APLRT1,K2GIA-10*:!4015.00N/07430.00W>digipeated",
+   "mqtt_topic": null,
+   "mqtt_payload": null
+  }
+ },
+ "digipeats": {
+  "wide1_first_hop": {
+   "heard": "<\u00ff\u0001N0CALL-7>APLRT1,WIDE1-1,WIDE2-1:!4015.00N/07430.00W>x",
+   "sent": "N0CALL-7>APLRT1,K2GIA-10*,WIDE2-1:!4015.00N/07430.00W>x"
+  },
+  "wide2_second_hop": {
+   "heard": "<\u00ff\u0001N0CALL-7>APLRT1,N0DIGI-10*,WIDE2-1:!4015.00N/07430.00W>x",
+   "sent": "N0CALL-7>APLRT1,N0DIGI-10,K2GIA-10*:!4015.00N/07430.00W>x"
+  },
+  "wide2_2": {
+   "heard": "<\u00ff\u0001N0CALL-7>APLRT1,WIDE2-2:!4015.00N/07430.00W>x",
+   "sent": "N0CALL-7>APLRT1,K2GIA-10*,WIDE2-1:!4015.00N/07430.00W>x"
+  }
+ }
+}

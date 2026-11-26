@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoRa APRS receive dashboard</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1f23;--mute:#6a7178;--line:#d9dcdf;--card:#fff;--red:#b3261e;--amber:#8a5a00;--link:#14599c}
+@media (prefers-color-scheme:dark){:root{--bg:#14171a;--fg:#e6e8ea;--mute:#959ca3;--line:#2d3338;--card:#1b1f23;--red:#ff8a80;--amber:#ffc65c;--link:#8cc2ff}}
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif}
+h1{font-size:19px;margin:0}h2{font-size:15px;margin:22px 0 6px}
+.mute{color:var(--mute)}
+.warn{border:1px solid var(--amber);color:var(--amber);padding:6px 10px;border-radius:6px;margin:8px 0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+button,select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--link);color:var(--link)}
+.cards{display:flex;flex-wrap:wrap;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:150px}
+.card b{font-size:20px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--card);font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:4px 8px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child,td.text,th.text{text-align:left}
+th:first-child,td:first-child{position:sticky;left:0;background:var(--card)}
+th{font-weight:600;cursor:pointer;user-select:none}
+td.info{white-space:normal;overflow-wrap:anywhere;text-align:left;min-width:180px}
+tr.dim td{color:var(--mute)}
+td.red{color:var(--red);font-weight:600}td.amber{color:var(--amber);font-weight:600}
+.compact th,.compact td{padding:1px 6px;font-size:12px}
+.compact .extra{display:none}
+details{margin:6px 0}summary{cursor:pointer;font-weight:600;padding:3px 0}
+.x{border:0;background:none;color:var(--mute);padding:0 0 0 8px}
+footer{margin-top:24px;color:var(--mute);font-size:12px;max-width:80ch}
+</style>
+</head>
+<body>
+<h1 id="title">LoRa APRS receive dashboard</h1>
+<div class="mute" id="updated">Loading…</div>
+<div id="warnings"></div>
+<div class="bar">
+  <label>Sort <select id="sort">
+    <option value="packets">packets</option><option value="last">last heard</option>
+    <option value="call">name</option><option value="noise">noise (high first)</option>
+  </select></label>
+  <button id="compact" aria-pressed="false">Compact</button>
+  <button id="hidden" aria-pressed="false">Show hidden</button>
+  <button id="expand">Expand all</button>
+  <button id="collapse">Collapse all</button>
+</div>
+<div class="cards" id="cards"></div>
+
+<h2>Heard directly by this receiver</h2>
+<div class="mute">Each row is a station whose transmitter this receiver heard, over the last 24 hours.</div>
+<div class="scroll" id="local"></div>
+
+<div id="relayedBox"></div>
+<div id="unknownBox"></div>
+
+<details id="recentBox"><summary>Recent packets</summary><div class="scroll" id="recent"></div></details>
+
+<footer id="notes"></footer>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+let data = null, packets = [];
+let sortKey = store.get("sort", "packets"), sortDir = 0;
+let hidden = new Set(store.get("hiddenCalls", [])), showHidden = false;
+const closed = new Set();
+
+// All packet text arrives over the air from strangers: only ever set textContent.
+function el(tag, text, cls) {
+  const e = document.createElement(tag);
+  if (text !== undefined && text !== null) e.textContent = text;
+  if (cls) e.className = cls;
+  return e;
+}
+const num = (v, d = 0) => v === null || v === undefined ? "–" : v.toFixed(d);
+function ago(ts) {
+  if (!ts) return "never";
+  const s = Math.max(0, data.now - ts);
+  if (s < 90) return Math.round(s) + " s ago";
+  if (s < 5400) return Math.round(s / 60) + " min ago";
+  if (s < 172800) return (s / 3600).toFixed(1) + " h ago";
+  return Math.round(s / 86400) + " d ago";
+}
+// Demodulation limit per spreading factor (SX127x datasheet).
+const limit = sf => -7.5 - 2.5 * (sf - 7);
+function snrClass(v) {
+  if (v === null) return "";
+  const l = limit(data.radio.sf);
+  return v < l + 1.5 ? "red" : v < l + 10.5 ? "amber" : "";
+}
+const count = (n, word) => n + " " + word + (n === 1 ? "" : "s");
+const pct = r => (r.estimated ? "≈ " : "") + r.toa_pct.toFixed(2);
+
+const COLUMNS = [
+  {key: "call", name: "Station", text: r => r.call},
+  {key: "packets", name: "Packets", text: r => r.packets},
+  {key: "snr", name: "Avg SNR dB", text: r => num(r.snr, 1), cls: r => snrClass(r.snr)},
+  {key: "last", name: "Last heard", text: r => ago(r.last)},
+  {key: "rssi", name: "Avg RSSI dBm", text: r => num(r.rssi), extra: true},
+  {key: "noise", name: "Noise est. dBm", text: r => num(r.noise)},
+  {key: "freq_err", name: "Freq offset Hz", text: r => num(r.freq_err)},
+  {key: "toa_pct", name: "Airtime % (1 h)", text: pct},
+  {key: "dist_km", name: "Distance km", text: r => num(r.dist_km, 1), extra: true, localOnly: true},
+  {key: "relayed", name: "Relayed", text: r => r.relayed, extra: true, localOnly: true}
+];
+
+function ordered(rows, key, dir) {
+  const natural = key === "call" ? 1 : -1;
+  const d = dir || natural;
+  return [...rows].sort((a, b) => {
+    const x = a[key], y = b[key];
+    if (x === y) return a.call.localeCompare(b.call);
+    if (x === null || x === undefined) return 1;
+    if (y === null || y === undefined) return -1;
+    return (typeof x === "string" ? x.localeCompare(y) : x - y) * d;
+  });
+}
+
+function table(columns, rows, hideable) {
+  const t = el("table"), head = el("tr");
+  for (const c of columns) {
+    const th = el("th", c.name + (c.key === sortKey ? (( sortDir || (c.key === "call" ? 1 : -1)) > 0 ? " ▲" : " ▼") : ""), c.extra ? "extra" : "");
+    th.onclick = () => {
+      if (sortKey === c.key) sortDir = -(sortDir || (c.key === "call" ? 1 : -1));
+      else { sortKey = c.key; sortDir = 0; }
+      store.set("sort", sortKey); render();
+    };
+    head.append(th);
+  }
+  t.append(head);
+  let shown = 0;
+  for (const r of ordered(rows, sortKey, sortDir)) {
+    const isHidden = hidden.has(r.call);
+    if (isHidden && !showHidden) continue;
+    shown++;
+    const tr = el("tr", null, r.packets < data.dim_below ? "dim" : "");
+    columns.forEach((c, i) => {
+      const td = el("td", c.text(r), [c.cls ? c.cls(r) : "", c.extra ? "extra" : ""].join(" ").trim());
+      if (i === 0 && hideable) {
+        const b = el("button", isHidden ? "show" : "hide", "x extra");
+        b.onclick = () => {
+          isHidden ? hidden.delete(r.call) : hidden.add(r.call);
+          store.set("hiddenCalls", [...hidden]); render();
+        };
+        td.append(b);
+      }
+      tr.append(td);
+    });
+    t.append(tr);
+  }
+  if (!shown) {
+    const tr = el("tr"), td = el("td", rows.length ? "All rows are hidden." : "Nothing yet.", "text");
+    td.colSpan = columns.length; tr.append(td); t.append(tr);
+  }
+  return t;
+}
+
+function render() {
+  if (!data) return;
+  const s = data.status;
+  $("title").textContent = data.station + " receive dashboard";
+  document.title = data.station + " LoRa APRS";
+  $("updated").textContent = "Updated " + new Date(data.now * 1000).toLocaleString() +
+    " · SF" + data.radio.sf + " BW" + data.radio.bw / 1000 + " CR4/" + data.radio.cr +
+    (data.data_since ? " · data since " + new Date(data.data_since * 1000).toLocaleString() : "");
+
+  const warn = [];
+  if (!s.syslog_last) warn.push("No syslog line received since the collector started.");
+  else if (data.now - s.syslog_last > 3600) warn.push("No syslog line for " + ago(s.syslog_last).replace(" ago", "") + ". Signal figures come only from syslog.");
+  if (s.mqtt_connected === null) warn.push("MQTT is not configured, so many packets have no known path.");
+  else if (!s.mqtt_connected) warn.push("MQTT is not connected, so many packets have no known path.");
+  if (s.firmware && s.firmware !== data.tested_firmware) warn.push("The iGate reports firmware " + s.firmware + "; this collector was tested against " + data.tested_firmware + ".");
+  if (s.unparsed) warn.push(s.unparsed + " syslog line(s) could not be read. Last one: " + s.last_unparsed);
+  $("warnings").replaceChildren(...warn.map(w => el("div", w, "warn")));
+
+  $("cards").replaceChildren(...data.windows.map(w => {
+    const c = el("div", null, "card");
+    c.append(el("div", "Last " + w.label, "mute"), el("b", count(w.packets, "packet")),
+      el("div", count(w.stations, "station") + " heard"),
+      el("div", "Channel busy " + w.busy_pct.toFixed(2) + " %"),
+      el("div", w.sent + " sent · " + w.crc_errors + " CRC errors", "mute"));
+    return c;
+  }));
+
+  $("local").replaceChildren(table(COLUMNS, data.local, true));
+
+  const rel = [];
+  if (data.relayed.length) {
+    rel.push(el("h2", "Arrived through a digipeater"),
+      el("div", "Who each digipeater passed on to this receiver. Signal figures for these hops are in the digipeater's row above.", "mute"));
+    for (const d of data.relayed) {
+      const box = el("details");
+      box.open = !closed.has(d.digi);
+      box.ontoggle = () => box.open ? closed.delete(d.digi) : closed.add(d.digi);
+      const rows = d.stations;
+      box.append(el("summary", "via " + d.digi + " (" + count(rows.reduce((n, r) => n + r.packets, 0), "packet") + ")"));
+      const wrap = el("div", null, "scroll");
+      wrap.append(table(COLUMNS.filter(c => ["call", "packets", "last"].includes(c.key)), rows, false));
+      box.append(wrap); rel.push(box);
+    }
+  }
+  $("relayedBox").replaceChildren(...rel);
+
+  const unk = [];
+  if (data.unknown.length) {
+    unk.push(el("h2", "Path unknown"),
+      el("div", "Listed by sender. The signal figures may belong to a digipeater, not to this station.", "mute"));
+    const wrap = el("div", null, "scroll");
+    wrap.append(table(COLUMNS.filter(c => !c.localOnly), data.unknown, true));
+    unk.push(wrap);
+  }
+  $("unknownBox").replaceChildren(...unk);
+
+  const t = el("table"), h = el("tr");
+  ["Time", "Kind", "From", "Heard from", "Type", "RSSI", "SNR", "Text"].forEach((n, i) => h.append(el("th", n, i === 7 ? "text" : "")));
+  t.append(h);
+  for (const p of packets) {
+    const tr = el("tr");
+    const heard = p.kind === "tx" ? "sent by us" : p.transmitter || (p.kind === "rx" ? "unknown" : "–");
+    [new Date(p.ts * 1000).toLocaleTimeString(), p.kind, p.sender || "–", heard, p.type || "–",
+     num(p.rssi), num(p.snr, 2)].forEach(v => tr.append(el("td", v)));
+    tr.append(el("td", (p.header ? "[" + p.header + "] " : "") + (p.info || ""), "info"));
+    t.append(tr);
+  }
+  $("recent").replaceChildren(t);
+
+  const l = limit(data.radio.sf);
+  $("notes").replaceChildren(...[
+    "All signal figures are measured at " + data.station + ". Averages use packets that had a syslog line.",
+    "SNR red: below " + (l + 1.5) + " dB. Amber: below " + (l + 10.5) + " dB. The decode limit at SF" + data.radio.sf + " is " + l + " dB. Grey row: fewer than " + data.dim_below + " packets.",
+    "Noise estimate: median of RSSI with the signal's share removed, from packets under +8 dB SNR. It is an estimate, not a calibrated measurement.",
+    "Airtime %: share of the last hour taken by that station's transmissions. ≈ means a packet length was incomplete, so the figure is likely low.",
+    "Our own transmissions: " + data.own_tx.packets + " in 24 h, " + pct(data.own_tx) + " % airtime in the last hour."
+  ].map(x => el("p", x)));
+}
+
+async function refresh() {
+  try {
+    const [a, b] = await Promise.all([fetch("api/summary"), fetch("api/packets?limit=100")]);
+    if (!a.ok || !b.ok) throw new Error("HTTP " + a.status + "/" + b.status);
+    data = await a.json(); packets = await b.json(); render();
+  } catch (e) {
+    $("warnings").replaceChildren(el("div", "Cannot reach the collector (" + e.message + "). Figures below are old.", "warn"));
+  }
+}
+
+$("sort").value = ["packets", "last", "call", "noise"].includes(sortKey) ? sortKey : "packets";
+$("sort").onchange = e => { sortKey = e.target.value; sortDir = 0; store.set("sort", sortKey); render(); };
+function applyCompact(on) { document.body.classList.toggle("compact", on); $("compact").setAttribute("aria-pressed", on); }
+applyCompact(store.get("compact", false));
+$("compact").onclick = () => { const on = !document.body.classList.contains("compact"); store.set("compact", on); applyCompact(on); };
+$("hidden").onclick = () => { showHidden = !showHidden; $("hidden").setAttribute("aria-pressed", showHidden); render(); };
+$("expand").onclick = () => { closed.clear(); $("recentBox").open = true; render(); };
+$("collapse").onclick = () => { if (data) data.relayed.forEach(d => closed.add(d.digi)); $("recentBox").open = false; render(); };
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>
