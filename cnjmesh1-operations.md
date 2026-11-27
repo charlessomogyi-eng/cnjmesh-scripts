@@ -244,7 +244,7 @@ docker logs meshcore-packet-capture --tail 10
 **Full detail (config, SSID map, known cpal/POLLERR issue, APRS OTA results): see `docs/aprs-2m-graywolf-reference.md`**
 - Callsign: **K2GIA-1** (changed Aug 17 2026 from bare K2GIA — digi+iGate combo SSID convention)
 - Runs on **cnjmesh1** (Graywolf web UI port 8082)
-- Radio: UV-5R M, **roof dual-band VHF/UHF antenna** (as of Aug 17 2026 — was whip)
+- Radio: UV-5R M, **NA-771 whip**, not the roof antenna [S, Nov 26 2026; it was on the roof dual-band from Aug 17 2026 for a while]
 - Interface: Digirig — check current path with `ls -l /dev/serial/by-id/` rather than assuming a fixed `/dev/ttyUSBx`. A clean same-port replug normally keeps the same index; renumbering happens on reboot, hub power-cycle, another device on the bus also down, or a process holding the device open at unplug. The by-id path is the durable reference.
 - iGate server: `rotate.aprs2.net:14580`
 - Passcode: 16025 (generated from base callsign K2GIA — SSID-independent, unaffected by K2GIA-1 change)
