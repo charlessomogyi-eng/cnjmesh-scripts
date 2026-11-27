@@ -2909,3 +2909,6 @@ Charlie: the Baofeng (K2GIA-1) has an NA-771 whip; it is not the thing on the ro
 
 ## 2026-11-26 (7:43 PM) — 2 m review of station notes
 Charlie asked for a review of the repo notes on the stations in the 2 m start file. Added to that file: the undeployed Nov 8 Discord bridge fix, and K2GIA-7's last recorded beacon interval and last aprs.fi path. Nothing changed on a Pi or radio.
+
+## 2026-11-26 (7:47 PM) — 2 m start file: mesh ops review notes applied
+Charlie relayed the mesh operations chat's check. In the 2 m start file: removed the neighbor iGate callsign from the K2GIA-7 line, and the USB check now looks at how far back the kernel log reaches. That chat corrected the antenna line in `cnjmesh1-operations.md`. Nothing changed on a Pi or radio.

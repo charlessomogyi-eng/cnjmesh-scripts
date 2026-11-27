@@ -70,9 +70,16 @@ Full notes: `docs/h9-toolbox.md`.
 - **Antenna: NA-771 whip on the Baofeng, not the roof** [S, Nov 26; matches Nov 4]. A Nov 8 note puts the whip in the garage [S].
 - **PTT / Digirig USB dropouts.** Spare UV-5RM swapped Nov 11; clean at the Nov 12 check. Left: kernel USB log check (command below), confirm aprs.fi shows it, add ferrite chokes on their own day, see more clean days.
 
+  An empty result covers only what the log still holds, so it is not proof on its own. Check the oldest entry first, then search since the Nov 11 swap.
+
   cnjmesh1, finishes on its own:
   ```
-  sudo dmesg -T | grep -i -E "usb.*(disconnect|error -71)"
+  sudo journalctl _TRANSPORT=kernel --no-pager | head -3
+  ```
+
+  cnjmesh1, finishes on its own:
+  ```
+  sudo journalctl _TRANSPORT=kernel --since "2026-11-11 20:50" --no-pager | grep -i -E "usb.*(disconnect|error -71)"
   ```
 - Re-check Graywolf receive level: the -11.5 dB input gain was tuned for the old radio.
 - Health watchdog auto-recovery upgrade: written, not deployed (`watchdogs/graywolf-health-watchdog/`).
@@ -85,7 +92,7 @@ Never add an automatic Graywolf restart to a watchdog beyond the health watchdog
 ## 7. Pending: K2GIA-7 and range testing
 
 - **2 m mobile reception test** (added Nov 24): beacon from K2GIA-7 at increasing distances, compare Graywolf's heard list and aprs.fi (direct or digipeated); also check whether the TD-H9 hears K2GIA-1. K2GIA-1 is on the whip, so results describe that setup, not a roof antenna. Before it: check receive level, check K2GIA-7's beacon interval and path. Ask which direction first. Includes the older Nov 4 drive-test idea.
-- K2GIA-7 not showing on aprs.fi (Nov 4); no resolution recorded [?]. Last sighting then: Oct 28 19:25, path `WIDE1-1,WIDE2-2`, heard by KB2EAR-13 [V, Nov 4 screenshot]. App notes use `WIDE1-1,WIDE2-1`, so check the radio's own path.
+- K2GIA-7 not showing on aprs.fi (Nov 4); no resolution recorded [?]. Last sighting then: Oct 28 19:25, path `WIDE1-1,WIDE2-2`, heard by a nearby iGate [V, Nov 4 screenshot]. App notes use `WIDE1-1,WIDE2-1`, so check the radio's own path.
 - Radio's timed beacon last recorded as 600 s, 10 min (`docs/td-h9-odmaster-aprs-messaging-bug.md`, Aug). Confirm on the radio.
 - Firmware 1.0.38 update: undecided (stated change is Morse only). Lean: wait.
 - Clean KISSLink message/ACK retest over RF, nothing cancelled (`docs/kisslink-screens-and-loopback-test-2026-10-28.md`).
