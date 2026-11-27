@@ -1,12 +1,12 @@
 # APRS 2m (Graywolf) Reference — cnjmesh1
 
-**Last updated:** 2026-08-17
+**Last updated:** 2026-11-26 (antenna line only)
 
 ## Hardware & Software
 - Radio: UV-5R M, dedicated to APRS, USB-C powered
 - Interface: Digirig (black cable), USB to cnjmesh1
 - Audio: C-Media USB Audio Device (ALSA card 3, name "Device"), CM108AH USB Audio
-- Antenna: **Roof dual-band VHF/UHF antenna** (as of Aug 17 2026 — previously a Nagoya-style whip)
+- Antenna: **NA-771 whip** on the UV-5R M, not the roof [S, Nov 26 2026; also Nov 4]. It was on the roof dual-band antenna from Aug 17 2026 for a while; later sections describing roof results refer to that period
 - Software: Graywolf 0.13.13, web UI on cnjmesh1 port 8082
 - Config storage: SQLite `/var/lib/graywolf/graywolf.db`, set via web UI only — no flat config file
 - DB owned by `graywolf` user — needs `sudo` to query; WAL mode, run `PRAGMA wal_checkpoint(FULL)` before querying for latest data

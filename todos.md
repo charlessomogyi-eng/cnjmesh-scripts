@@ -32,10 +32,9 @@
   - **SJMesh nodes missing from the Meshview graph:** the Aug 14 swap to `sjmesh-relay.service` dropped the SJMesh topic from `~/meshview/config.ini`. Next: `grep -n -i topic ~/meshview/config.ini` (read-only); restoring is a config change needing his OK.
   - **Tck's 62.5 test and CoreScope.** Tck's group wants to switch from 500 to 62.5 together (910.525 / 62.5 / SF7 / CR5) and see who hears whom. Open: read-only check of our CoreScope `mqttSources` and `iataFilter`; whether to add his IATA code; whether LetsMesh accepts a 62.5 observer (unverified). CoreScope is software someone hosts, not a service you sign up for.
   - **A second node named "CNJ Mesh Observer"** (key starts `101afe5e`, not our `a8c40bf3`). Harmless; no action unless Charlie wants the owner to rename.
-  - **K2GIA-1 antenna location is unresolved** (roof dual-band per the ops file since Aug 17, garage whip per older notes). Ask Charlie; needed before the 2 m mobile test.
+  - **[Resolved Nov 26] K2GIA-1 antenna:** NA-771 whip on the Baofeng, not the roof [S]. `cnjmesh1-operations.md` still says roof (mesh operations file).
 - **[Added Nov 25 2026] Pick up here (on hold until Charlie says he is ready):**
   - On cnjmesh2 (both finish on their own), paste the output into the chat: `uptime -s`, then `journalctl --list-boots --no-pager | tail -15`. Purpose: see whether the malla2 DOWN/UP alerts line up with cnjmesh2 resets.
-  - Answer: is K2GIA-1 on the roof antenna or the garage whip right now?
 - **[Added Nov 25 2026] LoRa APRS pager (wanted):** LilyGO T-LoRa Pager, 433 MHz SX1262, with the alpha firmware `radiohound/lora-aprs-pager`. Next: find 433 stock and decide on buying; check for newer releases before flashing. Details in `docs/lora-aprs-reference.md`.
 - **[Added Nov 25 2026] RXT-style LoRa APRS dashboard (wanted):** stage 1 uses K2GIA-10's existing syslog and MQTT feeds, no reflash. Plan and checks in `docs/lora-aprs-reference.md`. Code can be written offline; installing on cnjmesh1 needs Charlie's OK.
 

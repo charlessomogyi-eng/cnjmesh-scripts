@@ -2903,3 +2903,6 @@ Charlie decided to keep it. Reasons recorded: it self-heals a Digirig that drops
 
 ## 2026-11-25 (1:30 PM) — Part 3 handoff written; Nov 13-25 summarized
 Wrote `docs/handoff-part3-2026-11-25.md` for a fresh chat: how to read, update and review this repo (raw URLs, add_repo, pull before editing, commit trailers, what to say if a push fails), working agreement, stable network facts, Nov 13-25 chronology (the log had stopped at Nov 4), threads in flight with the next step for each, decisions waiting on Charlie, an index of every `todos.md` section, a docs map and the traps from this chat. Added a pointer to it in `CLAUDE_CONTEXT.md`. Also added the 2 m mobile reception test (K2GIA-1 and the TD-H9) to `todos.md`. Nothing changed on any Pi, broker or node.
+
+## 2026-11-26 (7:42 PM) — K2GIA-1 antenna confirmed
+Charlie: the Baofeng (K2GIA-1) has an NA-771 whip; it is not the thing on the roof. Updated the 2 m start file, the Graywolf reference and the 2 m lines in `todos.md`. Left for the mesh operations chat: the APRS section of `cnjmesh1-operations.md` still says roof dual-band antenna. Nothing changed on a Pi.

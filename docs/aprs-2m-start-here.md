@@ -67,7 +67,7 @@ Full notes: `docs/h9-toolbox.md`.
 
 ## 6. Pending: K2GIA-1
 
-- **Which antenna is it on?** Docs say roof dual-band since Aug 17; other notes say a garage whip, with the roof reserved for the Icom 2730. Ask him.
+- **Antenna: NA-771 whip on the Baofeng, not the roof** [S, Nov 26; matches Nov 4]. A Nov 8 note puts the whip in the garage [S].
 - **PTT / Digirig USB dropouts.** Spare UV-5RM swapped Nov 11; clean at the Nov 12 check. Left: kernel USB log check (command below), confirm aprs.fi shows it, add ferrite chokes on their own day, see more clean days.
 
   cnjmesh1, finishes on its own:
@@ -84,7 +84,7 @@ Never add an automatic Graywolf restart to a watchdog beyond the health watchdog
 
 ## 7. Pending: K2GIA-7 and range testing
 
-- **2 m mobile reception test** (added Nov 24): beacon from K2GIA-7 at increasing distances, compare Graywolf's heard list and aprs.fi (direct or digipeated); also check whether the TD-H9 hears K2GIA-1. Before it: answer the antenna question, check receive level, check K2GIA-7's beacon interval and path. Ask which direction first. Includes the older Nov 4 drive-test idea.
+- **2 m mobile reception test** (added Nov 24): beacon from K2GIA-7 at increasing distances, compare Graywolf's heard list and aprs.fi (direct or digipeated); also check whether the TD-H9 hears K2GIA-1. K2GIA-1 is on the whip, so results describe that setup, not a roof antenna. Before it: check receive level, check K2GIA-7's beacon interval and path. Ask which direction first. Includes the older Nov 4 drive-test idea.
 - K2GIA-7 not showing on aprs.fi (Nov 4); no resolution recorded [?].
 - Firmware 1.0.38 update: undecided (stated change is Morse only). Lean: wait.
 - Clean KISSLink message/ACK retest over RF, nothing cancelled (`docs/kisslink-screens-and-loopback-test-2026-10-28.md`).
