@@ -88,6 +88,20 @@ and positions. **No real captured line has been tested.**
 5. Port 8090 free (no use found in the repo docs).
 6. How often packets are "Path unknown" in practice.
 
+## lora-aprs.org (read Nov 26 2026, through a page summarizer)
+
+- Global and US default: 433.775 MHz, SF12, BW125, CR 4/5, preamble 8,
+  about 20 to 22 dBm. This matches K2GIA-10 and the dashboard defaults.
+- Arizona, Southern California and Sacramento run SF7 / BW125 / CR 4/6 on
+  the same frequency. SF7 and SF12 radios cannot hear each other. The site
+  says nothing about the Northeast.
+- Its channel-capacity page gives about 1.3 s on air for an 80 byte packet
+  at SF12 / BW125 / CR 4/5. By the Semtech airtime formula, worked by hand,
+  that packet takes about 3.28 s, which is what `aprs.airtime()` returns.
+  The site's occupancy examples look low by about 2.5 times. Not confirmed
+  against the page itself.
+- `lora-aprs.org/network-capacity` would not load (twice).
+
 ## Firmware V4 (read from source Nov 26 2026, not built or tested)
 
 Upstream tags go up to V4.0.4. K2GIA-10 runs 3.2.4, so nothing here affects
