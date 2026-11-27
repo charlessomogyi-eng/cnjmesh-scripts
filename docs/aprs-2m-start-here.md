@@ -78,14 +78,15 @@ Full notes: `docs/h9-toolbox.md`.
 - Health watchdog auto-recovery upgrade: written, not deployed (`watchdogs/graywolf-health-watchdog/`).
 - POLLERR audio bug unresolved. A Sep 24 flood coincided with lost receive; a Digirig replug restored it. Decide whether to keep the real-time scheduling override (no benefit seen).
 - Graywolf upgrade 0.13.13 to 0.14.14: read notes, decide, back up the database first. Newer releases not checked since Nov 25.
-- Compare the live Discord bridge with the repo copy (`md5sum`) [?].
+- Compare the live Discord bridge with the repo copy (`md5sum`) [?]. The repo copy has a Nov 8 fix (outgoing messages post only once actually sent), recorded then as not deployed.
 
 Never add an automatic Graywolf restart to a watchdog beyond the health watchdog's single one (`cnjmesh1-operations.md`).
 
 ## 7. Pending: K2GIA-7 and range testing
 
 - **2 m mobile reception test** (added Nov 24): beacon from K2GIA-7 at increasing distances, compare Graywolf's heard list and aprs.fi (direct or digipeated); also check whether the TD-H9 hears K2GIA-1. K2GIA-1 is on the whip, so results describe that setup, not a roof antenna. Before it: check receive level, check K2GIA-7's beacon interval and path. Ask which direction first. Includes the older Nov 4 drive-test idea.
-- K2GIA-7 not showing on aprs.fi (Nov 4); no resolution recorded [?].
+- K2GIA-7 not showing on aprs.fi (Nov 4); no resolution recorded [?]. Last sighting then: Oct 28 19:25, path `WIDE1-1,WIDE2-2`, heard by KB2EAR-13 [V, Nov 4 screenshot]. App notes use `WIDE1-1,WIDE2-1`, so check the radio's own path.
+- Radio's timed beacon last recorded as 600 s, 10 min (`docs/td-h9-odmaster-aprs-messaging-bug.md`, Aug). Confirm on the radio.
 - Firmware 1.0.38 update: undecided (stated change is Morse only). Lean: wait.
 - Clean KISSLink message/ACK retest over RF, nothing cancelled (`docs/kisslink-screens-and-loopback-test-2026-10-28.md`).
 - Low priority: check ODmaster for Android 2.6.5 (promised messaging fix).

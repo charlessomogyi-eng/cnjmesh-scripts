@@ -2906,3 +2906,6 @@ Wrote `docs/handoff-part3-2026-11-25.md` for a fresh chat: how to read, update a
 
 ## 2026-11-26 (7:42 PM) — K2GIA-1 antenna confirmed
 Charlie: the Baofeng (K2GIA-1) has an NA-771 whip; it is not the thing on the roof. Updated the 2 m start file, the Graywolf reference and the 2 m lines in `todos.md`. Left for the mesh operations chat: the APRS section of `cnjmesh1-operations.md` still says roof dual-band antenna. Nothing changed on a Pi.
+
+## 2026-11-26 (7:43 PM) — 2 m review of station notes
+Charlie asked for a review of the repo notes on the stations in the 2 m start file. Added to that file: the undeployed Nov 8 Discord bridge fix, and K2GIA-7's last recorded beacon interval and last aprs.fi path. Nothing changed on a Pi or radio.
