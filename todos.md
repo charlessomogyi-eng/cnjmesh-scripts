@@ -39,6 +39,8 @@
 - **[Added Nov 25 2026] LoRa APRS pager (wanted):** LilyGO T-LoRa Pager, 433 MHz SX1262, with the alpha firmware `radiohound/lora-aprs-pager`. Next: find 433 stock and decide on buying; check for newer releases before flashing. Details in `docs/lora-aprs-reference.md`.
 - **[Added Nov 25 2026] RXT-style LoRa APRS dashboard (wanted):** stage 1 uses K2GIA-10's existing syslog and MQTT feeds, no reflash. Plan and checks in `docs/lora-aprs-reference.md`. Code can be written offline; installing on cnjmesh1 needs Charlie's OK.
 
+- **[Nov 26 2026] 2 m APRS now has its own chat.** Its live list is `docs/aprs-2m-start-here.md` (K2GIA-1, K2GIA-7, the second TD-H9 due Dec 1, satellite/packet firmware, learning APRS). Update status there; the older 2 m items in this file are kept for history.
+
 ## Everything else that is still open (one line each; full text in `docs/todos-full-2026-11-12.md`)
 
 ### [PLAN — make the repo private and prove Claude can still push (Charlie's preference, Nov 4 2026 3:04 PM)]

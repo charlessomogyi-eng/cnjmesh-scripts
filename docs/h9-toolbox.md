@@ -77,3 +77,6 @@ Source: two Facebook posts in the TIDRADIO H9 - USERS group (Nov 23 and Nov 25 s
 - **From a commenter's review [S, one person's opinion, Nov 25]:** H9 OPS replaces H9 Toolbox rather than adding to it (he would have to uninstall Toolbox and "revert back to a modified stock firmware"); he calls it an APRS messaging app, a map that needs multi-stage setup and is not linked to Google/Open Maps, and weather limited to heard stations, and says Toolbox already gives him advanced APRS messaging and satellite tools. So the two look like separate projects that cannot share one radio.
 - **Unknown:** who wrote it, what the patched firmware changes, how to flash it and go back, and the license.
 - **Rule:** the patched firmware would replace the stock APRS firmware, so it is not for K2GIA-7 (do-not-reprogram). Same rule as above: use the second TD-H9. The Oct 21 decision on updating K2GIA-7 to 1.0.38 is a separate open item in `todos.md`.
+
+## Nov 26 2026: firmware page re-read
+- `dev.h9toolbox.com/firmware/` now shows H9 Toolbox Firmware **v0.1.8** (the Nov 19 instructions describe v0.1.5), still called experimental, Type-C only. Apps include FM Satellite Passes (next five passes, path plot, Doppler tuning, live tracking). In v0.1.8 an app opens with Menu on the channel screen. No release date or changelog on the page. Second TD-H9 due Dec 1 [S].
