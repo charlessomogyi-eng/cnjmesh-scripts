@@ -2912,3 +2912,8 @@ Charlie asked for a review of the repo notes on the stations in the 2 m start fi
 
 ## 2026-11-26 (7:47 PM) — 2 m start file: mesh ops review notes applied
 Charlie relayed the mesh operations chat's check. In the 2 m start file: removed the neighbor iGate callsign from the K2GIA-7 line, and the USB check now looks at how far back the kernel log reaches. That chat corrected the antenna line in `cnjmesh1-operations.md`. Nothing changed on a Pi or radio.
+
+
+## 2026-11-27: Observer clock, source check
+
+MeshOMatic repeated the clock email (1 day 2 hours ahead). Checked MeshCore `companion-v1.16.0` source: contact `lastmod` uses the Observer's own clock, boot sets the clock from it, and the CLI Rescue console can remove the contacts file. Runbook written in `cnjmesh1-operations.md`. Nothing changed on any device.

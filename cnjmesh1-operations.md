@@ -363,6 +363,41 @@ Expect the new "Radio info" line, 4/4 brokers, and "Waiting for packets...". Aft
 ## Update 2026-10-14 — KPR2 moved to 500 kHz (cnjmesh3); repeater-console runbook (from the KPR2 handoff; [V] = pasted output/screenshots, [I] = inference)
 **KPR2 entry update (old MeshCore table above left in place — it still shows KPR2 with the old location text):** Heltec WiFi LoRa 32 V4 (16 MB flash / 2 MB PSRAM), MeshCore **repeater** firmware 1.16.0-07a3ca9 (Build 06-Jun-2026), advertised as "Kendall Park Repeater 2", `/dev/ttyACM1` on cnjmesh3 (by-id `*heltec*`). Radio was 910.525 / 62.5 kHz / SF7 / CR5; set to **910.525 MHz / 500 kHz / SF10 / CR5 on Oct 14, 2026** (`get radio` prints `910.5250244,…` — float rounding of 910.525). [V] for the commands and read-backs, **[I] for the radio actually running 500 kHz**: the Observer (next to KPR2, on 500 kHz) logged a type-4 advert at -25 dBm the moment `advert` was sent, plus relayed copies at -53/-115/-91 dBm. Whether KPR2 rebooted is unknown (the console did not drop on `reboot`, twice).
 
+**Runbook - fix the Observer clock (written Nov 27 2026; NOT yet run; needs Charlie's OK).**
+
+Why it sticks [V, source, `companion-v1.16.0`]: each contact's `lastmod` is stamped with the Observer's own clock; at boot the clock is set to the newest `lastmod` + 1 (`bootstrapRTCfromContacts`); set-time refuses to go backwards. So every contact heard since the offset is future-dated, and all of them have to go. Upstream `main` (checkout dated Nov 14) still does the same, so an update alone would not fix it. `clkreboot` (MeshOMatic's suggestion) is not in the companion firmware.
+
+The rescue console (hold the user button within 8 s of boot) accepts `ls`, `cat`, `rm`, `reboot`, `erase`, `rebuild`, `set pin`. **Never use `erase`, and no factory reset: both wipe the identity key.** The contacts file is on ExtraFS (nRF52 build with `EXTRAFS=1`); identity and settings are in other files. Expected side effects: contact list (and any favourites) empties and refills from adverts; the Discord shim keeps its own saved-key list, so no re-announcement flood is expected [I]; nodes that heard future-dated adverts ignore newer ones from the Observer for about 27 h.
+
+On **cnjmesh3**, one at a time (all finish on their own except the terminal):
+```bash
+docker stop meshcore-packet-capture
+```
+```bash
+D=$(ls /dev/serial/by-id/*RAK4631*)
+```
+```bash
+meshcore-cli -s $D contacts > ~/observer-contacts-before.txt
+```
+```bash
+meshcore-cli -s $D reboot
+```
+Hold the Observer's button (about 2 s) within 8 s of the reboot. Then open a terminal (stays open, Ctrl+] exits; whether pyserial is installed on the Pi is unchecked):
+```bash
+python3 -m serial.tools.miniterm $D 115200
+```
+In the terminal: `ls /` (expect `ExtraFS/contacts3`), then `rm ExtraFS/contacts3`, then straight away `reboot` (send separately: the console takes one line at a time; an advert arriving in between can rewrite the file, so repeat if the clock is still ahead). Exit, then:
+```bash
+meshcore-cli -s $D clock sync
+```
+```bash
+docker start meshcore-packet-capture
+```
+```bash
+docker logs meshcore-packet-capture --tail 20
+```
+If the clock is still ahead after the file was removed, stop: the cause is something else.
+
 **Runbook — change KPR2's radio settings (repeater console).** The `meshcore-mqtt-bridge` container holds KPR2's serial port, so stop it first (its KPR2 feed has a gap meanwhile; it was ~25 min on Oct 14). Run this on **cnjmesh3**:
 ```bash
 docker stop meshcore-mqtt-bridge
