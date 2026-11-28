@@ -11,7 +11,7 @@ to it over Wi-Fi.
 
 ## What you need
 
-- SSH to cnjmesh3 (`somog@10.0.0.186`) and cnjmesh1 (`somog@10.0.0.181`).
+- SSH to cnjmesh3 (`somog@10.0.0.187`) and cnjmesh1 (`somog@10.0.0.181`).
 - A browser on the home network for K2GIA-10's settings page,
   `http://10.0.0.74` (user `admin`).
 - The broker password for the `somog` login. It is the one K2GIA-10 already
@@ -24,7 +24,7 @@ to it over Wi-Fi.
 ```
 K2GIA-10 --syslog UDP 1514--> cnjmesh3 dashboard --forwards every line--> cnjmesh1 Discord bridge (1514)
 K2GIA-10 --MQTT--> cnjmesh1 broker --read only--> cnjmesh3 dashboard
-You --browser--> http://10.0.0.186:8090
+You --browser--> http://10.0.0.187:8090
 ```
 
 Nothing changes on cnjmesh1. The broker gets one more reader, using the
@@ -175,7 +175,7 @@ in Step 5 is wrong: fix the file, then
 On your phone or PC, on the home network:
 
 ```
-http://10.0.0.186:8090
+http://10.0.0.187:8090
 ```
 
 Open the **Local setup** tab. `MQTT` should say `connected`. Stations start
@@ -187,7 +187,7 @@ Step 8.
 In the browser, open `http://10.0.0.74`, find the **Syslog** section:
 
 - **Enable syslog:** leave on.
-- **Server:** change `10.0.0.181` to `10.0.0.186`. (Write down the old value.)
+- **Server:** change `10.0.0.181` to `10.0.0.187`. (Write down the old value.)
 - **Port:** leave `1514`.
 
 Press **Save** at the top. The board restarts by itself; give it a minute.
@@ -210,7 +210,7 @@ ends on its own after 2 packets, or after 30 minutes if none come. (If it says
 sudo timeout 1800 tcpdump -i any -n -c 2 udp port 1514
 ```
 
-Lines from `10.0.0.186` mean the forwarding works.
+Lines from `10.0.0.187` mean the forwarding works.
 
 ## Step 10: send me real packets
 
