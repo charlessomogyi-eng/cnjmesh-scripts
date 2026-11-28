@@ -2925,3 +2925,7 @@ See the Nov 27 entry in `known-issues.md`. Assistant errors this evening: estima
 
 ## 2026-11-27 8:31 PM ET - cnjmesh3 back on 10.0.0.186
 - cnjmesh3 was reachable at .187. Static .186 set on the Pi itself, rebooted; 4/4 pings from cnjmesh1. Container health, router list and root cause not yet checked.
+
+## 2026-11-28 7:33 AM ET - Confirmed: #aprs-rf-nj shows other stations' RF messages
+- [V, Charlie's Discord screenshot] Nov 28 6:09 AM ET (11:09 UTC): an RF message between two other stations (NK1N to NU3E), Via KB2EAR-13* WIDE2-1, posted in #aprs-rf-nj. Neither station is ours. Earlier posts on Nov 20 and Nov 22 (From KE2BSB-1) are also in the screenshot.
+- Charlie confirmed it works and asked for this to be logged.
