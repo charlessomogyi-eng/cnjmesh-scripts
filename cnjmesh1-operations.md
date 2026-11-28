@@ -24,7 +24,9 @@ If you are an AI assistant, this file plus `todos.md` are the two short files to
 |---|---|---|---|
 | cnjmesh1 | 10.0.0.181 (static) | somog | `ssh somog@10.0.0.181` |
 | cnjmesh2 | 10.0.0.91 | somogyic | `ssh somogyic@10.0.0.91` |
-| cnjmesh3 | 10.0.0.186 (**IN DOUBT Nov 27 2026**: no answer; Fing showed .187; see `known-issues.md`) | somog | `ssh somog@10.0.0.186` |
+| cnjmesh3 | 10.0.0.186 (static, set on the Pi Nov 27 2026; see note below the table) | somog | `ssh somog@10.0.0.186` |
+
+**cnjmesh3 address (Nov 27 2026):** `10.0.0.186` is set **on the Pi itself** (NetworkManager connection `netplan-wlan0-C4Somogyi-24`), not by the router. The router list may show something else; the Pi setting is what counts. Check on cnjmesh3: `nmcli -g ipv4.method,ipv4.addresses con show netplan-wlan0-C4Somogyi-24`. To change it: `sudo nmcli con mod netplan-wlan0-C4Somogyi-24 ipv4.addresses <address>/24`, then reboot. If the router and the Pi disagree, make them match and update this table.
 
 **cnjmesh1 is the main server.** All critical services run here. cnjmesh2 is the Meshtastic gateway (Pi Zero 2W). cnjmesh3 is the upstairs MeshCore RF hub (Pi 3B+, hosts Observer + KPR2).
 

@@ -108,3 +108,10 @@ See `cnjmesh1-operations.md`'s own "Known Issues / Don't Touch" section — not 
 - [V, repo] Wi-Fi power saving is recorded as turned off on cnjmesh1 and cnjmesh2 only; no record for cnjmesh3. On cnjmesh1 it caused "healthy but unreachable on the LAN" (July).
 - Files that assume .186: `cnjmesh1-operations.md`, `docs/ports-quick-reference.md`, `scripts/pull-cnjmesh1-backup.ps1`, `lora-aprs-dashboard/INSTALL.md` and `README.md` (LoRa chat's files). Do not change them until the real address is confirmed.
 - [V, router "Online Devices" list pasted by Charlie ~8:11 PM] **cnjmesh3 shows DHCP: its reservation is gone.** Also DHCP: `esp32s3-A3E8D4` (CJG2, was to be .234), `iGATE-K2GIA-10` (repo: reserved .74), `esp32s3-841FE0` (KPN6, never reserved), `88:a2:9e:fe:3f:9a` (cnjmesh1, safe because its address is set on the Pi). Reserved: `esp32s3-CA423C` (CJG1), `esp32s3-C412AC`, `88:a2:9e:7f:3a:98` (device not identified in the repo). The list pasted had no IP or MAC columns. Earlier lost reservations: July 13 and Nov 11 2026; cause never found. Nothing changed in the router yet.
+
+**Update Nov 27 2026 ~8:31 PM ET:**
+- [V, router screenshot ~8:15 PM] cnjmesh3 was set to Reserved IP in the router. [Charlie's report ~8:23 PM] The router kept changing it back to `.187`. Cause unknown.
+- [V, pasted output ~8:26 PM] cnjmesh3 was reachable at `.187` over SSH from cnjmesh1; Wi-Fi connection `netplan-wlan0-C4Somogyi-24`. `.186` did not answer ping from cnjmesh3.
+- Fix given: static `10.0.0.186` set on the Pi with `nmcli con mod` (gateway 10.0.0.1, DNS 10.0.0.1 and 8.8.8.8, method manual), then reboot.
+- [V, pasted output ~8:31 PM] `10.0.0.186` answered 4 of 4 pings from cnjmesh1.
+- Not yet checked: that the Pi shows method `manual`, the containers are up, what the router list now shows, why the address changed, Wi-Fi power save on cnjmesh3, and the cnjmesh2 login problem.

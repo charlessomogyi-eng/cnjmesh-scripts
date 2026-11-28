@@ -2922,3 +2922,6 @@ MeshOMatic repeated the clock email (1 day 2 hours ahead). Checked MeshCore `com
 ## 2026-11-27 evening: cnjmesh2/3 login trouble
 
 See the Nov 27 entry in `known-issues.md`. Assistant errors this evening: estimated an outage start from a Discord alert that the relay log disproved; suggested the peer-check journal although it was retired Sep 2 and never on cnjmesh1; treated no answer at 10.0.0.186 as "down" although data had arrived after the failed ping, and Charlie power cycled the Pi.
+
+## 2026-11-27 8:31 PM ET - cnjmesh3 back on 10.0.0.186
+- cnjmesh3 was reachable at .187. Static .186 set on the Pi itself, rebooted; 4/4 pings from cnjmesh1. Container health, router list and root cause not yet checked.
