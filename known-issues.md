@@ -99,3 +99,12 @@ See `cnjmesh1-operations.md`'s own "Known Issues / Don't Touch" section — not 
 - **Never run `cnjmesh-backup.sh` or any heavy job on cnjmesh2** (Pi Zero 2 W; Jul 26 overload, and it resets on its own, see the cnjmesh2 section).
 - **Alert text (meshcore-bot):** the office name was cut to 4 letters of its second word ("by NWS MOUN" for Mount Holly, "NATI" for the tsunami center); patched Oct 23 20:07 to the full name (`patch_office_full_name.py`, bot restarted 20:13). **Confirmed Oct 24 06:24 AM on a real alert: "by NWS Mount Holly"** — fix holds. Still cosmetic: "Frost Adv" abbreviation, no day on "til 9AM", and the shown end time may come from a different field than the log's "until" time (Oct 23: Discord "til 7AM" vs log "until 9:00AM"). Alert filter confirmed working (real Mount Holly frost advisory delivered; no tests or other offices).
 - **cnjmesh1 `wlan0` promiscuous mode toggles every ~3 s** (dmesg; unidentified process, probably a scanner/monitor script). Low priority; find it with `sudo ss -0 -p | head -20`.
+
+## cnjmesh3 address in doubt, and cnjmesh2/3 login trouble (Nov 27 2026, OPEN)
+- [S] Charlie could log in to cnjmesh1 only, not cnjmesh2 or cnjmesh3. His PuTTY has a saved session for each; the address saved in the cnjmesh3 one is not yet checked.
+- [V, pasted output] From cnjmesh1: cnjmesh2 (10.0.0.91) answered ping. cnjmesh3 at 10.0.0.186 gave "Destination Host Unreachable" (~7:51 and 7:57 PM ET); `cnjmesh3.local` did not resolve. The broker logged a publish from the Observer's capture client at 7:53:12 PM.
+- [S, screenshot 8:04 PM] A Fing "cnjmesh3 is offline" email lists it at **10.0.0.187**. Time sent not visible; he had power cycled the Pi at about 8:03 PM (red light solid before; green seen after).
+- [I] Likely: cnjmesh3 is no longer at .186 (repo: DHCP, reserved July 16; Xfinity reservations were found missing once before, July 13). Not confirmed. It may not have been down before the power cycle.
+- [V, repo] Wi-Fi power saving is recorded as turned off on cnjmesh1 and cnjmesh2 only; no record for cnjmesh3. On cnjmesh1 it caused "healthy but unreachable on the LAN" (July).
+- Files that assume .186: `cnjmesh1-operations.md`, `docs/ports-quick-reference.md`, `scripts/pull-cnjmesh1-backup.ps1`, `lora-aprs-dashboard/INSTALL.md` and `README.md` (LoRa chat's files). Do not change them until the real address is confirmed.
+

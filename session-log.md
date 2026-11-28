@@ -2917,3 +2917,8 @@ Charlie relayed the mesh operations chat's check. In the 2 m start file: removed
 ## 2026-11-27: Observer clock, source check
 
 MeshOMatic repeated the clock email (1 day 2 hours ahead). Checked MeshCore `companion-v1.16.0` source: contact `lastmod` uses the Observer's own clock, boot sets the clock from it, and the CLI Rescue console can remove the contacts file. Runbook written in `cnjmesh1-operations.md`. Nothing changed on any device.
+
+
+## 2026-11-27 evening: cnjmesh2/3 login trouble
+
+See the Nov 27 entry in `known-issues.md`. Assistant errors this evening: estimated an outage start from a Discord alert that the relay log disproved; suggested the peer-check journal although it was retired Sep 2 and never on cnjmesh1; treated no answer at 10.0.0.186 as "down" although data had arrived after the failed ping, and Charlie power cycled the Pi.

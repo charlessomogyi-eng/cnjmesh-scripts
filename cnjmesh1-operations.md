@@ -24,7 +24,7 @@ If you are an AI assistant, this file plus `todos.md` are the two short files to
 |---|---|---|---|
 | cnjmesh1 | 10.0.0.181 (static) | somog | `ssh somog@10.0.0.181` |
 | cnjmesh2 | 10.0.0.91 | somogyic | `ssh somogyic@10.0.0.91` |
-| cnjmesh3 | 10.0.0.186 | somog | `ssh somog@10.0.0.186` |
+| cnjmesh3 | 10.0.0.186 (**IN DOUBT Nov 27 2026**: no answer; Fing showed .187; see `known-issues.md`) | somog | `ssh somog@10.0.0.186` |
 
 **cnjmesh1 is the main server.** All critical services run here. cnjmesh2 is the Meshtastic gateway (Pi Zero 2W). cnjmesh3 is the upstairs MeshCore RF hub (Pi 3B+, hosts Observer + KPR2).
 
