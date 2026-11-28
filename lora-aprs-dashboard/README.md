@@ -82,7 +82,7 @@ python3 tests/demo.py
 
 ## Where it runs
 
-Planned host: **cnjmesh3** (Pi 3B+, 10.0.0.187), where K2GIA-10 is moving. Not
+Planned host: **cnjmesh3** (Pi 3B+, 10.0.0.186), where K2GIA-10 is moving. Not
 decided until the checks below are back. cnjmesh1 already carries many services.
 
 - K2GIA-10 sends syslog to cnjmesh3 (its web page, Syslog section).
